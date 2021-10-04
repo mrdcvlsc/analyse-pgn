@@ -1,0 +1,17 @@
+start:
+	isready
+	ucinewga
+	position startpos
+	
+eval commands:
+	go infinite
+	go depth N
+	
+
+	stop - stops go commands
+
+moving:
+	position startpos moves e2e4
+
+increase threads:
+	setoption name Threads value N
