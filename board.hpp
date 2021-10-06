@@ -177,7 +177,30 @@ namespace apgn
             }
             else
             {
+                bool capture = move.find('x') != std::string::npos ? true : false;
 
+                // if the number is present, then the piece is aligned with the other same piece in the letter line
+                //      ex: R2xf4 means that the rook came from Rf2
+
+                // if the letter is present, then the piece is aligned with the other same piece in the number line
+                //      ex: Rbxe4 means that the rook came from Rb4
+
+
+                switch(piece)
+                {
+                    case 'R':
+                        break;
+                    case 'N':
+                        break;
+                    case 'B':
+                        break;
+                    case 'K':
+                        break;
+                    case 'Q':
+                        break;
+                    default:
+                        throw std::logic_error("WHILE MOVING A PIECE SOMETHING WENT WRONG, AND IDK WTF IS IT!");
+                }
             }
         }
 
