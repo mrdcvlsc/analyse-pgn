@@ -110,7 +110,37 @@ namespace apgn
             {
                 if(move.size()>2)
                 {
+                    bool enpasant = false;
+                    if(at(move[2],move[3])==' ')
+                    {
+                        enpasant = true;
+                    }
+
                     // capture pawn move
+                    at(move[2],move[3]) = piece;
+
+                    if(turn=='W')
+                    {
+                        at(move[0],char(move[3]-1)) = ' ';
+
+                        if(enpasant)
+                        {
+                            at(move[2],char(move[3]-1)) = ' ';
+                        }
+
+                        turn = 'B';
+                    }
+                    else
+                    {
+                        at(move[0],char(move[3]+1)) = ' ';
+
+                        if(enpasant)
+                        {
+                            at(move[2],char(move[3]+1)) = ' ';
+                        }
+
+                        turn = 'W';
+                    }
                 }
                 else
                 {
@@ -121,8 +151,6 @@ namespace apgn
                     {
                         for(size_t i=1; i<3; ++i)
                         {
-                            // std::cout<<"state num = "<<char(move[1]-i)<<"\n";
-                            // // std::cout<<"state = "<<at(move[0],move[1]-i)<<"\n";
                             if(at(move[0],char(move[1]-i))=='P')
                             {
                                 at(move[0],char(move[1]-i)) = ' ';
@@ -136,8 +164,6 @@ namespace apgn
                     {
                         for(size_t i=1; i<3; ++i)
                         {
-                            // std::cout<<"state num = "<<char(move[1]-i)<<"\n";
-                            // // std::cout<<"state = "<<at(move[0],move[1]-i)<<"\n";
                             if(at(move[0],char(move[1]+i))=='P')
                             {
                                 at(move[0],char(move[1]+i)) = ' ';
@@ -168,9 +194,10 @@ namespace apgn
                         std::cout<<'|';
                     }
                 }
-                std::cout<<'\n';
+                std::cout<<" "<<8-i<<"\n";
             }
             std::cout<<"+---+---+---+---+---+---+---+---+\n";
+            std::cout<<"  a   b   c   d   e   f   g   h  \n";
         }
 
         void display_color()

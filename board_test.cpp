@@ -10,28 +10,29 @@ int main()
     std::cout<<"board peicees = \n\n";
     test.display_board();
 
-    test.move("e4");
+    test.move("d4");
+    std::cout<<"board peicees = \n\n";
+    test.display_board();
 
+    test.move("h5");
+    std::cout<<"board peicees = \n\n";
+    test.display_board();
+
+    test.move("d5");
     std::cout<<"board peicees = \n\n";
     test.display_board();
 
     test.move("e5");
-
     std::cout<<"board peicees = \n\n";
     test.display_board();
 
-    test.move("a3");
-
+    test.move("dxe6");
     std::cout<<"board peicees = \n\n";
     test.display_board();
 
-    test.move("h6");
-
+    test.move("fxe6");
     std::cout<<"board peicees = \n\n";
     test.display_board();
-
-    // std::cout<<"board colors = \n\n";
-    // test.display_color();
 
     return 0;
 }
