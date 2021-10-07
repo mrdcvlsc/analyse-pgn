@@ -1,0 +1,1 @@
+engines that support UCI2 should go here

@@ -23,6 +23,7 @@
 
 #include "cyfre/cyfre.hpp"
 #include "cofun/strings/reader.hpp"
+#include "cofun/strings/removes.hpp"
 
 namespace apgn
 {
@@ -50,6 +51,14 @@ namespace apgn
             size_t i = '8'-number;
 
             return board_state(i,j);
+        }
+
+        char& ct(char letter, char number)
+        {
+            size_t j = letter-'a';
+            size_t i = '8'-number;
+
+            return board_color(i,j);
         }
 
         board(char turn='W') : turn(turn)
@@ -100,12 +109,59 @@ namespace apgn
             return 'P';
         }
 
+        /// scans horizontally for attacking piece, returns an empty string if found nothing
+        std::vector<std::string> scan_H(char letter, char number, char piece, char color)
+        {
+            std::vector<std::string> attacking_pieces;
+            for(size_t i=0; i<8; ++i)
+            {
+                std::string attacking_piece = "";
+                if(at(char('a'+i),number)==piece && ct(char('a'+i),number)==color && char('a'+i)!=letter)
+                {
+                    attacking_piece.push_back(char('a'+i));
+                    attacking_piece.push_back(number);
+                    attacking_pieces.push_back(attacking_piece);
+                }
+            }
+            return attacking_pieces;
+        }
+
+        /// scans vertically for attacking piece, returns an empty string if found nothing
+        std::vector<std::string> scan_V(char letter, char number, char piece, char color)
+        {
+            std::vector<std::string> attacking_pieces;
+            for(size_t i=0; i<8; ++i)
+            {
+                std::string attacking_piece = "";
+                if(at(letter,char('1'+i))==piece && ct(letter,char('1'+i))==color && char('1'+i)!=number)
+                {
+                    attacking_piece.push_back(letter);
+                    attacking_piece.push_back(char('1'+i));
+                    attacking_pieces.push_back(attacking_piece);
+                }
+            }
+            return attacking_pieces;
+        }
+
+        /// scan diagonals
+        std::string scan_D(char letter, char number, char piece, char color)
+        {
+            return "undefined";
+        }
+
+        /// scan L shape squares
+        std::string scan_L(char letter, char number, char piece, char color)
+        {
+            return "undefined";
+        }
+
         void move(const std::string& move)
         {
             std::cout<<"move : "<<move<<"\n";
 
             char piece = piece_move(move);
 
+            /// pawn move
             if(piece=='P')
             {
                 if(move.size()>2)
@@ -118,14 +174,17 @@ namespace apgn
 
                     // capture pawn move
                     at(move[2],move[3]) = piece;
+                    ct(move[2],move[3]) = turn;
 
                     if(turn=='W')
                     {
                         at(move[0],char(move[3]-1)) = ' ';
+                        ct(move[0],char(move[3]-1)) = ' ';
 
                         if(enpasant)
                         {
                             at(move[2],char(move[3]-1)) = ' ';
+                            ct(move[2],char(move[3]-1)) = ' ';
                         }
 
                         turn = 'B';
@@ -133,10 +192,12 @@ namespace apgn
                     else
                     {
                         at(move[0],char(move[3]+1)) = ' ';
+                        ct(move[0],char(move[3]+1)) = ' ';
 
                         if(enpasant)
                         {
                             at(move[2],char(move[3]+1)) = ' ';
+                            ct(move[2],char(move[3]+1)) = ' ';
                         }
 
                         turn = 'W';
@@ -146,6 +207,7 @@ namespace apgn
                 {
                     // forward pawn move
                     at(move[0],move[1]) = piece;
+                    ct(move[0],move[1]) = turn;
 
                     if(turn=='W')
                     {
@@ -154,6 +216,7 @@ namespace apgn
                             if(at(move[0],char(move[1]-i))=='P')
                             {
                                 at(move[0],char(move[1]-i)) = ' ';
+                                ct(move[0],char(move[1]-i)) = ' ';
                                 break;
                             }
                         }
@@ -167,6 +230,7 @@ namespace apgn
                             if(at(move[0],char(move[1]+i))=='P')
                             {
                                 at(move[0],char(move[1]+i)) = ' ';
+                                ct(move[0],char(move[1]+i)) = ' ';
                                 break;
                             }
                         }
@@ -177,18 +241,61 @@ namespace apgn
             }
             else
             {
-                bool capture = move.find('x') != std::string::npos ? true : false;
+                std::string Move = removes::match(move,"x");
+
+                /// the peice is aligned to the same piece
+                bool aligned = Move.size()==4 ? true : false;
 
                 // if the number is present, then the piece is aligned with the other same piece in the letter line
-                //      ex: R2xf4 means that the rook came from Rf2
+                //      ex: R2f4 means that the rook came from Rf2
 
                 // if the letter is present, then the piece is aligned with the other same piece in the number line
-                //      ex: Rbxe4 means that the rook came from Rb4
-
+                //      ex: Rbe4 means that the rook came from Rb4
 
                 switch(piece)
                 {
                     case 'R':
+                        if(!aligned)
+                        {
+                            std::vector<std::string> rook_pos = scan_H(move[1],move[2],'R',turn);
+                            if(rook_pos.empty())
+                            {
+                                rook_pos = scan_V(move[1],move[2],'R',turn);
+                            }
+
+                            // remove old position
+                            std::string old_pos = rook_pos[0];
+                            at(old_pos[0],old_pos[1]) = ' ';
+                            ct(old_pos[0],old_pos[1]) = ' ';
+
+                            // place to new position
+                            at(move[1],move[2]) = 'R';
+                            ct(move[1],move[2]) = turn;
+                        }
+                        else
+                        {
+                            char old_lpos;
+                            char old_npos;
+
+                            if(isdigit(move[1]))
+                            {
+                                old_lpos = move[2];
+                                old_npos = move[1];
+                            }
+                            else
+                            {
+                                old_lpos = move[1];
+                                old_npos = move[3];
+                            }
+
+                            // remove old position
+                            at(old_lpos, old_npos) = ' ';
+                            ct(old_lpos, old_npos) = ' ';
+
+                            // place to new position
+                            at(move[2],move[3]) = 'R';
+                            ct(move[2],move[3]) = turn;
+                        }
                         break;
                     case 'N':
                         break;
@@ -201,14 +308,15 @@ namespace apgn
                     default:
                         throw std::logic_error("WHILE MOVING A PIECE SOMETHING WENT WRONG, AND IDK WTF IS IT!");
                 }
+                turn = turn=='W' ? 'B' : 'W';
             }
         }
 
-        void display_board()
+        void display_board_state()
         {
             for(size_t i=0; i<8; ++i)
             {
-                std::cout<<"+---+---+---+---+---+---+---+---+\n";
+                std::cout<<"+---+---+---+---+---+---+---+---+\t+---+---+---+---+---+---+---+---+\n";
                 for(size_t j=0; j<8; ++j)
                 {                    
                     std::cout<<"| "<<board_state(i,j)<<" ";
@@ -217,17 +325,7 @@ namespace apgn
                         std::cout<<'|';
                     }
                 }
-                std::cout<<" "<<8-i<<"\n";
-            }
-            std::cout<<"+---+---+---+---+---+---+---+---+\n";
-            std::cout<<"  a   b   c   d   e   f   g   h  \n";
-        }
-
-        void display_color()
-        {
-            for(size_t i=0; i<8; ++i)
-            {
-                std::cout<<"+---+---+---+---+---+---+---+---+\n";
+                std::cout<<" "<<8-i<<"\t";
                 for(size_t j=0; j<8; ++j)
                 {                    
                     std::cout<<"| "<<board_color(i,j)<<" ";
@@ -238,7 +336,8 @@ namespace apgn
                 }
                 std::cout<<'\n';
             }
-            std::cout<<"+---+---+---+---+---+---+---+---+\n";
+            std::cout<<"+---+---+---+---+---+---+---+---+\t+---+---+---+---+---+---+---+---+\n";
+            std::cout<<"  a   b   c   d   e   f   g   h  \t===== C   O   L   O   R   S =====\n";
         }
     };
 

@@ -5,34 +5,20 @@ int main()
 {
     apgn::board test;
 
-    std::cout<<"readed\n";
+    test.display_board_state();
+    std::cout<<"\n";
 
-    std::cout<<"board peicees = \n\n";
-    test.display_board();
+    test.move("Rad1");
+    test.display_board_state();
+    std::cout<<"\n";
 
-    test.move("d4");
-    std::cout<<"board peicees = \n\n";
-    test.display_board();
+    test.move("a5");
+    test.display_board_state();
+    std::cout<<"\n";
 
-    test.move("h5");
-    std::cout<<"board peicees = \n\n";
-    test.display_board();
-
-    test.move("d5");
-    std::cout<<"board peicees = \n\n";
-    test.display_board();
-
-    test.move("e5");
-    std::cout<<"board peicees = \n\n";
-    test.display_board();
-
-    test.move("dxe6");
-    std::cout<<"board peicees = \n\n";
-    test.display_board();
-
-    test.move("fxe6");
-    std::cout<<"board peicees = \n\n";
-    test.display_board();
+    test.move("Rhd1");
+    test.display_board_state();
+    std::cout<<"\n";
 
     return 0;
 }

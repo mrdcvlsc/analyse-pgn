@@ -1,0 +1,20 @@
+[Event "Computer chess game"]
+[Site "ada-d9y1999m9"]
+[Date "2021.10.06"]
+[Round "?"]
+[White "lovelace"]
+[Black "lovelace"]
+[Result "*"]
+[BlackElo "2400"]
+[Time "22:04:44"]
+[WhiteElo "2400"]
+[TimeControl "180"]
+[SetUp "1"]
+[FEN "8/2R4R/4p3/4p3/1R2p2R/8/8/k6K w - - 0 1"]
+[Termination "unterminated"]
+[PlyCount "3"]
+[WhiteType "human"]
+[BlackType "human"]
+
+1. Rbxe4 Kb2 2. Rhe7 *
+

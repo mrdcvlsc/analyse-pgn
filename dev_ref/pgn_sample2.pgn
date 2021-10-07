@@ -1,0 +1,25 @@
+[Event "Computer chess game"]
+[Site "ada-d9y1999m9"]
+[Date "2021.10.04"]
+[Round "?"]
+[White "lovelace"]
+[Black "lovelace"]
+[Result "*"]
+[BlackElo "2400"]
+[ECO "D53"]
+[Opening "QGD"]
+[Time "23:04:50"]
+[Variation "4.Bg5 Be7 5.Nf3"]
+[WhiteElo "2400"]
+[TimeControl "180"]
+[Termination "unterminated"]
+[PlyCount "38"]
+[WhiteType "human"]
+[BlackType "human"]
+
+1. d4 d5 2. Nf3 Nf6 3. c4 ?! e6 4. Bg5 Be7 ! 5. Nc3 Nc6 6. e3 O-O {comment
+before} 7. Bd3 {comment after} Nb4 8. O-O Nxd3 9. Qxd3 b6 10. Bxf6 (10.
+cxd5 {best move}) 10. .. Bxf6 11. Qxh7+ Kxh7 12. cxd5 exd5 13. Ne2 g5 (13.
+.. a5 {best move}) 14. Ne5 Bd7 15. Nf4 Bc6 16. Nfg6 Rc8 (16. .. a6 17.
+Nxf8+ (17. b3)) 17. Ne7 Qd6 18. N5xc6 Bxe7 19. Nd8 Rfxd8 *
+
