@@ -1,6 +1,6 @@
 start:
 	isready
-	ucinewga
+	ucinewgame
 	position startpos
 	
 eval commands:
