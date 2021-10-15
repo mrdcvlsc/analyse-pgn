@@ -1,0 +1,3 @@
+stockfish10   - https://stockfishchess.org/download/
+pgn-extract   - https://www.cs.kent.ac.uk/people/staff/djb/pgn-extract/
+uci-analyser  - https://www.cs.kent.ac.uk/people/staff/djb/uci-analyser/
