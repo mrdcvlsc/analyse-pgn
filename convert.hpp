@@ -35,16 +35,8 @@ int run_subprog(const char* program, char *const args[])
     return status;
 }
 
-
-// PGN to UCI
-// ./pgn-extract -Wuci --output converted.pgn to_convert.pgn
-
-// UCI to PGN
-// ./pgn-extract -WsanPNBRQK --output converted.pgn to_convert.pgn
-
 void uci_to_pgn(const std::string& input, const std::string output)
 {
-    // input = 
     char *const args[] = {"pgn-extract","-WsanPNBRQK","--output",(char* const)output.c_str(),(char* const)input.c_str(),NULL};
     run_subprog("./bin/pgn-extract",args);
 }
