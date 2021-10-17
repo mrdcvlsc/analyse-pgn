@@ -5,7 +5,9 @@ int main()
 {
     std::vector<std::string> env_variables = apgn_env::grab("env.txt",{
         "CHESS_ENGINE",
-        "THREADS"
+        "WORKER_THREADS",
+        "ANALYSIS_DEPTH",
+        "OPENING_MOVE_TO_SKIP"
     });
 
     for(auto e: env_variables)

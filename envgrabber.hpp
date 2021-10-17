@@ -41,7 +41,13 @@ namespace apgn_env
                 value.erase(0,variables[i].size()+sep.size());
                 values.push_back(value);
             }
-            else throw std::runtime_error("the variable inputed does not macth any variables in the give file");
+            else
+            {
+                throw std::runtime_error(
+                    "in envgrabber.hpp->apgn_env::grab()\n"
+                    "\tthe given env variable '"+variables[i]+"' does not exist in the '"+envfile+"' file\n"
+                );
+            }
         }
 
         return values;

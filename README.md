@@ -2,4 +2,4 @@
 
 a simple chess game PGN file analyzer
 
-cppstd >= C++17
+C++ Standard >= C++17

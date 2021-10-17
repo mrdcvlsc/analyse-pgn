@@ -47,6 +47,16 @@ namespace interpret
             else if(interpretation > -610) std::cout<<" winning but lost huge advantage ";
             else                           std::cout<<" winning but you missed all the good moves ";
         }
+        else if(played_move<-650)
+        {
+            if     (interpretation > -100)  std::cout<<" losing : top move but losing already ";
+            else if(interpretation > -300)  std::cout<<" losing : not the best move ";
+            else if(interpretation > -600)  std::cout<<" losing : this move speeds up your demise";
+            else if(interpretation > -900)  std::cout<<" losing : you should have resigned at this point ";
+            else if(interpretation > -9999) std::cout<<" losing : why are you still here? just to suffer? ";
+            else                            std::cout<<" losing : either you guys are complete noobs or, he's just playing "
+                                                     <<" with his food and you're being too stubborn ";
+        }
         else
         {
             if(played_move==best_move) std::cout<<" brilliant move ";
