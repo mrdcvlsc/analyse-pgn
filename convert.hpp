@@ -10,49 +10,37 @@
 #include <wait.h>
 #include <fstream>
 
-int run_subprog(const char* program, char *const args[])
+#include "path.hpp"
+
+int run_subprog(std::string program, char *const args[])
 {
     int status;
 
     if(!std::filesystem::exists(program))
-    {
         throw std::logic_error("'"+std::string(program)+"' file not found");
-    }
 
     int pid = fork();
 
     if(pid==-1) throw std::runtime_error("error forking subprocess");
 
-    if(pid==0)
-    {
-        execv(program,args);
-    }
-    else
-    {
-        waitpid(pid, &status, 0);
-    }
+    if(pid==0) execv(program.data(),args);
+    else       waitpid(pid, &status, 0);
 
     return status;
 }
 
-
-// PGN to UCI
-// ./pgn-extract -Wuci --output converted.pgn to_convert.pgn
-
-// UCI to PGN
-// ./pgn-extract -WsanPNBRQK --output converted.pgn to_convert.pgn
-
 void uci_to_pgn(const std::string& input, const std::string output)
 {
-    // input = 
-    char *const args[] = {"pgn-extract","-WsanPNBRQK","--output",(char* const)output.c_str(),(char* const)input.c_str(),NULL};
-    run_subprog("./bin/pgn-extract",args);
+    std::string PGN_EXTRACT = "pgn-extract", FLG1 = "-WsanPNBRQK", FLG2 = "--output";
+    char *const args[] = {PGN_EXTRACT.data(),FLG1.data(),FLG2.data(),(char* const)output.c_str(),(char* const)input.c_str(),NULL};
+    run_subprog(apgn::get_execpath()+"/bin/pgn-extract",args);
 }
 
 void pgn_to_uci(const std::string& input, const std::string output)
 {
-    char *const args[] = {"pgn-extract","-Wuci","--output",(char* const)output.c_str(),(char* const)input.c_str(),NULL};
-    run_subprog("./bin/pgn-extract",args);
+    std::string PGN_EXTRACT = "pgn-extract", FLG1 = "-Wuci", FLG2 = "--output";
+    char *const args[] = {PGN_EXTRACT.data(),FLG1.data(),FLG2.data(),(char* const)output.c_str(),(char* const)input.c_str(),NULL};
+    run_subprog(apgn::get_execpath()+"/bin/pgn-extract",args);
 }
 
 namespace COLOR
@@ -63,44 +51,47 @@ namespace COLOR
 }
 
 void analyse_game(
-    const std::string& input,
-    const std::string& output,
-    const std::string& engine,
+    std::string input,
+    std::string output,
+    std::string engine,
     char* search_depth,
     char* threads,
     char* opening_move_skips,
     char apgn_COLOR
 )   
 {
+    std::string analyse_ = "analyse", engine_ = "--engine", searchd_ = "--searchdepth", bookd_ = "--bookdepth", setopt_ = "--setoption",
+                threads_ = "Threads", annotate_ = "--annotatePGN", white_ = "--whiteonly", black_ = "--blackonly";
+
     char *const args[] = {
-        "analyse",
-        "--engine",(char* const)engine.c_str(),
-        "--searchdepth",search_depth,
-        "--bookdepth",opening_move_skips,
-        "--setoption","Threads",threads,
-        "--annotatePGN",(char* const)input.c_str(),
+        analyse_.data(),
+        engine_.data(),engine.data(),
+        searchd_.data(),search_depth,
+        bookd_.data(),opening_move_skips,
+        setopt_.data(),threads_.data(),threads,
+        annotate_.data(),input.data(),
         NULL
     };
 
     char *const args_white[] = {
-        "analyse",
-        "--engine",(char* const)engine.c_str(),
-        "--whiteonly",
-        "--searchdepth",search_depth,
-        "--bookdepth",opening_move_skips,
-        "--setoption","Threads",threads,
-        "--annotatePGN",(char* const)input.c_str(),
+        analyse_.data(),
+        engine_.data(),engine.data(),
+        white_.data(),
+        searchd_.data(),search_depth,
+        bookd_.data(),opening_move_skips,
+        setopt_.data(),threads_.data(),threads,
+        annotate_.data(),input.data(),
         NULL
     };
 
     char *const args_black[] = {
-        "analyse",
-        "--engine",(char* const)engine.c_str(),
-        "--blackonly",
-        "--searchdepth",search_depth,
-        "--bookdepth",opening_move_skips,
-        "--setoption","Threads",threads,
-        "--annotatePGN",(char* const)input.c_str(),
+        analyse_.data(),
+        engine_.data(),engine.data(),
+        black_.data(),
+        searchd_.data(),search_depth,
+        bookd_.data(),opening_move_skips,
+        setopt_.data(),threads_.data(),threads,
+        annotate_.data(),input.data(),
         NULL
     };
 
@@ -115,6 +106,8 @@ void analyse_game(
 
     if(pid==-1) std::runtime_error("error forking parent process, unable to create a child process in analyse_game()");
 
+    std::string analyse_executable_path = apgn::get_execpath()+"/bin/analyse";
+
     if(pid==0)
     {
         dup2(reader[1], STDOUT_FILENO);
@@ -122,13 +115,13 @@ void analyse_game(
         switch (apgn_COLOR)
         {
         case COLOR::ALL:
-            execv("./bin/analyse",args);
+            execv(analyse_executable_path.data(),args);
             break;
         case COLOR::WHITE:
-            execv("./bin/analyse",args_white);
+            execv(analyse_executable_path.data(),args_white);
             break;
         case COLOR::BLACK:
-            execv("./bin/analyse",args_black);
+            execv(analyse_executable_path.data(),args_black);
             break;
         default:
             throw std::runtime_error("something happend - error in convert.hpp");
@@ -165,8 +158,6 @@ void analyse_game(
     outfile.open(output,std::ios_base::trunc);
     outfile<<result_pgn;
     outfile.close();
-
-    ///analyse --engine ./stockfish14 --blackonly --searchdepth 20 --bookdepth 0 --setoption Threads 4 --annotatePGN uci_mygame.pgn > analyzed_uci_mygame.pgn
 }
 
 #endif
