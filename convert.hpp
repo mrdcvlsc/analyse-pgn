@@ -14,6 +14,7 @@
 
 int run_subprog(std::string program, char *const args[])
 {
+    #if defined(__linux__)
     int status;
 
     if(!std::filesystem::exists(program))
@@ -27,6 +28,9 @@ int run_subprog(std::string program, char *const args[])
     else       waitpid(pid, &status, 0);
 
     return status;
+    #elif defined(_WIN32)
+    //
+    #endif
 }
 
 void uci_to_pgn(const std::string& input, const std::string output)
