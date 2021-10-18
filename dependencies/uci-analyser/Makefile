@@ -23,7 +23,7 @@
 CC=g++
 # CFLAGS=-c -g -Wall -O3 -D__unix__
 CFLAGS=-c -g -Wall -O3 -D__unix__ -DPRODUCTION
-OBJS=analyse.o evaluation.o engine.o utils.o
+OBJS=analyse.o evaluation.o engine.o utils.o interpret.o
 TARGET=analyse
 
 .cpp.o:
@@ -36,6 +36,7 @@ clean:
 	rm -f $(OBJS) $(TARGET)
 
 engine.o : engine.cpp engine.h
-evaluation.o : evaluation.cpp evaluation.h utils.h
+evaluation.o : evaluation.cpp evaluation.h utils.h interpret.hpp
 analyse.o : analyse.cpp engine.h evaluation.h utils.h
 utils.o : utils.cpp utils.h
+interpret.o : interpret.cpp interpret.hpp
