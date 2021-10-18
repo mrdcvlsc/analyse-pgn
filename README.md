@@ -1,8 +1,10 @@
 # analyse-pgn++
 
+(linux only for now)
+
 a simple chess game PGN file analyzer
 
-This program adds comments in your pgn file
+This program will add comments in your pgn file
 
 - shows the best move you should have played instead
 - shows your blunders, mistakes, inaccuracy and etc.
