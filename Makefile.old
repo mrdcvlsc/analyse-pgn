@@ -21,9 +21,13 @@ test_clean:
 
 install:
 	ln -s $(dir $(abspath $(lastword $(MAKEFILE_LIST))))apgn /usr/bin
+# @ln -s $(dir $(abspath $(lastword $(MAKEFILE_LIST))))apgn /usr/local/bin
+# @ln -s $(dir $(abspath $(lastword $(MAKEFILE_LIST))))apgn /home/$(USER)/.local/bin
 
 uninstall:
 	rm /usr/bin/apgn
+# rm /usr/local/bin/apgn
+# rm /home/$(USER)/.local/bin
 	@rm ./bin/analyse ./bin/pgn-extract ./apgn
 
 clean:
