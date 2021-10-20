@@ -61,7 +61,11 @@ int main(int argc, char* args[])
         }
 
         std::vector<std::string> env_var = apgn_env::grab(apgn::get_execpath()+"/env.txt",{
-            "CHESS_ENGINE",
+            #if defined(__linux__)
+            "CHESS_ENGINE_LINUX",
+            #elif defined(_WIN32)
+            "CHESS_ENGINE_WINDOWS",
+            #endif
             "WORKER_THREADS",
             "ANALYSIS_DEPTH",
             "OPENING_MOVE_TO_SKIP"
@@ -78,8 +82,10 @@ int main(int argc, char* args[])
             throw std::invalid_argument("invalid 3rd  argument, choices are only A,W,B");
         }
 
+        std::cout<<"converting files...\n\n";
         pgn_to_uci(args[1],uci_converted_);
         
+        std::cout<<"analysing game(s)...\n\n";
         analyse_game(
             uci_converted_,
             analyse_,
@@ -90,11 +96,15 @@ int main(int argc, char* args[])
             args[2][0]
         );
 
+        std::cout<<"setting up Analyzed pgn...\n\n";
         uci_to_pgn(analyse_,out_pgn);
 
         apgn::deleteFile(uci_converted_);
-
         apgn::deleteFile(analyse_);
+
+        std::cout<<"\nIf you are using a different chess\n";
+        std::cout<<"engine don't forget to edit the 'env.txt'\n";
+        std::cout<<"file, and set the engine name to the one inside the bin/engines folder.\n";
     }
     else
     {

@@ -19,6 +19,8 @@
  *  https://www.cs.kent.ac.uk/people/staff/djb/
  */
 
+#include <iostream>
+
 #include "engine.h"
 #include <sstream>
 #include <string.h>
@@ -230,7 +232,7 @@ string Engine::getResponse(bool& eof) {
 #ifdef __unix__
                     strcpy(buffer, &buffer[index]);
 #else
-                    strcpy_s(buffer, &buffer[index]);
+                    strcpy(buffer, &buffer[index]);
 #endif
                     }
                     else {
@@ -383,9 +385,10 @@ bool Engine::startEngine(const string& engineName) {
     siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
 
     // Create the child process. 
-    CA2T commandLine(engineName.c_str());
+    // CA2T commandLine(engineName.c_str()); // this did not work for me in windows using minGW
+    LPSTR CA2T = const_cast<LPSTR>(engineName.c_str()); // I did this instead
     bSuccess = CreateProcess(NULL,
-            commandLine,     // command line 
+            CA2T,     // command line 
             NULL,          // process security attributes 
             NULL,          // primary thread security attributes 
             TRUE,          // handles are inherited 
