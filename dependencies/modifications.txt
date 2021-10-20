@@ -16,127 +16,34 @@
 
 2.) uci-analyser -> added the file "interpret.hpp"
 
+instead of showing the value of centipawns, this will replace the output with
+pgn comments in english sentences
+
 --------------------------------------------------------------------------------------------
 
 3.) uci-analyser -> some modification in the "analyse.cpp"
 
---- a/dependencies/uci-analyser/analyse.cpp
-+++ b/dependencies/uci-analyser/analyse.cpp
-@@ -32,6 +32,7 @@
- #include "engine.h"
- #include "evaluation.h"
- #include "utils.h"
-+#include "interpret.hpp"
- 
- using namespace std;
- 
-@@ -507,7 +508,15 @@ void sendGame(vector<string> &movelist, const string& fenstring, int bookDepth)
-             white = !white;
-         }
- 
-+        int total_moves = movelist.size(), moveTurn = 0;
-+
-         for (; moveCount < numMoves; moveCount++) {
-+
-+            if(moveCount%2==0) moveTurn++;
-+
-+            cerr << "Turn : " << moveTurn << " | analyzing move " << moveCount+1 << "/" << total_moves-1;
-+            cerr << "\t depth of = " << searchDepth << "\n";
-+
-             const string& playedMove = movelist[moveCount];
-             // Only analyse a move for a particular colour if required.
-             if ((white && analyseWhite) || (!white && analyseBlack)) {
-@@ -539,6 +548,8 @@ void sendGame(vector<string> &movelist, const string& fenstring, int bookDepth)
-                             " was not evaluated." << endl;
-                 }
-             }
-+            else cout << " " << playedMove << " " ;
-+
-             moves.append(playedMove);
-             moves.append(" ");
-             white = !white;
-@@ -648,21 +659,35 @@ bool showEvaluationsForMove(const string &playedMove, bool white) {
-  * Return whether the played move was evaluated.
-  */
- bool annotateMove(const string &playedMove) {
-+
-+    interpret::initializeOStream();
-+
-     vector<Evaluation *>::iterator it = evaluations.begin();
-     while (it != evaluations.end() && (*it)->getFirstMove() != playedMove) {
-         it++;
-     }
-+
-+    int playedMoveEval, bestMoveEval;
-+    string playedMoveSTDOUT = "", bestMoveSTDOUT = "";
-+    bool noMateYet = true;
-+
-     if (it != evaluations.end()) {
-         const Evaluation *ev = *it;
- 
--        cout << playedMove << " ";
--        cout << "{ ";
-+        playedMoveSTDOUT.append(playedMove+" { ");
-+
-         if (ev->isForcedMate()) {
--            cout << "mate " << ev->getNumMateMoves();
-+            playedMoveSTDOUT.append("mate "+to_string(ev->getNumMateMoves()));
-+            playedMoveEval = 0;
-+            noMateYet = false;
-         } else {
--            cout << ev->getValue();
-+            #ifndef PRODUCTION
-+            playedMoveSTDOUT.append(to_string(ev->getValue())); // for debugging/tunning interpretation
-+            #endif
-+            playedMoveEval = ev->getValue();
-         }
--        cout << " } ";
-+
-+        bestMoveEval = playedMoveEval;
- 
-         // Print out the better alternative moves and their evaluations.
-         it = evaluations.begin();
-@@ -670,17 +695,35 @@ bool annotateMove(const string &playedMove) {
-         do {
-             ev = *it;
-             if (ev->getFirstMove() != playedMove) {
--                cout << "( " << ev->getFirstMove() << " { ";
-+                bestMoveSTDOUT.append("( "+ev->getFirstMove()+" { ");
-                 if (ev->isForcedMate()) {
--                    cout << "mate " << ev->getNumMateMoves();
-+                    bestMoveSTDOUT.append("mate "+to_string(ev->getNumMateMoves()));
-+                    bestMoveEval = playedMoveEval;
-                 } else {
--                    cout << ev->getValue();
-+                    #ifndef PRODUCTION
-+                    bestMoveSTDOUT.append(to_string(ev->getValue())); // for debugging/tunning interpretation
-+                    #endif
-+                    bestMoveEval = ev->getValue();
-                 }
--                cout << " }) ";
-+                
-+                if(bestMoveEval!=playedMoveEval)
-+                    bestMoveSTDOUT.append(+" BEST MOVE"+interpret::displayCP(bestMoveEval));
-+
-+                bestMoveSTDOUT.append(" }) ");
-             }
-             it++;
-+            
-         } while (it != evaluations.end() && !worse_move(*it, best));
-+
-+        cout << playedMoveSTDOUT;
-+        
-+        if(noMateYet)
-+            interpret::playedMove(playedMoveEval,bestMoveEval);
-+        
-+        cout << " } ";
-+        cout << bestMoveSTDOUT;
-         cout << endl;
-+
-         return true;
-     } else {
-         cout << endl;
-         
+changes are made to output the moves of the other color that you don't want to analyse,
+and you want to include their moves to convert it back into a proper pgn file.
+
+example, the command "analyse --engine stockfish --searchdepth 12 --blackonly --annotatePGN ucif.pgn > output.pgn
+
+original result:
+    - analyse blacks move only
+    - the output.pgn will only have the moves of the black pieces with evaluation
+
+modified result:
+    - analyse blacks move only
+    - both white and black moves are added, but only black will have analysis comments
+
+--------------------------------------------------------------------------------------------
+
+3.) uci-analyser -> some modification in the "engine.cpp"
+
+changes are made to support MinGW GCC compiler in windows,
+I might have break the support for Microsoft Visual Studio in the process,
+though It's just some little lines of code not a big one.
+
 --------------------------------------------------------------------------------------------
 
 4.) pgn-extract  ->  removed the 'test' folder

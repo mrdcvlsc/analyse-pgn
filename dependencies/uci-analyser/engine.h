@@ -28,8 +28,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #else
-#include "stdafx.h"
-#include <atlstr.h>
 #include <windows.h>
 #endif
 

@@ -514,8 +514,10 @@ void sendGame(vector<string> &movelist, const string& fenstring, int bookDepth) 
 
             if(moveCount%2==0) moveTurn++;
 
+            #ifdef __linux__
             cerr << "Turn : " << moveTurn << " | analyzing move " << moveCount+1 << "/" << total_moves-1;
             cerr << "\t depth of = " << searchDepth << "\n";
+            #endif
 
             const string& playedMove = movelist[moveCount];
             // Only analyse a move for a particular colour if required.

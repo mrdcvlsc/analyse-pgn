@@ -26,7 +26,7 @@ namespace apgn_env
             std::fread(&filetext[0], 1, filetext.size(), filereader);
             std::fclose(filereader);
         }
-        else throw std::invalid_argument("env filename provided not found");
+        else throw std::invalid_argument("env filename='"+envfile+"' provided not found");
 
         std::vector<std::string> values;
 
