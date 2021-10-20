@@ -36,15 +36,18 @@ endif
 install:
 ifeq ($(OS), Linux)
 	@ln -s $(dir $(abspath $(lastword $(MAKEFILE_LIST))))apgn /usr/bin
+# @ln -s $(dir $(abspath $(lastword $(MAKEFILE_LIST))))apgn /usr/local/bin
+# @ln -s $(dir $(abspath $(lastword $(MAKEFILE_LIST))))apgn /home/$(USER)/.local/bin
 else
-	@echo "Windows Not Implemented yet"
-	echo %PATH%
+	@echo "Set It Manually for now"
 # SETX /M PATH "%PATH%;$(dir $(abspath $(lastword $(MAKEFILE_LIST))))"
 endif
 
 uninstall:
 ifeq ($(OS), Linux)
-	@rm /usr/bin/apgn
+	# @rm /usr/bin/apgn
+# @rm /usr/local/bin/apgn
+# @rm /home/$(USER)/.local/bin/apgn
 	@rm ./bin/analyse ./bin/pgn-extract ./apgn
 else
 	@rm ./bin/analyse.exe ./bin/pgn-extract.exe ./apgn.exe

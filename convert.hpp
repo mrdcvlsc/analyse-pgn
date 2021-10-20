@@ -15,6 +15,7 @@
 
 #if defined(__linux__)
 #include <unistd.h>
+#include <wait.h>
 #else
 #include "winProcRun.hpp"
 #endif

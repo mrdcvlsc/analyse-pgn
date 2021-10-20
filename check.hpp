@@ -22,7 +22,7 @@ namespace apgn
     {
         try {
             if (std::filesystem::remove(filename))
-                std::cout << "file " << filename << " deleted.\n";
+                std::cout << "Clean Actions Done\n";
             else
                 std::cout << "file " << filename << " not found.\n";
         }
