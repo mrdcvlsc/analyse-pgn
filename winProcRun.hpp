@@ -62,8 +62,6 @@ namespace apgn
 
         // memset(&processInfo, 0, sizeof(processInfo));  // Not actually necessary
 
-        printf("Starting.\n");
-
         std::string CMD_RUN_WARGS = cmdline.c_str();
 
         if(!cmdArguments.empty() && cmdArguments.size()!=1)
@@ -74,8 +72,6 @@ namespace apgn
                 CMD_RUN_WARGS.append(cmdArguments[i]);
             }
         }
-
-        std::cout<<"CMD_RUN_WARGS = "<<CMD_RUN_WARGS<<"\n";
 
         // LPSTR CMDLINE_DATA = const_cast<LPSTR>(cmdline.c_str());
         LPSTR CMDLINE_DATA = const_cast<LPSTR>(CMD_RUN_WARGS.c_str());
@@ -92,12 +88,11 @@ namespace apgn
         // strcpy_s(outbuf, sizeof(outbuf), "");
         outbuf = std::string("");
 
-        printf("this might take some few minutes...\n");
         size_t loadingDot = 1;
-        for (;;) {
+        for (size_t counter=1;;counter++) {
             if (!ReadFile(stdoutReadHandle, tBuf, 256, &bytes_read, NULL))
             {
-                printf("ReadFile: %u\n", GetLastError());
+                // printf("ReadFile: %u\n", GetLastError());
                 break;
             }
             if (bytes_read > 0)
@@ -107,7 +102,7 @@ namespace apgn
                 outbuf += std::string(tBuf);
             }
             std::string dotsLoad('.',loadingDot);
-            std::cout<<"analysing moves"<<std::string(loadingDot,'.')<<"\n";
+            std::cout<<"analysing moves("<<counter<<")"<<std::string(loadingDot,'.')<<"\n";
             if(loadingDot==10) loadingDot = 0;
             loadingDot++;
         }
@@ -123,8 +118,6 @@ namespace apgn
             printf("GetExitCodeProcess: %u\n", GetLastError());
             throw std::runtime_error("GetExitCodeProcess() Failed");
         }
-
-        printf("Exit code: %u\n", exitcode);
 
         CloseHandle( processInfo.hProcess );
         CloseHandle( processInfo.hThread );

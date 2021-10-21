@@ -48,7 +48,7 @@ int main(int argc, char* args[])
     }
     else if(argc==3)
     {
-        std::string out_pgn, format = ".pgn";
+        std::string out_pgn, format = ".pgn", statsFileName;
 
         if(!apgn::match_last(args[1],format))
         {
@@ -57,7 +57,9 @@ int main(int argc, char* args[])
         else
         {
             out_pgn = apgn::removeFormat(args[1],format);
+            statsFileName = out_pgn;
             out_pgn+="Analyzed.pgn";
+            statsFileName+="AnalyzedStats.txt";
         }
 
         std::vector<std::string> env_var = apgn_env::grab(apgn::get_execpath()+"/env.txt",{
@@ -73,7 +75,7 @@ int main(int argc, char* args[])
 
         apgn::errorFileNotFound(apgn::get_execpath()+"/bin/engines/"+env_var[CHESS_ENGINE]);
 
-        std::string uci_converted_ = apgn::get_execpath()+"/.uci_convert", analyse_ = apgn::get_execpath()+"/.analyse";
+        std::string uci_converted_ = apgn::get_execpath()+"/.analyzing_moves", analyse_ = apgn::get_execpath()+"/.analyse";
 
         apgn::errorFileNotFound(args[1]);
 
@@ -86,6 +88,15 @@ int main(int argc, char* args[])
         pgn_to_uci(args[1],uci_converted_);
         
         std::cout<<"analysing game(s)...\n\n";
+
+        int depthValue = stoi(env_var[ANALYSIS_DEPTH]);
+
+        if(depthValue>12)
+        {
+            std::cout<<"NOTE: env.txt's 'ANALYSIS_DEPTH' value is greater than 12\n";
+            std::cout<<"because of this, analysis might take a few minutes\n";
+        }
+
         analyse_game(
             uci_converted_,
             analyse_,
@@ -98,7 +109,46 @@ int main(int argc, char* args[])
 
         std::cout<<"setting up Analyzed pgn...\n\n";
         uci_to_pgn(analyse_,out_pgn);
+        
+        std::cout<<"writing stats file to destination\n\n...";
+        std::string stats_content = "";
 
+        std::ifstream stats_file_cacheW(apgn::get_execpath()+"/.statsW");
+        if(stats_file_cacheW.is_open())
+        {
+            std::cout<<"WHITE PIECE STATS FOUND\n";
+            std::string lineBuffer;
+            while(getline(stats_file_cacheW,lineBuffer))
+            {
+                stats_content.append(lineBuffer+"\n");
+            }
+            stats_file_cacheW.close();
+            apgn::deleteFile(apgn::get_execpath()+"/.statsW");
+        }
+        stats_content.append("\n\n");
+
+        std::ifstream stats_file_cacheB(apgn::get_execpath()+"/.statsB");
+        if(stats_file_cacheB.is_open())
+        {
+            std::cout<<"BLACK PIECE STATS FOUND\n";
+            std::string lineBuffer;
+            while(getline(stats_file_cacheB,lineBuffer))
+            {
+                stats_content.append(lineBuffer+"\n");
+            }
+            stats_file_cacheB.close();
+            apgn::deleteFile(apgn::get_execpath()+"/.statsB");
+        }
+
+        std::cout<<"summary : \n";
+        std::cout<<stats_content<<"\n";
+
+        std::ofstream outfile;
+        outfile.open(statsFileName,std::ios_base::trunc);
+        outfile<<stats_content;
+        outfile.close();
+
+        // apgn::deleteFile(apgn::get_execpath()+"/.stats");
         apgn::deleteFile(uci_converted_);
         apgn::deleteFile(analyse_);
 

@@ -11,11 +11,11 @@ all:
 	mv dependencies/uci-analyser/analyse bin/analyse
 
 ifeq ($(OS), Linux)
-	chmod +x bin/engines/stockfish10_linux
+	chmod +x bin/engines/stockfish11_x64
 	g++ -static-libgcc -static-libstdc++ -std=c++17 apgn.cpp -o apgn -O3
 # g++ -std=c++17 apgn.cpp -o apgn -DDEBUG -fsanitize=address -g # For Debugging
 else
-	chmod +x bin/engines/stockfish10.exe
+	chmod +x bin/engines/stockfish11_x64.exe
 	g++ -static-libgcc -static-libstdc++ -std=c++17 apgn.cpp -o apgn.exe -O3
 endif
 
