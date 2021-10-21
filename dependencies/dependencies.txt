@@ -3,5 +3,5 @@ ALL OF THIS DEPENDENCIES ARE STATED BELOW, AND ALL OF THEM ARE UNDER THE SOFTWAR
 GNU General Public License, hence this software(analyse-pgn) IS ALSO UNDER THE GPLv3 license
 
 stockfish10  - https://stockfishchess.org/download/
-pgn-extract  - https://www.cs.kent.ac.uk/people/staff/djb/pgn-extract/
+pgn-extract (Version 21-02) - https://www.cs.kent.ac.uk/people/staff/djb/pgn-extract/
 uci-analyser - https://www.cs.kent.ac.uk/people/staff/djb/uci-analyser/
