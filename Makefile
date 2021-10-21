@@ -12,11 +12,11 @@ all:
 
 ifeq ($(OS), Linux)
 	chmod +x bin/engines/stockfish10_linux
-	g++ -std=c++17 apgn.cpp -o apgn -O3
+	g++ -static-libgcc -static-libstdc++ -std=c++17 apgn.cpp -o apgn -O3
 # g++ -std=c++17 apgn.cpp -o apgn -DDEBUG -fsanitize=address -g # For Debugging
 else
 	chmod +x bin/engines/stockfish10.exe
-	g++ -std=c++17 apgn.cpp -o apgn.exe -O3
+	g++ -static-libgcc -static-libstdc++ -std=c++17 apgn.cpp -o apgn.exe -O3
 endif
 
 test:

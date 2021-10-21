@@ -40,7 +40,7 @@ OPTIMISE=-O3
 CFLAGS+=-c -pedantic -Wall -Wshadow -Wformat -Wpointer-arith \
 	-Wstrict-prototypes -Wmissing-prototypes -Wwrite-strings \
 	-Wsign-compare -Wimplicit-function-declaration $(DEBUGINFO) \
-	-I/usr/local/lib/ansi-include -std=c99 \
+	-I/usr/local/lib/ansi-include -static-libgcc -std=c99 \
         $(CPPFLAGS) \
         $(OPTIMISE)
 	 
