@@ -1,0 +1,9 @@
+THIS PROGRAM USES OTHER PROGRAMS THAT WAS DEVELOPED/CREATED BY OTHER DEVELOPERS/GROUP OF DEVELOPERS
+ALL OF THIS DEPENDENCIES ARE STATED BELOW, AND ALL OF THEM ARE UNDER THE SOFTWARE LICENSE GPLv3 or
+GNU General Public License, hence this software(analyse-pgn) IS ALSO UNDER THE GPLv3 license
+
+stockfish11  - https://stockfishchess.org/download/
+
+You can get the full source of pgn-extract and uci-analyse in this link
+pgn-extract (Version 21-02) - https://www.cs.kent.ac.uk/people/staff/djb/pgn-extract/
+uci-analyser - https://www.cs.kent.ac.uk/people/staff/djb/uci-analyser/
