@@ -91,7 +91,11 @@ the env.txt contains the default settings for analysis, like how deep you want t
 1. **Download** the compiled [analyse-pgn](https://github.com/mrdcvlsc/analyse-pgn/releases/tag/v0.7) | [direct-download-7z](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v0.7/analyse-pgn.7z)
 2. **Move** the file where you want to put it permanently, then **Extract** it there
 
-***(Optional)*** Add the path of **analyse-pgn** in your environment variables, here are some tutorial on how to do this [example1](https://docs.microsoft.com/en-us/previous-versions/office/developer/sharepoint-2010/ee537574(v=office.14)#:~:text=To%20add%20a%20path%20to%20the%20PATH%20environment%20variable&text=In%20the%20System%20dialog%20box,to%20Path%20and%20select%20it.), [example2](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/),[example3](https://helpdeskgeek.com/windows-10/add-windows-path-environment-variable/).
+***(Optional)*** Add the path of **analyse-pgn** in your environment variables, here are some tutorial on how to do this
+
+- [example1 - From Microsoft](https://docs.microsoft.com/en-us/previous-versions/office/developer/sharepoint-2010/ee537574(v=office.14)#:~:text=To%20add%20a%20path%20to%20the%20PATH%20environment%20variable&text=In%20the%20System%20dialog%20box,to%20Path%20and%20select%20it.)
+- [example2 - Architect Ryan's Blog](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/)
+- [example3 - From Aseem Kishore](https://helpdeskgeek.com/windows-10/add-windows-path-environment-variable/)
 
 3. **Start** the command line or cmd **terminal**, you can do this by either searching the keyword ```cmd``` in the windows start menu, or you can press the **```Windows Key```+```R```** then type ```cmd``` and click **OK**
 
