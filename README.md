@@ -7,7 +7,7 @@ a simple chess game PGN file analyzer
 
 - shows the best move you should have played
 - shows your blunders, mistakes, inaccuracy and etc.
-- it uses a chess engine executable for analysis (default:stockfish10)
+- it uses a chess engine executable for analysis (default:stockfish11)
 - the resulting Analyzed pgn can still be loaded on chess gui's like [Chess Arena](http://www.playwitharena.de/)
 
 ## installation

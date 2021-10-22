@@ -35,14 +35,19 @@ DEBUGINFO=-g
 # Mac OS X users might need to add -D__unix__ to CFLAGS
 # and use CC=cc or CC=gcc
 
-OPTIMISE=-O3
+OPTIMISE=-O3 -march=native
 
-CFLAGS+=-c -pedantic -Wall -Wshadow -Wformat -Wpointer-arith \
-	-Wstrict-prototypes -Wmissing-prototypes -Wwrite-strings \
-	-Wsign-compare -Wimplicit-function-declaration $(DEBUGINFO) \
-	-I/usr/local/lib/ansi-include -static-libgcc -std=c99 \
-        $(CPPFLAGS) \
-        $(OPTIMISE)
+# DEVELOPMENT
+# CFLAGS+=-c -pedantic -Wall -Wshadow -Wformat -Wpointer-arith \
+# 	-Wstrict-prototypes -Wmissing-prototypes -Wwrite-strings \
+# 	-Wsign-compare -Wimplicit-function-declaration $(DEBUGINFO) \
+# 	-I/usr/local/lib/ansi-include -std=c99 \
+#         $(CPPFLAGS) \
+#         $(OPTIMISE)
+
+# PRODUCTION
+CFLAGS+=-c -I/usr/local/lib/ansi-include -static-libgcc -std=c99 \
+        $(CPPFLAGS) $(OPTIMISE)
 	 
 CC=gcc
 LIBS=-lm
