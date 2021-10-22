@@ -117,4 +117,4 @@ apgn C:/Userts/%USERNAME%/Downloads/yourChessGame.pgn W
 
 let us say for example you downloaded a pgn from one of your online games... let's call that pgn file **yourChessGame.pgn**
 
-_the command above will analyse **yourChessGame.pgn** file in the downloads folder, this will produce another pgn file called **yourChessGameAnalyzed.pgn**, this is the pgn file that contains comments for each move on how well you did, and what is the best move for that turn, It will also produce another file called **yourChessGameAnalyzedStats.txt**, this will contain the numbers of different moves you made and the accuracy of your moves in the game.
+_the command above will analyse **yourChessGame.pgn** file in the downloads folder, this will produce another pgn file called **yourChessGameAnalyzed.pgn**, this is the pgn file that contains comments for each move on how well you did, and what is the best move for that turn, It will also produce another file called **yourChessGameAnalyzedStats.txt**, this will contain the numbers of different moves you made and the accuracy of your moves in the game._
