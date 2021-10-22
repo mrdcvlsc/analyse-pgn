@@ -43,7 +43,7 @@ namespace interpret
         bestEval[0] = bestEval[1] = 0;
     }
 
-    void saveStats(const string& saveFile, bool color)
+    void recordStats(const string& saveFile, bool color, size_t gameNumber)
     {
         long long upper = playedEval[color], lower = bestEval[color];
         
@@ -63,37 +63,41 @@ namespace interpret
         long double accuracy = ((long double)upper/(long double)lower)*100L;
         
         string ColorLabel = (color ? "W" : "B");
-        string statCounts="----------------------------------------------------"
-                          "COLOR : "+ColorLabel+"\n";
-        statCounts.append("--------------- Analyzed Move Counts --------------- \n");
-        statCounts.append( "\tBriliant Moves   - " + to_string(brilliantMoves[color])+"\n");
-        statCounts.append( "\tExcellent Moves  - " + to_string(excellentMove[color])+"\n");
-        statCounts.append( "\tGood Moves       - " + to_string(goodMove[color])+"\n");
-        statCounts.append( "\tinaccurate Moves - " + to_string(inaccurateMove[color])+"\n");
-        statCounts.append( "\tBad Moves        - " + to_string(badMove[color])+"\n");
-        statCounts.append( "\tMistakes         - " + to_string(mistake[color])+"\n");
-        statCounts.append( "\tBlunders         - " + to_string(blunder[color])+"\n");
-        statCounts.append( "\tAlready Winning  - " + to_string(winningMoves[color])+"\n");
-        statCounts.append( "\tAlready Losing   - " + to_string(losingMoves[color])+"\n");
+        string statCounts="- - - - - - - - - - - - - - - - - - - - - - - - - - - \n"
+                          "Game# : " + to_string(gameNumber) + "\n"
+                          "COLOR : " + ColorLabel + "\n";
+        statCounts.append(" - - - - - - - - Analyzed Move Counts - - - - - - - - \n");
+        statCounts.append( "\tBriliant Moves   - " + to_string(brilliantMoves[color]) + "\n");
+        statCounts.append( "\tExcellent Moves  - " + to_string(excellentMove[color]) + "\n");
+        statCounts.append( "\tGood Moves       - " + to_string(goodMove[color]) + "\n");
+        statCounts.append( "\tinaccurate Moves - " + to_string(inaccurateMove[color]) + "\n");
+        statCounts.append( "\tBad Moves        - " + to_string(badMove[color]) + "\n");
+        statCounts.append( "\tMistakes         - " + to_string(mistake[color]) + "\n");
+        statCounts.append( "\tBlunders         - " + to_string(blunder[color]) + "\n");
+        statCounts.append( "\tAlready Winning  - " + to_string(winningMoves[color]) + "\n");
+        statCounts.append( "\tAlready Losing   - " + to_string(losingMoves[color]) + "\n");
         statCounts.append( "\tTOTAL : " + to_string(
           ( brilliantMoves[color] + excellentMove[color] + goodMove[color] + inaccurateMove[color] +
             badMove[color] + mistake[color] + blunder[color] + winningMoves[color] +
             losingMoves[color]))+"\n"
           );
 
-        statCounts.append("\nPlayed Move Total Centipawns = "+to_string(playedEval[color]));
-        statCounts.append("\nBest Move Total Centipawns = "+to_string(bestEval[color]));
-        statCounts.append("\nmin|max = "+to_string(upper)+"|"+to_string(lower));
+        #ifndef PRODUCTION
+        statCounts.append("\nPlayed Move Total Centipawns = " + to_string(playedEval[color]));
+        statCounts.append("\nBest Move Total Centipawns = " + to_string(bestEval[color]));
+        statCounts.append("\nmin|max = "+to_string(upper)+"|" + to_string(lower));
+        #endif
         
         cpPrec.str("");
         cpPrec.clear();
         cpPrec << accuracy;
-        statCounts.append("\n\tAccuracy : "+cpPrec.str()+"%\n");
+        statCounts.append("\n\tAccuracy : "+cpPrec.str()+"%\n\n");
         cpPrec.str("");
         cpPrec.clear();
 
         ofstream outfile;
-        outfile.open(saveFile+ColorLabel,ios_base::trunc);
+        outfile.open(saveFile+"_stats",ios_base::out | ios_base::app);
+        outfile<<"==============================================================\n";
         outfile<<statCounts;
         outfile.close();
     }
@@ -158,22 +162,22 @@ namespace interpret
                 excellentMove[color]++;
                 cout<<" excellent move ";
             }
-            else if(interpretation >  -55)
+            else if(interpretation >  -60)
             {
                 goodMove[color]++;
                 cout<<" good move ";
             }
-            else if(interpretation > -100)
+            else if(interpretation > -110)
             {
                 inaccurateMove[color]++;
                 cout<<" inaccurate move ";
             }
-            else if(interpretation > -145)
+            else if(interpretation > -160)
             {
                 badMove[color]++;
                 cout<<" bad move ";
             }
-            else if(interpretation > -190)
+            else if(interpretation > -210)
             {
                 mistake[color]++;
                 cout<<" mistake ";
@@ -194,5 +198,32 @@ namespace interpret
         }
 
         cout << displayCP(played_move) ;
+    }
+
+    std::string get_execpath()
+    {
+        #if defined(__linux__)
+        char result[PATH_MAX];
+        ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+        const char *path;
+        if (count != -1) {
+            path = dirname(result);
+        }
+        return path;
+        #elif defined(_WIN32)
+        WCHAR path[MAX_PATH];
+        GetModuleFileNameW(NULL, path, MAX_PATH);
+
+        std::wstring string_to_convert = path;
+
+        //setup converter
+        using convert_type = std::codecvt_utf8<wchar_t>;
+        std::wstring_convert<convert_type, wchar_t> converter;
+
+        //use converter (.to_bytes: wstr->str, .from_bytes: str->wstr)
+        std::string converted_str = converter.to_bytes( string_to_convert );
+        
+        return converted_str.substr(0,converted_str.size()-9);
+        #endif
     }
 }

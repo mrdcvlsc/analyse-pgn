@@ -98,6 +98,16 @@ static bool XMLformat = true;
 // The evaluation engine.
 static Engine *engine;
 
+// Game number record
+static size_t GAME_NUMBER = 0;
+
+// Full filepath of the output PGN
+static string OUTPGN_FILEWPATH = "";
+
+// ARGV INDEX
+#define INPUT_PGN_FILE_ARGC12 11
+#define INPUT_PGN_FILE_ARGC13 12
+
 #ifdef __unix__
 
 int main(int argc, char *argv[]) {
@@ -105,6 +115,10 @@ int main(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
 #endif
+
+    if(argc==12) OUTPGN_FILEWPATH = argv[INPUT_PGN_FILE_ARGC12];
+    else         OUTPGN_FILEWPATH = argv[INPUT_PGN_FILE_ARGC13];
+
     bool ok = true;
     int argnum = 1;
 
@@ -297,14 +311,6 @@ bool processMovesFile(const string& movesFile) {
             sendGame(moves, fenstring, bookDepth);
         }
         movestream.close();
-
-        if(analyseWhite && analyseBlack)
-        {
-            interpret::saveStats(".stats",true);
-            interpret::saveStats(".stats",false);
-        }
-        if     (analyseWhite) interpret::saveStats(".stats",true);
-        else if(analyseBlack) interpret::saveStats(".stats",false);
 
         return true;
     } else {
@@ -523,6 +529,7 @@ void sendGame(vector<string> &movelist, const string& fenstring, int bookDepth) 
         int moveTurn = 0;
 
         interpret::clearStats();
+        GAME_NUMBER++;
 
         for (; moveCount < numMoves; moveCount++) {
 
@@ -570,6 +577,9 @@ void sendGame(vector<string> &movelist, const string& fenstring, int bookDepth) 
             moves.append(" ");
             white = !white;
         }
+
+        if(analyseWhite) interpret::recordStats(OUTPGN_FILEWPATH,true,GAME_NUMBER);
+        if(analyseBlack) interpret::recordStats(OUTPGN_FILEWPATH,false,GAME_NUMBER);
 
         if (annotate) {
             // Output the result.
