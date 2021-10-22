@@ -1,17 +1,5 @@
-1.) uci-analyser's makefile
+1.) uci-analyser & pgn-extract's makefiles are slightly changed
 
---- a/dependencies/uci-analyser/Makefile
-+++ b/dependencies/uci-analyser/Makefile
-@@ -21,7 +21,8 @@
- # Available from: http://www.cs.kent.ac.uk/~djb/chessplag/
- 
- CC=g++
--CFLAGS=-c -g -Wall -O3 -D__unix__
-+# CFLAGS=-c -g -Wall -O3 -D__unix__
-+CFLAGS=-c -g -Wall -O3 -D__unix__ -DPRODUCTION
- OBJS=analyse.o evaluation.o engine.o utils.o
- TARGET=analyse
- 
 --------------------------------------------------------------------------------------------
 
 2.) uci-analyser -> added the file "interpret.hpp"

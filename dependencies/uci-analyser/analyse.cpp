@@ -63,7 +63,7 @@ void outputTag(const string& tagLine);
 void saveEvaluation(Evaluation *ev, const string& info);
 bool haveEvaluationForMove(const string &move);
 bool showEvaluationsForMove(const string &move, bool white);
-bool annotateMove(const string &playedMove);
+bool annotateMove(const string &playedMove, bool color);
 void showUsage(const char *programName);
 bool isResult(const string& move);
 bool worse_move(const Evaluation *move, const Evaluation *best);
@@ -98,6 +98,16 @@ static bool XMLformat = true;
 // The evaluation engine.
 static Engine *engine;
 
+// Game number record
+static size_t GAME_NUMBER = 0;
+
+// Full filepath of the output PGN
+static string OUTPGN_FILEWPATH = "";
+
+// ARGV INDEX
+#define INPUT_PGN_FILE_ARGC12 11
+#define INPUT_PGN_FILE_ARGC13 12
+
 #ifdef __unix__
 
 int main(int argc, char *argv[]) {
@@ -105,6 +115,10 @@ int main(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
 #endif
+
+    if(argc==12) OUTPGN_FILEWPATH = argv[INPUT_PGN_FILE_ARGC12];
+    else         OUTPGN_FILEWPATH = argv[INPUT_PGN_FILE_ARGC13];
+
     bool ok = true;
     int argnum = 1;
 
@@ -297,6 +311,7 @@ bool processMovesFile(const string& movesFile) {
             sendGame(moves, fenstring, bookDepth);
         }
         movestream.close();
+
         return true;
     } else {
         cerr << "Unable to open " << movesFile << endl;
@@ -508,7 +523,13 @@ void sendGame(vector<string> &movelist, const string& fenstring, int bookDepth) 
             white = !white;
         }
 
-        int total_moves = movelist.size(), moveTurn = 0;
+        #ifdef __linux__
+        int total_moves = movelist.size();
+        #endif
+        int moveTurn = 0;
+
+        interpret::clearStats();
+        GAME_NUMBER++;
 
         for (; moveCount < numMoves; moveCount++) {
 
@@ -541,7 +562,7 @@ void sendGame(vector<string> &movelist, const string& fenstring, int bookDepth) 
 
                 bool playedMoveEvaluated;
                 if (annotate) {
-                    playedMoveEvaluated = annotateMove(playedMove);
+                    playedMoveEvaluated = annotateMove(playedMove,white);
                 } else {
                     playedMoveEvaluated = showEvaluationsForMove(playedMove, white);
                 }
@@ -556,6 +577,10 @@ void sendGame(vector<string> &movelist, const string& fenstring, int bookDepth) 
             moves.append(" ");
             white = !white;
         }
+
+        if(analyseWhite) interpret::recordStats(OUTPGN_FILEWPATH,true,GAME_NUMBER);
+        if(analyseBlack) interpret::recordStats(OUTPGN_FILEWPATH,false,GAME_NUMBER);
+
         if (annotate) {
             // Output the result.
             cout << movelist[movelist.size() - 1] << endl;
@@ -660,7 +685,7 @@ bool showEvaluationsForMove(const string &playedMove, bool white) {
  * Show the evaluation for the played move and the best alternative.
  * Return whether the played move was evaluated.
  */
-bool annotateMove(const string &playedMove) {
+bool annotateMove(const string &playedMove, bool color) {
 
     interpret::initializeOStream();
 
@@ -720,7 +745,7 @@ bool annotateMove(const string &playedMove) {
         cout << playedMoveSTDOUT;
         
         if(noMateYet)
-            interpret::playedMove(playedMoveEval,bestMoveEval);
+            interpret::playedMove(playedMoveEval,bestMoveEval,color);
         
         cout << " } ";
         cout << bestMoveSTDOUT;

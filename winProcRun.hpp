@@ -19,10 +19,8 @@ namespace apgn
         HANDLE stdoutReadHandle = NULL;
         HANDLE stdoutWriteHandle = NULL;
 
-        // char cmdline[256];
-        std::string cmdline;
-        // char outbuf[32768];
-        std::string outbuf;
+        std::string cmdline; // replace -> char cmdline[256];
+        std::string outbuf;  // replace -> char outbuf[32768];
         DWORD bytes_read;
         char tBuf[257];
 
@@ -30,9 +28,7 @@ namespace apgn
 
         std::string cmdBuffer;
 
-        cmdline = std::string(cmdline_in);
-
-        // strcpy_s(cmdline, sizeof(cmdline), cmdline_in);
+        cmdline = std::string(cmdline_in); // replaced -> strcpy_s(cmdline, sizeof(cmdline), cmdline_in);
 
         memset(&saAttr, 0, sizeof(saAttr));
         saAttr.nLength = sizeof(SECURITY_ATTRIBUTES); 
@@ -55,14 +51,12 @@ namespace apgn
 
         memset(&startupInfo, 0, sizeof(startupInfo));
         startupInfo.cb = sizeof(startupInfo);
-        // startupInfo.hStdError = stdoutWriteHandle; // if I remove this this might not print the turns
+        // startupInfo.hStdError = stdoutWriteHandle; // not needed for my specific use case
         startupInfo.hStdOutput = stdoutWriteHandle;
         startupInfo.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
         startupInfo.dwFlags |= STARTF_USESTDHANDLES;
 
         // memset(&processInfo, 0, sizeof(processInfo));  // Not actually necessary
-
-        printf("Starting.\n");
 
         std::string CMD_RUN_WARGS = cmdline.c_str();
 
@@ -75,9 +69,6 @@ namespace apgn
             }
         }
 
-        std::cout<<"CMD_RUN_WARGS = "<<CMD_RUN_WARGS<<"\n";
-
-        // LPSTR CMDLINE_DATA = const_cast<LPSTR>(cmdline.c_str());
         LPSTR CMDLINE_DATA = const_cast<LPSTR>(CMD_RUN_WARGS.c_str());
 
         if (!CreateProcessA(NULL, CMDLINE_DATA, NULL, NULL, TRUE,
@@ -89,25 +80,22 @@ namespace apgn
 
         CloseHandle(stdoutWriteHandle);
 
-        // strcpy_s(outbuf, sizeof(outbuf), "");
-        outbuf = std::string("");
+        outbuf = std::string(""); // replaced -> strcpy_s(outbuf, sizeof(outbuf), "");
 
-        printf("this might take some few minutes...\n");
         size_t loadingDot = 1;
-        for (;;) {
+        for (size_t counter=1;;counter++) {
             if (!ReadFile(stdoutReadHandle, tBuf, 256, &bytes_read, NULL))
             {
-                printf("ReadFile: %u\n", GetLastError());
+                // printf("ReadFile: %u\n", GetLastError()); // comment out, not needed for my specific use case
                 break;
             }
             if (bytes_read > 0)
             {
                 tBuf[bytes_read] = '\0';
-                // strcat_s(outbuf, sizeof(outbuf), tBuf);
-                outbuf += std::string(tBuf);
+                outbuf += std::string(tBuf); // replaced -> strcat_s(outbuf, sizeof(outbuf), tBuf);
             }
             std::string dotsLoad('.',loadingDot);
-            std::cout<<"analysing moves"<<std::string(loadingDot,'.')<<"\n";
+            std::cout<<"analysing moves("<<counter<<")"<<std::string(loadingDot,'.')<<"\n";
             if(loadingDot==10) loadingDot = 0;
             loadingDot++;
         }
@@ -124,8 +112,6 @@ namespace apgn
             throw std::runtime_error("GetExitCodeProcess() Failed");
         }
 
-        printf("Exit code: %u\n", exitcode);
-
         CloseHandle( processInfo.hProcess );
         CloseHandle( processInfo.hThread );
 
@@ -133,12 +119,3 @@ namespace apgn
     }
 }
 #endif
-
-// int main(int argc, char** argv)
-// {
-//     std::string grabbed = runAndGrabOutput("test.exe",{"one two"});
-
-//     std::cout<<"\n\nThis is From the parent : \n";
-//     std::cout<<grabbed<<"\n";
-//     return 0;
-// }

@@ -24,7 +24,7 @@ CC=g++
 # CFLAGS=-c -g -Wall -O3 -D__unix__ # Linux Debug
 # CFLAGS=-c -g -Wall -O3 -D__unix__ -DPRODUCTION # Linux
 # CFLAGS= -std=c++17 -c -g -Wall -O3 # Windows Debug Eval
-CFLAGS= -std=c++17 -c -g -Wall -O3 -DPRODUCTION
+CFLAGS= -static-libgcc -static-libstdc++ -std=c++17 -c -g -Wall -O3 -DPRODUCTION
 OBJS=analyse.o evaluation.o engine.o utils.o interpret.o
 TARGET=analyse
 

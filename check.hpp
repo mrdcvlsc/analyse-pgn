@@ -22,7 +22,7 @@ namespace apgn
     {
         try {
             if (std::filesystem::remove(filename))
-                std::cout << "Clean Actions Done\n";
+                std::cout << "...\n";
             else
                 std::cout << "file " << filename << " not found.\n";
         }
@@ -50,6 +50,18 @@ namespace apgn
     std::string removeFormat(const std::string& filename, const std::string& format)
     {
         return filename.substr(0,filename.size()-format.size());
+    }
+
+    std::string removeFilename(const std::string& filename)
+    {
+        for(size_t i=1; i<filename.size(); ++i)
+        {
+            if(filename[filename.size()-i]=='\\' || filename[filename.size()-i]=='/')
+            {
+                return filename.substr(0,filename.size()-i);
+            }
+        }
+        return "";
     }
 }
 
