@@ -20,11 +20,28 @@
 # https://www.cs.kent.ac.uk/people/staff/djb/
 # Available from: http://www.cs.kent.ac.uk/~djb/chessplag/
 
+OS := $(shell uname)
+
 CC=g++
-# CFLAGS=-c -g -Wall -O3 -D__unix__ # Linux Debug
-# CFLAGS=-c -g -Wall -O3 -D__unix__ -DPRODUCTION # Linux
-# CFLAGS= -std=c++17 -c -g -Wall -O3 # Windows Debug Eval
-CFLAGS= -static-libgcc -static-libstdc++ -std=c++17 -c -g -Wall -O3 -DPRODUCTION
+
+ifeq ($(OS), Linux)
+# LINUX
+
+# DEVELOPMENT
+# CFLAGS=-c -g -Wall -O3 -D__unix__
+
+# PRODUCTION
+CFLAGS= -static-libgcc -static-libstdc++ -std=c++17 -c -O3 -march=native -DPRODUCTION -D__unix__
+else 
+# WINDOWS
+
+# DEVELOPMENT
+# CFLAGS= -std=c++17 -c -g -Wall -O3
+
+# PRODUCTION
+CFLAGS= -static-libgcc -static-libstdc++ -std=c++17 -c -O3 -march=native -DPRODUCTION
+endif
+
 OBJS=analyse.o evaluation.o engine.o utils.o interpret.o
 TARGET=analyse
 
