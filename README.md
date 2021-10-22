@@ -29,10 +29,12 @@ make clean
 
 **Uninstall**
 
+in the analyse-pgn directory
+  
 ```
 sudo make uninstall
 cd ..
-rm -rf analyse-pgn (lol)
+rm -rf analyse-pgn
 ```
 
 </ul>
