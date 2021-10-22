@@ -88,12 +88,12 @@ the env.txt contains the default settings for analysis, like how deep you want t
 
 ## how to use analyse-pgn in windows (Non-Developers)
 
-1. Download the compiled [analyse-pgn](https://github.com/mrdcvlsc/analyse-pgn/releases/tag/v0.7) | [direct-download-7z](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v0.7/analyse-pgn.7z)
-2. Move the file where you want to put it permanently, then extract it there
+1. **Download** the compiled [analyse-pgn](https://github.com/mrdcvlsc/analyse-pgn/releases/tag/v0.7) | [direct-download-7z](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v0.7/analyse-pgn.7z)
+2. **Move** the file where you want to put it permanently, then **Extract** it there
 
 ***(Optional)*** Add the path of **analyse-pgn** in your environment variables, here are some tutorial on how to do this [example1](https://docs.microsoft.com/en-us/previous-versions/office/developer/sharepoint-2010/ee537574(v=office.14)#:~:text=To%20add%20a%20path%20to%20the%20PATH%20environment%20variable&text=In%20the%20System%20dialog%20box,to%20Path%20and%20select%20it.), [example2](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/),[example3](https://helpdeskgeek.com/windows-10/add-windows-path-environment-variable/).
 
-3. start the command line or cmd, you can do this by either searching the keyword ```cmd``` in the windows start menu, or you can press the **```Windows Key```+```R```** then type ```cmd``` and click **OK**
+3. **Start** the command line or cmd **terminal**, you can do this by either searching the keyword ```cmd``` in the windows start menu, or you can press the **```Windows Key```+```R```** then type ```cmd``` and click **OK**
 
 Now a window with a black background should appear, that is the command line terminal (cmd), let's just call it **terminal**
 
@@ -103,7 +103,7 @@ Now a window with a black background should appear, that is the command line ter
 cd C:/Users/%USERNAME%/Downloads/analyse-pgn
 ```
 
-5. Now you can start analysing pgn games now, type ```apgn``` then press **space**, then open the folder where you pgn files are located, the copy-paste the path to the command line, then press **space** again, then input which color you want to analyse; W for white, B for black, and A for both colors.
+5. Now you can **start analysing** pgn games now, type ```apgn``` then press **space**, then open the folder where you pgn files are located, the copy-paste the path to the command line, then press **space** again, then input which color you want to analyse; W for white, B for black, and A for both colors.
 
 the command should look like the example below:
 
