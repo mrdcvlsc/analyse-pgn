@@ -9,7 +9,6 @@
 #include "check.hpp"
 #include "path.hpp"
 
-
 #define CHESS_ENGINE 0
 #define WORKER_THREADS 1
 #define ANALYSIS_DEPTH 2
