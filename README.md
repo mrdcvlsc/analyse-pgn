@@ -43,18 +43,14 @@ rm -rf analyse-pgn (lol)
 <summary><b>Windows Build From Source</b></summary>
 <br>
 <ul>
-
-You can get analyse-pgn for windows using either of the two ways provided below.
   
-**Build From Source**
-
-You can also build analyse-pgn from source with GCC compilers, and the provided Makefile using your **cmd**
+You can also build analyse-pgn from source with GCC compilers, and the provided Makefile using your **cmd** in windows
   
 download, or git clone **analyse-pgn** first(if you have git in windows)
   
 in your command line (cmd) change directory to analyse-pgn, ```cd C:/Users/%USERNAME%/Downloads/analyse-pgn``` 
   
-then use the commands:
+then use the commands below:
   
 ```
 make
