@@ -39,7 +39,7 @@ int main(int argc, char* args[])
                 "\tthe command above will analyse the pgn file 'first.pgn' for player white\n"
                 "\tto avoid errors make sure the your PGN file has a lowercase extension '.pgn'\n\n\n"
                 "\tTo adjust the settings values that the engine will use, open\n"
-                "\tthe file "+apgn::get_execpath()+"env.txt file and tweek the values\n";
+                "\tthe file "+apgn::get_execpath()+"/env.txt file and tweek the values\n";
         }
         else
         {
