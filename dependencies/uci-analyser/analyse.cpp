@@ -734,7 +734,7 @@ bool annotateMove(const string &playedMove, bool color) {
                 }
                 
                 if(bestMoveEval!=playedMoveEval)
-                    bestMoveSTDOUT.append(+" BEST MOVE"+interpret::displayCP(bestMoveEval));
+                    bestMoveSTDOUT.append(+" BEST "+interpret::displayCP(bestMoveEval));
 
                 bestMoveSTDOUT.append(" }) ");
             }

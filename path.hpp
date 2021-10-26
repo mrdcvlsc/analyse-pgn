@@ -13,7 +13,7 @@
 #include <codecvt>
 #endif
 
-namespace apgn
+namespace apgn_path
 {
     std::string get_execpath()
     {
@@ -42,4 +42,5 @@ namespace apgn
         #endif
     }
 }
+
 #endif

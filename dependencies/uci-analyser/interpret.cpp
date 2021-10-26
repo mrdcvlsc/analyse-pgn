@@ -10,12 +10,9 @@ namespace interpret
     short excellentMove[2];
     short goodMove[2];
     short inaccurateMove[2];
-    short badMove[2];
     short mistake[2];
     short blunder[2];
     short missedWin[2];
-    short winningMoves[2];
-    short losingMoves[2];
     long long playedEval[2];
     long long bestEval[2];
 
@@ -33,12 +30,9 @@ namespace interpret
         excellentMove[0] = excellentMove[1] = 0;
         goodMove[0] = goodMove[1] = 0;
         inaccurateMove[0] = inaccurateMove[1] = 0;
-        badMove[0] = badMove[1] = 0;
         mistake[0] = mistake[1] = 0;
         blunder[0] = blunder[1] = 0;
         missedWin[0] = missedWin[1] = 0;
-        winningMoves[0] = winningMoves[1] = 0;
-        losingMoves[0] = losingMoves[1] = 0;
         playedEval[0] = playedEval[1] = 0;
         bestEval[0] = bestEval[1] = 0;
     }
@@ -71,15 +65,12 @@ namespace interpret
         statCounts.append( "\tExcellent Moves  - " + to_string(excellentMove[color]) + "\n");
         statCounts.append( "\tGood Moves       - " + to_string(goodMove[color]) + "\n");
         statCounts.append( "\tinaccurate Moves - " + to_string(inaccurateMove[color]) + "\n");
-        statCounts.append( "\tBad Moves        - " + to_string(badMove[color]) + "\n");
         statCounts.append( "\tMistakes         - " + to_string(mistake[color]) + "\n");
         statCounts.append( "\tBlunders         - " + to_string(blunder[color]) + "\n");
-        statCounts.append( "\tAlready Winning  - " + to_string(winningMoves[color]) + "\n");
-        statCounts.append( "\tAlready Losing   - " + to_string(losingMoves[color]) + "\n");
+        statCounts.append( "\tMissed Wins      - " + to_string(missedWin[color]) + "\n");
         statCounts.append( "\tTOTAL : " + to_string(
           ( brilliantMoves[color] + excellentMove[color] + goodMove[color] + inaccurateMove[color] +
-            badMove[color] + mistake[color] + blunder[color] + winningMoves[color] +
-            losingMoves[color]))+"\n"
+            mistake[color] + blunder[color] + missedWin[color]))+"\n"
           );
 
         #ifndef PRODUCTION
@@ -128,74 +119,48 @@ namespace interpret
 
         playedEval[color] += played_move;
         bestEval[color] += best_move;
-
-        if(played_move>650)
+    
+        if(played_move==best_move)
         {
-            winningMoves[color]++;
-            if     (interpretation >  -75) cout<<" winning : move is in top cantidate ";
-            else if(interpretation > -150) cout<<" winning : move has medium advantage ";
-            else if(interpretation > -300) cout<<" winning : move is slightly passive ";
-            else if(interpretation > -450) cout<<" winning but lost small advantage ";
-            else if(interpretation > -610) cout<<" winning but lost huge advantage ";
-            else                           cout<<" winning but you missed all the good moves ";
+            brilliantMoves[color]++;
+            cout<<" brilliant!!! ";
         }
-        else if(played_move<-650)
+        else if(interpretation >  -10)
         {
-            losingMoves[color]++;
-            if     (interpretation > -100)  cout<<" losing : top move but losing already ";
-            else if(interpretation > -300)  cout<<" losing : not the best move ";
-            else if(interpretation > -600)  cout<<" losing : this move speeds up your demise";
-            else if(interpretation > -900)  cout<<" losing : you should have resigned at this point ";
-            else if(interpretation > -9999) cout<<" losing : why are you still here? just to suffer? ";
-            else                            cout<<" losing : either you guys are complete noobs or, he's just playing "
-                                                     <<" with his food and you're being too stubborn ";
+            excellentMove[color]++;
+            cout<<" excellent!! ";
+        }
+        else if(interpretation >  -50)
+        {
+            goodMove[color]++;
+            cout<<" good! ";
+        }
+        else if(interpretation > -100)
+        {
+            inaccurateMove[color]++;
+            cout<<" inaccurate? ";
+        }
+        else if(interpretation > -200)
+        {
+            mistake[color]++;
+            cout<<" mistake?? ";
         }
         else
         {
-            if(played_move==best_move)
+            if(played_move<0)
             {
-                brilliantMoves[color]++;
-                cout<<" brilliant move ";
-            }
-            else if(interpretation >  -10)
-            {
-                excellentMove[color]++;
-                cout<<" excellent move ";
-            }
-            else if(interpretation >  -60)
-            {
-                goodMove[color]++;
-                cout<<" good move ";
-            }
-            else if(interpretation > -110)
-            {
-                inaccurateMove[color]++;
-                cout<<" inaccurate move ";
-            }
-            else if(interpretation > -160)
-            {
-                badMove[color]++;
-                cout<<" bad move ";
-            }
-            else if(interpretation > -210)
-            {
-                mistake[color]++;
-                cout<<" mistake ";
+                blunder[color]++;
+                cout<<" blunder??? ";
             }
             else
             {
-                if(played_move<0)
-                {
-                    blunder[color]++;
-                    cout<<" blunder ";
-                }
-                else
-                {
-                    missedWin[color]++;
-                    cout<<" missed win or advantage ";
-                }
+                missedWin[color]++;
+                cout<<" missed??? ";
             }
         }
+
+        if      (played_move>400) cout << " - W ";
+        else if(played_move<-400) cout << " - L ";
 
         cout << displayCP(played_move) ;
     }
