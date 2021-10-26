@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <string>
 
-namespace apgn
+namespace apgn_check
 {
     bool validNumber(const std::string& str)
     {

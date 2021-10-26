@@ -52,7 +52,6 @@ namespace apgn_env
 
         return values;
     }
-
 }
 
 #endif
