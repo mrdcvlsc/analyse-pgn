@@ -126,39 +126,39 @@ namespace interpret
         if(played_move==best_move)
         {
             brilliantMoves[color]++;
-            cout<<" brilliant ";
+            cout<<" brilliant!!! ";
         }
         else if(interpretation >  -10)
         {
             excellentMove[color]++;
-            cout<<" excellent ";
+            cout<<" excellent!! ";
         }
-        else if(interpretation >  -60)
+        else if(interpretation >  -50)
         {
             goodMove[color]++;
-            cout<<" good ";
+            cout<<" good! ";
         }
-        else if(interpretation > -110)
+        else if(interpretation > -100)
         {
             inaccurateMove[color]++;
-            cout<<" inaccurate ";
+            cout<<" inaccurate? ";
         }
-        else if(interpretation > -210)
+        else if(interpretation > -200)
         {
             mistake[color]++;
-            cout<<" mistake ";
+            cout<<" mistake?? ";
         }
         else
         {
             if(played_move<0)
             {
                 blunder[color]++;
-                cout<<" blunder ";
+                cout<<" blunder??? ";
             }
             else
             {
                 missedWin[color]++;
-                cout<<" missed win or advantage ";
+                cout<<" missed??? ";
             }
         }
 

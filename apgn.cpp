@@ -23,11 +23,6 @@ int main(int argc, char* args[])
     {
         if(strcmp(args[1],"--help")==0 || strcmp(args[1],"-h")==0)
         {
-            std::cout<<"\tTo display this message, input the command : \n";
-            std::cout<<"\t\tapgn --help\n";
-            std::cout<<"\tor\n";
-            std::cout<<"\t\tapgn -h\n\n";
-
             std::cout<<
                 "\tThe proper format for analyzing games are either\n"
                 "\tof the two commands given below:\n\n"
