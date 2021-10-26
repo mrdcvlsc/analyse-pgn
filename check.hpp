@@ -7,6 +7,13 @@
 
 namespace apgn
 {
+    bool validNumber(const std::string& str)
+    {
+        std::string::const_iterator i = str.begin();
+        while (i != str.end() && std::isdigit(*i)) ++i;
+        return !str.empty() && i == str.end();
+    }
+
     void errorFileNotFound(const std::string& filename)
     {
         std::FILE *filereader = std::fopen(filename.c_str(), "rb");
