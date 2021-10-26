@@ -99,7 +99,7 @@ the env.txt contains the default settings for analysis, like how deep you want t
 
 **Installation Part**
 
-1. **Download** the pre-compiled program [analyse-pgn](https://github.com/mrdcvlsc/analyse-pgn/releases/tag/v0.8) | [direct-download-7z](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v0.8/analyse-pgn.8z)
+1. **Download** the pre-compiled program [analyse-pgn](https://github.com/mrdcvlsc/analyse-pgn/releases/tag/v0.8) | [direct-download-7z](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v0.8/analyse-pgn.7z)
 2. **Move** and **Extract** the file where you want to put it permanently
 
 3. **Add path** of _analyse-pgn_ to your **Environment Variables**. below are some tutorial on how to do this:
