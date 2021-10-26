@@ -119,9 +119,6 @@ namespace interpret
 
         playedEval[color] += played_move;
         bestEval[color] += best_move;
-
-        if      (played_move>650) cout << " winning : ";
-        else if(played_move<-650) cout << " losing : ";
     
         if(played_move==best_move)
         {
@@ -161,6 +158,9 @@ namespace interpret
                 cout<<" missed??? ";
             }
         }
+
+        if      (played_move>400) cout << " - W ";
+        else if(played_move<-400) cout << " - L ";
 
         cout << displayCP(played_move) ;
     }

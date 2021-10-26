@@ -59,7 +59,8 @@ int main(int argc, char* args[])
         }
         else if(strcmp(args[1],"--version")==0 || strcmp(args[1],"-v")==0)
         {
-            std::cout<< "analyse-pgn : " << APGN_VERSION << "\n";
+            std::cout << "analyse-pgn : " << APGN_VERSION << "\n"
+                         "Licence : GPLv3\n";
         }
 
         return 1;
