@@ -49,9 +49,9 @@ namespace interpret
         }
         else if(upper<0 && lower>=0)
         {
-            cout << "\n\n\nERROR : AN EDGE CASE OCCUR IN GETTING THE ACCURACY, WHERE TOTAL PLAYED_MOVE EVAL \n";
-            cout << "        IS A NEGATIVE VALUE, AND THE BEST EVAL IS A POSITIVE VALUE\n\n";
-            throw std::runtime_error("detected an edge case");
+            long long distance = std::abs(lower) + std::abs(upper);
+            upper = std::min(std::abs(upper),std::abs(lower));
+            lower = distance;
         }
 
         long double accuracy = ((long double)upper/(long double)lower)*100L;
@@ -87,7 +87,7 @@ namespace interpret
         cpPrec.clear();
 
         ofstream outfile;
-        outfile.open(saveFile+"_stats",ios_base::out | ios_base::app);
+        outfile.open(saveFile+".stats.txt",ios_base::out | ios_base::app);
         outfile<<"==============================================================\n";
         outfile<<statCounts;
         outfile.close();

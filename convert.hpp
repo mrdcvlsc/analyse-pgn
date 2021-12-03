@@ -11,7 +11,7 @@
 #include <string.h>
 #include <fstream>
 
-#include "path.hpp"
+#include "apgnFileSys.hpp"
 
 #if defined(__linux__)
 #include <unistd.h>
@@ -63,14 +63,14 @@ namespace apgn_convert
     {
         std::string PGN_EXTRACT = "pgn-extract", FLG1 = "-WsanPNBRQK", FLG2 = "--output";
         char *const args[] = {PGN_EXTRACT.data(),FLG1.data(),FLG2.data(),(char* const)output.c_str(),(char* const)input.c_str(),NULL};
-        run_subprog(apgn_path::get_execpath()+"/bin/pgn-extract",args);
+        run_subprog(apgnFileSys::getExecpath()+"/bin/pgn-extract",args);
     }
 
     void pgn_to_uci(const std::string& input, const std::string output)
     {
         std::string PGN_EXTRACT = "pgn-extract", FLG1 = "-Wuci", FLG2 = "--output";
         char *const args[] = {PGN_EXTRACT.data(),FLG1.data(),FLG2.data(),(char* const)output.c_str(),(char* const)input.c_str(),NULL};
-        run_subprog(apgn_path::get_execpath()+"/bin/pgn-extract",args);
+        run_subprog(apgnFileSys::getExecpath()+"/bin/pgn-extract",args);
     }
 
     void analyse_game(
@@ -154,7 +154,7 @@ namespace apgn_convert
 
         if(pid==-1) std::runtime_error("error forking parent process, unable to create a child process in analyse_game()");
 
-        std::string analyse_executable_path = apgn_path::get_execpath()+"/bin/analyse";
+        std::string analyse_executable_path = apgnFileSys::getExecpath()+"/bin/analyse";
 
         if(pid==0)
         {
@@ -190,7 +190,7 @@ namespace apgn_convert
             wait(NULL);
         }
         #else
-        std::string analyse_executable_path = apgn_path::get_execpath()+"/bin/analyse";
+        std::string analyse_executable_path = apgnFileSys::getExecpath()+"/bin/analyse";
         std::string result_pgn;
 
         switch (apgn_COLOR)

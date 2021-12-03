@@ -1,21 +1,38 @@
-#ifndef APGN_PATH_HPP
-#define APGN_PATH_HPP
+#ifndef APGN_FILESYS_HPP
+#define APGN_FILESYS_HPP
 
 #include <iostream>
+#include <filesystem>
+#include <string>
+
 #include <limits.h>
 
 #if defined(__linux__)
 #include <libgen.h>
 #include <unistd.h>
-#elif defined(_WIN32)
+#elif defined(_WIN32 || _WIN64)
 #include <windows.h>
 #include <locale>
 #include <codecvt>
 #endif
 
-namespace apgn_path
+namespace apgnFileSys
 {
-    std::string get_execpath()
+    void deleteFile(const std::string& filename)
+    {
+        try {
+            if (std::filesystem::remove(filename))
+                std::cout << "...\n";
+            else
+                std::cout << "file " << filename << " not found.\n";
+        }
+        catch(const std::filesystem::filesystem_error& err)
+        {
+            throw std::system_error(err);
+        }
+    }
+
+    std::string getExecpath()
     {
         #if defined(__linux__)
         char result[PATH_MAX];
