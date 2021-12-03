@@ -3,99 +3,106 @@ https://github.com/mrdcvlsc/analyse-pgn
 
 a simple chess game PGN file analyzer on terminal
 
-**analyse-pgn** adds analysis comments for each moves in your pgn file
+## analyse-pgn
 
-- shows the best move you should have played
-- shows your blunders, mistakes, inaccuracy and etc.
-- it uses a chess engine executable for analysis (default:stockfish11)
-- the resulting Analyzed pgn can still be loaded on chess gui's like [Chess Arena](http://www.playwitharena.de/)
+this program will generate an **.analyzed.pgn** file, and a **.stats.txt**.
+
+The **.analyzed.pgn** will contain the following:
+
+- per-move comments showing the best move
+- per-move comments on how good or bad your move was compared to the best move.
+  1. **```brilliant!!!```** - indicates that the move is the best move
+  2. **```excellent!!```** - indicates that the move is a top move
+  3. **```good!```** - indicates that the move is still accurate or average
+  4. **```inaccurate?```** - indicates that the move provide a slight disadvantage
+  5. **```mistake??```** - the move is slightly losing
+  6. **```blunder/missed```** - blunder is a completely losing move, missed is when you give up a large advantage
+
+The **.stats.txt** file will contain
+- the total counts of brilliant, excellent, good, average, mistake, blunder, and missed moves in the pgn game.
+- it will also provide a percentage representing the accuracy of moves a color played through out the whole game.
+
+### the resulting Analyzed pgn is recomended ton be loaded on chess gui's like [Chess Arena](http://www.playwitharena.de/) for better visualization.
 
 ---------------------------
 
-GCC C++ Standard >= C++17
+## Build Support
+  - standard >= C++17
+  - Windows MinGW Makefile
+  - Linux GCC Makefile
 
-<details>
-<summary><b>Linx Build From Source</b></summary>
-<br>
-<ul>
-  
+**Build apgn**
+
 ```
 git clone https://github.com/mrdcvlsc/analyse-pgn.git
 cd analyse-pgn
 make
+make clean
+```
+
+**Install & Uninstall for Linux**
+```
 sudo make install
-make clean
-```
-
-**Uninstall**
-
-in the analyse-pgn directory
-  
-```
 sudo make uninstall
-cd ..
-rm -rf analyse-pgn
 ```
-
-</ul>
-</details>
-
-
-<details>
-<summary><b>Windows Build From Source</b></summary>
-<br>
-<ul>
-  
-You can also build analyse-pgn from source with GCC compilers, and the provided Makefile using your **cmd** in windows
-  
-download, or git clone **analyse-pgn** first(if you have git in windows)
-  
-in your command line (cmd) change directory to analyse-pgn, ```cd C:/Users/%USERNAME%/Downloads/analyse-pgn``` 
-  
-then use the commands below:
-  
-```
-make
-make clean
-```
-
-  _then after that you need to add the path of **analyse-pgn** into your environment variables... (or don't you can also use it right away after building it, just ```cd``` to where it is located and copy the full path of you pgn game that you want to analyse)_
-
-</ul>
-</details>
 
 -------------------------------------------
 
 ## analyse a pgn game
 
-**Command Format :**
-  - **```apgn /PATH/FILE.pgn COLOR```**
-  - **```apgn /PATH/FILE.pgn COLOR OPENING_SKIP DEPTH THREADS```**
+### The ```--help``` menu
 
-***COLORs :***
-- W = white
-- B = black
-- A = both
+  **Modifier Flags:**
 
-example:
+    -engine [PATH]  - the directory location with the
+                      filename of your pgn file
 
-if you want to analyse a pgn file called 'myGame.pgn' for the player color black, ```cd``` to where it is located (or copy it's whole path), then add the color you want to analyse, like the example below
+    -color [A,W,B]  - select one letter from A, W or B, where
+                      W = white, B = black, and A = both
 
-```shell
-apgn myGame.pgn B
-```
+    -oskip [+I>=0]  - this is the number of moves in the opening
+                      that the engine will not analyse
+                      this value should be >= 0 and < the total moves
 
-this will produce another pgn file named 'myGameAnalyzed.pgn' on that same directory with analysis comments on each move for the player color black
+    -depth [+I>0]   - this is how deep the chess engine will analyse
+                      the given pgn file, the larger the number the
+                      the better the analysis, but will also take
+                      more time to finish, this value should be >= 1
+
+    -threads [+I>0] - this is the number of the worker threads you want
+                      your engine to use, the more threads the faster
+                      the analysis, given that you did not exceed your CPUs
+                      maximum thread, but if you did a bigger thread will
+                      also slow down the analysis
+
+<br>
+
+**Defaults Flag values** - if a flag is not specified, the default value will be used, below are the default values of each flags :
+
+        engine  - ../analyse-pgn/bin/engines/stockfish11_x64
+        color   - A
+        oskip   - 4
+        depth   - 11
+        threads - 1
+
+<br>
+
+**Example 1** - Using Default Values:
+
+    apgn myGame1.pgn myGame2.pgn
+
+<br>
+
+**Example 2** - Using Costum Values:
+
+    apgn -color B -threads 4 myGame1.pgn myGame2.pgn
+
+    NOTE: this examples will use the costum values for the specified flags
+          and use the default values for the unspecified flags.
 
 ------------------------------
 
-## the env.txt
-
-the env.txt contains the default settings for analysis, like how deep you want to analyse your moves, the chess engine you want to use, and etc.
-
-------------------------------
-
-## how to use analyse-pgn in windows (Non-Developers)
+## how to use analyse-pgn in windows (Non-Developers) (old)
 
 **Installation Part**
 
@@ -119,11 +126,11 @@ the env.txt contains the default settings for analysis, like how deep you want t
 <ul>
 
 **Command Format :**
-  - **```apgn /PATH/FILE.pgn COLOR```**
+  - **```apgn /PATH/FILE.pgn -color COLOR```**
 
 or
 
-  - **```apgn /PATH/FILE.pgn COLOR OPENING_SKIP DEPTH THREADS```**
+  - **```apgn /PATH/FILE.pgn -color COLOR -oskip OPENING_SKIP -depth DEPTH -threads THREADS```**
 </ul>
 
 
@@ -135,7 +142,7 @@ let us say for you have downloaded a pgn from one of your online games where you
 to do that you need to input the command below in your **CMD**
 
 ```
-apgn C:/Users/%USERNAME%/Downloads/yourChessGame.pgn W
+apgn C:/Users/%USERNAME%/Downloads/yourChessGame.pgn -color W
 ```
 
 _the command above will analyse **yourChessGame.pgn** file in the downloads folder for the player color white, this will produce another pgn file called **yourChessGameAnalyzed.pgn**, this is the pgn file that contains comments for each move on how well you did, and what is the best move for that turn, It will also produce another file called **yourChessGameAnalyzedStats.txt**, this will contain statistical information of your moves._
