@@ -143,7 +143,8 @@ int main(int argc, char* argv[])
                 "\t                  maximum thread, but if you did a bigger thread will\n"
                 "\t                  also slow down the analysis\n\n"
 
-                "\tif flags are not specified, the default values are used :\n\n"
+                "\tif a flags is not specified, the default value of that flag will be used,\n"
+                "\tbelow are the default value of each flags\n\n"
                 "\t    engine  - " << DEFAULT_ENGINE() << "\n"
                 "\t    color   - " << DEFAULT_COLOR << "\n"
                 "\t    oskip   - " << DEAFULT_OPENNING_MOVE_SKIP << "\n"
