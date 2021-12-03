@@ -1,7 +1,7 @@
 # analyse-pgn++
 https://github.com/mrdcvlsc/analyse-pgn
 
-a simple chess game PGN file analyzer on terminal
+a simple chess game PGN file analyser on command line terminal
 
 ## analyse-pgn
 
