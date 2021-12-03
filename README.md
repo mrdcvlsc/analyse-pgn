@@ -5,12 +5,12 @@ a simple chess game PGN file analyzer on terminal
 
 ## analyse-pgn
 
-this program will generate an **.analyzed.pgn** file, and a **.stats.txt**.
+this program will generate an **.analyzed.pgn** file, and a **.stats.txt** from a pgn file.
 
 The **.analyzed.pgn** will contain the following:
 
 - per-move comments showing the best move
-- per-move comments on how good or bad your move was compared to the best move.
+- per-move comments on how good or bad the move was compared to the best move.
   1. **```brilliant!!!```** - indicates that the move is the best move
   2. **```excellent!!```** - indicates that the move is a top move
   3. **```good!```** - indicates that the move is still accurate or average
@@ -22,7 +22,7 @@ The **.stats.txt** file will contain
 - the total counts of brilliant, excellent, good, average, mistake, blunder, and missed moves in the pgn game.
 - it will also provide a percentage representing the accuracy of moves a color played through out the whole game.
 
-### the resulting Analyzed pgn is recomended ton be loaded on chess gui's like [Chess Arena](http://www.playwitharena.de/) for better visualization.
+### the resulting Analyzed pgn is recomended to be loaded on chess gui's like [Chess Arena](http://www.playwitharena.de/) for better visualization.
 
 ---------------------------
 
@@ -102,11 +102,11 @@ sudo make uninstall
 
 ------------------------------
 
-## how to use analyse-pgn in windows (Non-Developers) (old)
+## how to use analyse-pgn in windows (Non-Developers)
 
 **Installation Part**
 
-1. **Download** the pre-compiled program [analyse-pgn](https://github.com/mrdcvlsc/analyse-pgn/releases/tag/v0.8) | [zip](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v1.0/apgn.zip) | [7z](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v1.0/apgn.7z) | [tar.gz](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v1.0/apgn.tar.gz)
+1. **Download** the pre-compiled program [analyse-pgn](https://github.com/mrdcvlsc/analyse-pgn/releases/tag/v1.0) | [zip](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v1.0/apgn.zip) | [7z](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v1.0/apgn.7z) | [tar.gz](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v1.0/apgn.tar.gz)
 2. **Move** and **Extract** the file where you want to put it permanently
 
 3. **Add path** of _analyse-pgn_ to your **Environment Variables**. below are some tutorial on how to do this:
@@ -148,6 +148,6 @@ to do that you need to input the command below in your **CMD**
 apgn C:/Users/%USERNAME%/Downloads/yourChessGame.pgn -color W
 ```
 
-_the command above will analyse **yourChessGame.pgn** file in the downloads folder for the player color white, this will produce another pgn file called **yourChessGameAnalyzed.pgn**, this is the pgn file that contains comments for each move on how well you did, and what is the best move for that turn, It will also produce another file called **yourChessGameAnalyzedStats.txt**, this will contain statistical information of your moves._
+_the command above will analyse **yourChessGame.pgn** file in the downloads folder for the player color white, this will produce another pgn file called **yourChessGame.analyzed.pgn**, this is the pgn file that contains comments for each move on how well you did, and what is the best move for that turn, It will also produce another file called **yourChessGame.stats.txt**, this will contain statistical information of your moves._
 
-load **yourChessGameAnalyzed.pgn** on chess GUI's like [Chess Arena](http://www.playwitharena.de/) and [PGN Viewer](https://chesstempo.com/pgn-viewer/) to better visualize your moves.
+load **yourChessGame.analyzed.pgn** on chess GUI's like [Chess Arena](http://www.playwitharena.de/) and [PGN Viewer](https://chesstempo.com/pgn-viewer/) to better visualize your moves.
