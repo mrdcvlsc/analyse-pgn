@@ -10,7 +10,7 @@
 #if defined(__linux__)
 #include <libgen.h>
 #include <unistd.h>
-#elif defined(_WIN32 || _WIN64)
+#elif defined(_WIN32)
 #include <windows.h>
 #include <locale>
 #include <codecvt>

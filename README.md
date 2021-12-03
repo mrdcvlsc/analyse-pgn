@@ -126,11 +126,11 @@ sudo make uninstall
 <ul>
 
 **Command Format :**
-  - **```apgn /PATH/FILE.pgn COLOR```**
+  - **```apgn /PATH/FILE.pgn -color COLOR```**
 
 or
 
-  - **```apgn /PATH/FILE.pgn COLOR OPENING_SKIP DEPTH THREADS```**
+  - **```apgn /PATH/FILE.pgn -color COLOR -oskip OPENING_SKIP -depth DEPTH -threads THREADS```**
 </ul>
 
 
@@ -142,7 +142,7 @@ let us say for you have downloaded a pgn from one of your online games where you
 to do that you need to input the command below in your **CMD**
 
 ```
-apgn C:/Users/%USERNAME%/Downloads/yourChessGame.pgn W
+apgn C:/Users/%USERNAME%/Downloads/yourChessGame.pgn -color W
 ```
 
 _the command above will analyse **yourChessGame.pgn** file in the downloads folder for the player color white, this will produce another pgn file called **yourChessGameAnalyzed.pgn**, this is the pgn file that contains comments for each move on how well you did, and what is the best move for that turn, It will also produce another file called **yourChessGameAnalyzedStats.txt**, this will contain statistical information of your moves._
