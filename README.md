@@ -130,7 +130,7 @@ sudo make uninstall
 
 or
 
-  - **```apgn -color COLOR -oskip OPENING_SKIP -depth DEPTH -threads THREADS``` /PATH/GAME1.pgn /PATH/GAME2.pgn**
+  - **```apgn -color COLOR -oskip OPENING_SKIP -depth DEPTH -threads THREADS /PATH/GAME1.pgn /PATH/GAME2.pgn```**
   
   you can pass as many pgn file you want to the program
   
