@@ -1,9 +1,7 @@
-# analyse-pgn++
+# analyse-pgn
 https://github.com/mrdcvlsc/analyse-pgn
 
 a simple chess game PGN file analyser on command line terminal
-
-## analyse-pgn
 
 this program will generate an **.analyzed.pgn** file, and a **.stats.txt** from a pgn file.
 
