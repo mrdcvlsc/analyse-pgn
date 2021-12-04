@@ -15,7 +15,9 @@ The **.analyzed.pgn** will contain the following:
   4. **```inaccurate?```** - indicates that the move provide a slight disadvantage
   5. **```mistake??```** - the move is slightly losing
   6. **```blunder/missed```** - blunder is a completely losing move, missed is when you give up a large advantage
-
+  -  **```W```** - means that the ***advantage*** is so great, the changes of ***winning*** is astronomical, as long as you don't blunder big, or played many inaccurate moves
+  -  **```L```** - means that the ***disadvantage*** is so great, the chances of ***lossing*** is astronomical, as long as the other side does not blunder big, or played many inaccurate moves
+  -  
 The **.stats.txt** file will contain
 - the total counts of brilliant, excellent, good, average, mistake, blunder, and missed moves in the pgn game.
 - it will also provide a percentage representing the accuracy of moves a color played through out the whole game.
