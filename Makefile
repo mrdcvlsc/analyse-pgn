@@ -1,7 +1,9 @@
 mkfile_path = $(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
-
 OS := $(shell uname)
+
+EXECUTABLE=apgn
+INSTALLPATH=/usr/local/bin
 
 all:
 	$(MAKE) -C dependencies/pgn-extract
@@ -12,18 +14,18 @@ all:
 
 ifeq ($(OS), Linux)
 	chmod +x bin/engines/stockfish11_x64
-	g++ -static-libgcc -static-libstdc++ -std=c++17 main.cpp -o apgn -O3
+	g++ -static-libgcc -static-libstdc++ -std=c++17 main.cpp -o ${EXECUTABLE} -O3
 # g++ -std=c++17 main.cpp -o apgn -DDEBUG -fsanitize=address -g # For Debugging
 else
 	chmod +x bin/engines/stockfish11_x64.exe
-	g++ -static-libgcc -static-libstdc++ -std=c++17 main.cpp -o apgn.exe -O3
+	g++ -static-libgcc -static-libstdc++ -std=c++17 main.cpp -o ${EXECUTABLE}.exe -O3
 endif
 
 test:
 ifeq ($(OS), Linux)
-	./apgn ./pgn_samples/first.pgn W
+	./${EXECUTABLE} ./pgn_samples/first.pgn W
 else
-	apgn.exe pgn_samples/first.pgn W
+	${EXECUTABLE}.exe pgn_samples/first.pgn W
 endif
 
 test_clean:
@@ -35,9 +37,7 @@ endif
 
 install:
 ifeq ($(OS), Linux)
-	@ln -s $(dir $(abspath $(lastword $(MAKEFILE_LIST))))apgn /usr/bin
-# @ln -s $(dir $(abspath $(lastword $(MAKEFILE_LIST))))apgn /usr/local/bin
-# @ln -s $(dir $(abspath $(lastword $(MAKEFILE_LIST))))apgn /home/$(USER)/.local/bin
+	@ln -s $(dir $(abspath $(lastword $(MAKEFILE_LIST))))${EXECUTABLE} ${INSTALLPATH}
 else
 	@echo "Set It Manually for now"
 # SETX /M PATH "%PATH%;$(dir $(abspath $(lastword $(MAKEFILE_LIST))))"
@@ -45,12 +45,10 @@ endif
 
 uninstall:
 ifeq ($(OS), Linux)
-	# @rm /usr/bin/apgn
-# @rm /usr/local/bin/apgn
-# @rm /home/$(USER)/.local/bin/apgn
-	@rm ./bin/analyse ./bin/pgn-extract ./apgn
+	@rm ${INSTALLPATH}/${EXECUTABLE}
+	@rm ./bin/analyse ./bin/pgn-extract ./${EXECUTABLE}
 else
-	@rm ./bin/analyse.exe ./bin/pgn-extract.exe ./apgn.exe
+	@rm ./bin/analyse.exe ./bin/pgn-extract.exe ./${EXECUTABLE}.exe
 endif
 
 clean:
