@@ -51,9 +51,9 @@ std::string DEFAULT_ENGINE()
     #if defined(__linux__)
     return apgnFileSys::getExecpath()+"/bin/engines/stockfish11_x64";
     #elif defined(_WIN64)
-    return apgnFileSys::getExecpath()+"/bin/engines/stockfish11_x64";
+    return apgnFileSys::getExecpath()+"/bin/engines/stockfish11_x64.exe";
     #elif defined(_WIN32)
-    return apgnFileSys::getExecpath()+"/bin/engines/stockfish11_x86";
+    return apgnFileSys::getExecpath()+"/bin/engines/stockfish11_x86.exe";
     #endif
 }
 
@@ -62,20 +62,6 @@ bool isNumber(const std::string& input)
     std::string::const_iterator i = input.begin();
     while (i != input.end() && std::isdigit(*i)) ++i;
     return !input.empty() && i == input.end();
-}
-
-bool isEngine(const std::string& input)
-{
-    std::FILE *filereader = std::fopen(input.c_str(), "rb");
-    if(!filereader)
-    {
-        throw std::invalid_argument(
-            "The given engine '"+input+"' was not found"
-        );
-    }
-    // I still don't know a way on how to validate if a file is a UCI chess engine,
-    // so for now I'll just always return this to true
-    return true;
 }
 
 /// checks if the filename has the proper pgn extension
@@ -188,51 +174,51 @@ int main(int argc, char* argv[])
         {
             DEBUG_PRINT("ENGINE FLAG DETECTED");
             ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
-            if(isEngine(ARGUMENTS[i]))
+            if(std::filesystem::exists(ARGUMENTS[++i]))
             {
                 engine = ARGUMENTS[i];
             }
-            else ASSERT_INVALID("engine", ARGUMENTS[i], ARGUMENTS[i+1]);
+            else ASSERT_INVALID("engine", ARGUMENTS[i-1], ARGUMENTS[i]);
         }
         else if(ARGUMENTS[i]==ANALYSE_THREADS)
         {
             DEBUG_PRINT("THREAD FLAG DETECTED");
             ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
-            if(isNumber(ARGUMENTS[i+1]))
+            if(isNumber(ARGUMENTS[++i]))
             {
-                thread = std::atoi(ARGUMENTS[i+1].data());
+                thread = std::atoi(ARGUMENTS[i].data());
             }
-            else ASSERT_INVALID("thread value", ARGUMENTS[i], ARGUMENTS[i+1]);
+            else ASSERT_INVALID("thread value", ARGUMENTS[i-1], ARGUMENTS[i]);
         }
         else if(ARGUMENTS[i]==ANALYSE_DEPTH)
         {
             DEBUG_PRINT("DEPTH FLAG DETECTED");
             ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
-            if(isNumber(ARGUMENTS[i+1]))
+            if(isNumber(ARGUMENTS[++i]))
             {
-                depth = std::atoi(ARGUMENTS[i+1].data());
+                depth = std::atoi(ARGUMENTS[i].data());
             }
-            else ASSERT_INVALID("depth value", ARGUMENTS[i], ARGUMENTS[i+1]);
+            else ASSERT_INVALID("depth value", ARGUMENTS[i-1], ARGUMENTS[i]);
         }
         else if(ARGUMENTS[i]==ANALYSE_COLOR)
         {
             DEBUG_PRINT("COLOR FLAG DETECTED");
             ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
-            if(isValidColor(ARGUMENTS[i+1]))
+            if(isValidColor(ARGUMENTS[++i]))
             {
-                color = ARGUMENTS[i+1][0];
+                color = ARGUMENTS[i][0];
             }
-            else ASSERT_INVALID("color", ARGUMENTS[i], ARGUMENTS[i+1]);
+            else ASSERT_INVALID("color", ARGUMENTS[i-1], ARGUMENTS[i]);
         }
         else if(ARGUMENTS[i]==ANALYSE_OPENNING_SKIP)
         {
             DEBUG_PRINT("OPENNING SKIP FLAG DETECTED");
             ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
-            if(isNumber(ARGUMENTS[i+1]))
+            if(isNumber(ARGUMENTS[++i]))
             {
-                openning_move_skip = std::atoi(ARGUMENTS[i+1].data());
+                openning_move_skip = std::atoi(ARGUMENTS[i].data());
             }
-            else ASSERT_INVALID("openning skip counts", ARGUMENTS[i], ARGUMENTS[i+1]);
+            else ASSERT_INVALID("openning skip counts", ARGUMENTS[i-1], ARGUMENTS[i]);
         }
         else if(isPGN(ARGUMENTS[i]))
         {
