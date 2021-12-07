@@ -26,7 +26,7 @@ if(INDEX+1>=ARG_COUNT) \
     exit(1); \
 }
 
-#define APGN_VERSION "version 1.0"
+#define APGN_VERSION "version 1.1"
 #define SIZE_T_32BIT 4
 
 #define FLAG_VERSION "--version"
@@ -184,7 +184,7 @@ int main(int argc, char* argv[])
     {
         if(ARGUMENTS[i]==ANALYSE_ENGINE)
         {
-            DEBUG_PRINT("ENGINE FLAG DETECTED");
+            // DEBUG_PRINT("ENGINE FLAG DETECTED");
             ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
             if(std::filesystem::exists(ARGUMENTS[++i]))
             {
@@ -194,7 +194,7 @@ int main(int argc, char* argv[])
         }
         else if(ARGUMENTS[i]==ANALYSE_THREADS)
         {
-            DEBUG_PRINT("THREAD FLAG DETECTED");
+            // DEBUG_PRINT("THREAD FLAG DETECTED");
             ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
             if(isNumber(ARGUMENTS[++i]))
             {
@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
         }
         else if(ARGUMENTS[i]==ANALYSE_DEPTH)
         {
-            DEBUG_PRINT("DEPTH FLAG DETECTED");
+            // DEBUG_PRINT("DEPTH FLAG DETECTED");
             ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
             if(isNumber(ARGUMENTS[++i]))
             {
@@ -214,7 +214,7 @@ int main(int argc, char* argv[])
         }
         else if(ARGUMENTS[i]==ANALYSE_COLOR)
         {
-            DEBUG_PRINT("COLOR FLAG DETECTED");
+            // DEBUG_PRINT("COLOR FLAG DETECTED");
             ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
             if(isValidColor(ARGUMENTS[++i]))
             {
@@ -224,7 +224,7 @@ int main(int argc, char* argv[])
         }
         else if(ARGUMENTS[i]==ANALYSE_OPENNING_SKIP)
         {
-            DEBUG_PRINT("OPENNING SKIP FLAG DETECTED");
+            // DEBUG_PRINT("OPENNING SKIP FLAG DETECTED");
             ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
             if(isNumber(ARGUMENTS[++i]))
             {
@@ -234,7 +234,7 @@ int main(int argc, char* argv[])
         }
         else if(isPGN(ARGUMENTS[i]))
         {
-            DEBUG_PRINT("A PGN FILE IS DETECTED");
+            // DEBUG_PRINT("A PGN FILE IS DETECTED");
             std::string CURRENT_PGN_FILE(ARGUMENTS[i]);
             std::string BASE_FILENAME = CURRENT_PGN_FILE.substr(0,CURRENT_PGN_FILE.size()-PGN_EXT.size());
             std::string ANALYZED_PGN = BASE_FILENAME+".analyzed.pgn";

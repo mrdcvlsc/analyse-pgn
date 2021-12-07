@@ -5,9 +5,11 @@ OS := $(shell uname)
 CC=g++
 CXX_FLAGS=-std=c++17 -static-libgcc -static-libstdc++ -O3
 ifeq ($(OS), Linux)
+EXTENSION=
 EXECUTABLE=apgn
 else
 EXECUTABLE=apgn.exe
+EXTENSION=.exe
 endif
 INSTALLPATH=/usr/local/bin
 
@@ -56,4 +58,4 @@ clean:
 	@echo "removing uci-analyse object files"
 	@$(MAKE) -C dependencies/uci-analyser clean
 	@echo "removing analyse-pgn binaries files"
-	@rm ./bin/analyse ./bin/pgn-extract ./${EXECUTABLE}
+	@rm ./bin/analyse${EXTENSION} ./bin/pgn-extract${EXTENSION} ./${EXECUTABLE}
