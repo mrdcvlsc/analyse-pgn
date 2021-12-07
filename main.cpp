@@ -26,7 +26,7 @@ if(INDEX+1>=ARG_COUNT) \
     exit(1); \
 }
 
-#define APGN_VERSION "version 1.0"
+#define APGN_VERSION "version 1.1"
 #define SIZE_T_32BIT 4
 
 #define FLAG_VERSION "--version"
@@ -51,9 +51,9 @@ std::string DEFAULT_ENGINE()
     #if defined(__linux__)
     return apgnFileSys::getExecpath()+"/bin/engines/stockfish11_x64";
     #elif defined(_WIN64)
-    return apgnFileSys::getExecpath()+"/bin/engines/stockfish11_x64";
+    return apgnFileSys::getExecpath()+"/bin/engines/stockfish11_x64.exe";
     #elif defined(_WIN32)
-    return apgnFileSys::getExecpath()+"/bin/engines/stockfish11_x86";
+    return apgnFileSys::getExecpath()+"/bin/engines/stockfish11_x86.exe";
     #endif
 }
 
@@ -62,20 +62,6 @@ bool isNumber(const std::string& input)
     std::string::const_iterator i = input.begin();
     while (i != input.end() && std::isdigit(*i)) ++i;
     return !input.empty() && i == input.end();
-}
-
-bool isEngine(const std::string& input)
-{
-    std::FILE *filereader = std::fopen(input.c_str(), "rb");
-    if(!filereader)
-    {
-        throw std::invalid_argument(
-            "The given engine '"+input+"' was not found"
-        );
-    }
-    // I still don't know a way on how to validate if a file is a UCI chess engine,
-    // so for now I'll just always return this to true
-    return true;
 }
 
 /// checks if the filename has the proper pgn extension
@@ -117,12 +103,24 @@ bool isValidColor(const std::string& input) {
 
 int main(int argc, char* argv[])
 {
-    if(argc==2)
+    if(argc==1)
+    {
+        std::cerr <<
+        "\n\tA simple CLI chess game PGN-file analyser.\n"
+        "\tGPL-3.0 License\n"
+        "\thttps://github.com/mrdcvlsc/analyse-pgn\n"
+        "\tuse the command below for more information about this program:\n\n"
+        "\t\tapgn --help\n\n";
+        return 0;
+    }
+    else if(argc==2)
     {
         if(strcmp(argv[1],FLAG_HELP)==0)
         {
             std::cerr<<
-                "    HELP MENU\n\n"
+                "    Help menu: apgn --help\n\n"
+
+                "    Display version: apgn --version\n\n"
 
                 "    Modifier Flags:\n\n"
                 
@@ -186,57 +184,57 @@ int main(int argc, char* argv[])
     {
         if(ARGUMENTS[i]==ANALYSE_ENGINE)
         {
-            DEBUG_PRINT("ENGINE FLAG DETECTED");
+            // DEBUG_PRINT("ENGINE FLAG DETECTED");
             ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
-            if(isEngine(ARGUMENTS[i]))
+            if(std::filesystem::exists(ARGUMENTS[++i]))
             {
                 engine = ARGUMENTS[i];
             }
-            else ASSERT_INVALID("engine", ARGUMENTS[i], ARGUMENTS[i+1]);
+            else ASSERT_INVALID("engine", ARGUMENTS[i-1], ARGUMENTS[i]);
         }
         else if(ARGUMENTS[i]==ANALYSE_THREADS)
         {
-            DEBUG_PRINT("THREAD FLAG DETECTED");
+            // DEBUG_PRINT("THREAD FLAG DETECTED");
             ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
-            if(isNumber(ARGUMENTS[i+1]))
+            if(isNumber(ARGUMENTS[++i]))
             {
-                thread = std::atoi(ARGUMENTS[i+1].data());
+                thread = std::atoi(ARGUMENTS[i].data());
             }
-            else ASSERT_INVALID("thread value", ARGUMENTS[i], ARGUMENTS[i+1]);
+            else ASSERT_INVALID("thread value", ARGUMENTS[i-1], ARGUMENTS[i]);
         }
         else if(ARGUMENTS[i]==ANALYSE_DEPTH)
         {
-            DEBUG_PRINT("DEPTH FLAG DETECTED");
+            // DEBUG_PRINT("DEPTH FLAG DETECTED");
             ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
-            if(isNumber(ARGUMENTS[i+1]))
+            if(isNumber(ARGUMENTS[++i]))
             {
-                depth = std::atoi(ARGUMENTS[i+1].data());
+                depth = std::atoi(ARGUMENTS[i].data());
             }
-            else ASSERT_INVALID("depth value", ARGUMENTS[i], ARGUMENTS[i+1]);
+            else ASSERT_INVALID("depth value", ARGUMENTS[i-1], ARGUMENTS[i]);
         }
         else if(ARGUMENTS[i]==ANALYSE_COLOR)
         {
-            DEBUG_PRINT("COLOR FLAG DETECTED");
+            // DEBUG_PRINT("COLOR FLAG DETECTED");
             ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
-            if(isValidColor(ARGUMENTS[i+1]))
+            if(isValidColor(ARGUMENTS[++i]))
             {
-                color = ARGUMENTS[i+1][0];
+                color = ARGUMENTS[i][0];
             }
-            else ASSERT_INVALID("color", ARGUMENTS[i], ARGUMENTS[i+1]);
+            else ASSERT_INVALID("color", ARGUMENTS[i-1], ARGUMENTS[i]);
         }
         else if(ARGUMENTS[i]==ANALYSE_OPENNING_SKIP)
         {
-            DEBUG_PRINT("OPENNING SKIP FLAG DETECTED");
+            // DEBUG_PRINT("OPENNING SKIP FLAG DETECTED");
             ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
-            if(isNumber(ARGUMENTS[i+1]))
+            if(isNumber(ARGUMENTS[++i]))
             {
-                openning_move_skip = std::atoi(ARGUMENTS[i+1].data());
+                openning_move_skip = std::atoi(ARGUMENTS[i].data());
             }
-            else ASSERT_INVALID("openning skip counts", ARGUMENTS[i], ARGUMENTS[i+1]);
+            else ASSERT_INVALID("openning skip counts", ARGUMENTS[i-1], ARGUMENTS[i]);
         }
         else if(isPGN(ARGUMENTS[i]))
         {
-            DEBUG_PRINT("A PGN FILE IS DETECTED");
+            // DEBUG_PRINT("A PGN FILE IS DETECTED");
             std::string CURRENT_PGN_FILE(ARGUMENTS[i]);
             std::string BASE_FILENAME = CURRENT_PGN_FILE.substr(0,CURRENT_PGN_FILE.size()-PGN_EXT.size());
             std::string ANALYZED_PGN = BASE_FILENAME+".analyzed.pgn";
@@ -253,7 +251,7 @@ int main(int argc, char* argv[])
 
     // display analysis information
     std::cout <<
-        "Engine  : " << engine << "\n"
+        "\nEngine  : " << engine << "\n"
         "Threads : " << thread << "\n"
         "Depth   : " << depth << "\n"
         "Color   : " << color << "\n"
@@ -295,4 +293,7 @@ int main(int argc, char* argv[])
         apgnFileSys::deleteFile(FILENAME[i]+".analyzed");
     }
 
+    std::cout << "Analyzed PGN files: " << PGN_GAMES.size() << "\n";
+
+    return 0;
 }
