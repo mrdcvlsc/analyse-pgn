@@ -41,7 +41,7 @@ install:
 ifeq ($(OS), Linux)
 	@ln -s $(dir $(abspath $(lastword $(MAKEFILE_LIST))))${EXECUTABLE} ${INSTALLPATH}
 else
-	@echo "Set It Manually for now"
+	@echo "make install is not supported for windows"
 # SETX /M PATH "%PATH%;$(dir $(abspath $(lastword $(MAKEFILE_LIST))))"
 endif
 
@@ -49,7 +49,7 @@ uninstall:
 ifeq ($(OS), Linux)
 	@rm ${INSTALLPATH}/${EXECUTABLE}
 else
-	@echo "uninstall make is not supported for windows"
+	@echo "make uninstall is not supported for windows"
 endif
 
 clean:
