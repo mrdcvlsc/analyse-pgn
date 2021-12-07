@@ -2,7 +2,13 @@ mkfile_path = $(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 OS := $(shell uname)
 
+CC=g++
+CXX_FLAGS=-std=c++17 -static-libgcc -static-libstdc++ -O3
+ifeq ($(OS), Linux)
 EXECUTABLE=apgn
+else
+EXECUTABLE=apgn.exe
+endif
 INSTALLPATH=/usr/local/bin
 
 all:
@@ -14,19 +20,13 @@ all:
 
 ifeq ($(OS), Linux)
 	chmod +x bin/engines/stockfish11_x64
-	g++ -static-libgcc -static-libstdc++ -std=c++17 main.cpp -o ${EXECUTABLE} -O3
-# g++ -std=c++17 main.cpp -o apgn -DDEBUG -fsanitize=address -g # For Debugging
 else
 	chmod +x bin/engines/stockfish11_x64.exe
-	g++ -static-libgcc -static-libstdc++ -std=c++17 main.cpp -o ${EXECUTABLE}.exe -O3
 endif
+	${CC} ${CXX_FLAGS} main.cpp -o ${EXECUTABLE}
 
 test:
-ifeq ($(OS), Linux)
 	./${EXECUTABLE} ./pgn_samples/first.pgn W
-else
-	${EXECUTABLE}.exe pgn_samples/first.pgn W
-endif
 
 test_clean:
 ifeq ($(OS), Linux)
@@ -46,9 +46,8 @@ endif
 uninstall:
 ifeq ($(OS), Linux)
 	@rm ${INSTALLPATH}/${EXECUTABLE}
-	@rm ./bin/analyse ./bin/pgn-extract ./${EXECUTABLE}
 else
-	@rm ./bin/analyse.exe ./bin/pgn-extract.exe ./${EXECUTABLE}.exe
+	@echo "uninstall make is not supported for windows"
 endif
 
 clean:
@@ -56,4 +55,5 @@ clean:
 	@$(MAKE) -C dependencies/pgn-extract clean
 	@echo "removing uci-analyse object files"
 	@$(MAKE) -C dependencies/uci-analyser clean
-	@echo "removing analyse-pgn object files"
+	@echo "removing analyse-pgn binaries files"
+	@rm ./bin/analyse ./bin/pgn-extract ./${EXECUTABLE}

@@ -103,12 +103,24 @@ bool isValidColor(const std::string& input) {
 
 int main(int argc, char* argv[])
 {
-    if(argc==2)
+    if(argc==1)
+    {
+        std::cerr <<
+        "\n\tA simple CLI chess game PGN-file analyser.\n"
+        "\tGPL-3.0 License\n"
+        "\thttps://github.com/mrdcvlsc/analyse-pgn\n"
+        "\tuse the command below for more information about this program:\n\n"
+        "\t\tapgn --help\n\n";
+        return 0;
+    }
+    else if(argc==2)
     {
         if(strcmp(argv[1],FLAG_HELP)==0)
         {
             std::cerr<<
-                "    HELP MENU\n\n"
+                "    Help menu: apgn --help\n\n"
+
+                "    Display version: apgn --version\n\n"
 
                 "    Modifier Flags:\n\n"
                 
@@ -239,7 +251,7 @@ int main(int argc, char* argv[])
 
     // display analysis information
     std::cout <<
-        "Engine  : " << engine << "\n"
+        "\nEngine  : " << engine << "\n"
         "Threads : " << thread << "\n"
         "Depth   : " << depth << "\n"
         "Color   : " << color << "\n"
@@ -281,4 +293,7 @@ int main(int argc, char* argv[])
         apgnFileSys::deleteFile(FILENAME[i]+".analyzed");
     }
 
+    std::cout << "Analyzed PGN files: " << PGN_GAMES.size() << "\n";
+
+    return 0;
 }
