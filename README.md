@@ -106,7 +106,7 @@ sudo make uninstall
 
 **Installation Part**
 
-1. **Download** the pre-compiled program [analyse-pgn](https://github.com/mrdcvlsc/analyse-pgn/releases/tag/v1.0) | [zip](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v1.0/apgn.zip) | [7z](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v1.0/apgn.7z) | [tar.gz](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v1.0/apgn.tar.gz)
+1. **Download** the pre-compiled program [analyse-pgn](https://github.com/mrdcvlsc/analyse-pgn/releases/tag/v1.0) | [zip](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v1.1/apgn.zip) | [7z](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v1.1/apgn.7z) | [tar.gz](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v1.1/apgn.tar.gz)
 2. **Move** and **Extract** the file where you want to put it permanently
 
 3. **Add path** of _analyse-pgn_ to your **Environment Variables**. below are some tutorial on how to do this:
