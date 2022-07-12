@@ -80,11 +80,12 @@ namespace apgn_convert
         char* search_depth,
         char* threads,
         char* opening_move_skips,
+        char* moves_until,
         char apgn_COLOR
     )   
     {
         std::string analyse_ = "analyse", engine_ = "--engine", searchd_ = "--searchdepth", bookd_ = "--bookdepth", setopt_ = "--setoption",
-                    threads_ = "Threads", annotate_ = "--annotatePGN", white_ = "--whiteonly", black_ = "--blackonly";
+                    movesuntil_ = "--movesuntil", threads_ = "Threads", annotate_ = "--annotatePGN", white_ = "--whiteonly", black_ = "--blackonly";
 
         #if defined(__linux__)
         char *const args[] = {
@@ -95,6 +96,7 @@ namespace apgn_convert
             engine_.data(),engine.data(),
             searchd_.data(),search_depth,
             bookd_.data(),opening_move_skips,
+            movesuntil_.data(),moves_until,
             setopt_.data(),threads_.data(),threads,
             #if defined(__linux__)
             annotate_.data(),input.data(),
@@ -114,6 +116,7 @@ namespace apgn_convert
             white_.data(),
             searchd_.data(),search_depth,
             bookd_.data(),opening_move_skips,
+            movesuntil_.data(),moves_until,
             setopt_.data(),threads_.data(),threads,
             #if defined(__linux__)
             annotate_.data(),input.data(),
@@ -133,6 +136,7 @@ namespace apgn_convert
             black_.data(),
             searchd_.data(),search_depth,
             bookd_.data(),opening_move_skips,
+            movesuntil_.data(),moves_until,
             setopt_.data(),threads_.data(),threads,
             #if defined(__linux__)
             annotate_.data(),input.data(),

@@ -21,9 +21,9 @@ all:
 	mv dependencies/uci-analyser/analyse bin/analyse
 
 ifeq ($(OS), Linux)
-	chmod +x bin/engines/stockfish11_x64
+	chmod +x bin/engines/stockfish
 else
-	chmod +x bin/engines/stockfish11_x64.exe
+	chmod +x bin/engines/stockfish.exe
 endif
 	${CC} ${CXX_FLAGS} main.cpp -o ${EXECUTABLE}
 
