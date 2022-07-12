@@ -75,6 +75,7 @@ static vector<Evaluation *> evaluations;
 static int defaultBookDepth = 8;
 static unsigned numVariations = 5;
 static int searchDepth = 20;
+static int defaultMovesUntil = 0; // 0 means till the end
 // Default analysis engine.
 static string engineName = "stockfish";
 
@@ -105,8 +106,8 @@ static size_t GAME_NUMBER = 0;
 static string OUTPGN_FILEWPATH = "";
 
 // ARGV INDEX
-#define INPUT_PGN_FILE_ARGC12 11
-#define INPUT_PGN_FILE_ARGC13 12
+#define INPUT_COLOR_SPECIFIC 14
+#define INPUT_COLOR_ALL 15
 
 #ifdef __unix__
 
@@ -116,8 +117,8 @@ int main(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
 #endif
 
-    if(argc==12) OUTPGN_FILEWPATH = argv[INPUT_PGN_FILE_ARGC12];
-    else         OUTPGN_FILEWPATH = argv[INPUT_PGN_FILE_ARGC13];
+    if(argc==15) OUTPGN_FILEWPATH = argv[INPUT_COLOR_SPECIFIC];
+    else         OUTPGN_FILEWPATH = argv[INPUT_COLOR_ALL];
 
     bool ok = true;
     int argnum = 1;
@@ -199,6 +200,15 @@ int main(int argc, char *argv[]) {
                 cerr << arg << " << conflicts with --blackonly" << endl;
                 ok = false;
             }
+        } else if (arg == "--movesuntil") {
+            if (argnum < argc) {
+                string movesUntil(argv[argnum]);
+                argnum++;
+                defaultMovesUntil = strToInt(movesUntil);
+            } else {
+                cerr << "Missing value argument to " << arg << endl;
+                ok = false;
+            }
         } else {
             cerr << "Unknown argument: " << arg << endl;
             ok = false;
@@ -242,6 +252,8 @@ void showUsage(const char *programName) {
             "        show the current version\n" <<
             "    [--whiteonly]\n" <<
             "        only analyse white's moves\n" <<
+            "    [--movesuntil in ply]\n" <<
+            "        number of moves to analyse before stopping\n" <<
             "    file [...]\n" <<
             "        file(s) to be analysed." <<
             endl;
@@ -530,6 +542,10 @@ void sendGame(vector<string> &movelist, const string& fenstring, int bookDepth) 
 
         interpret::clearStats();
         GAME_NUMBER++;
+
+        if(defaultMovesUntil && defaultMovesUntil < numMoves && defaultMovesUntil > movesToSkip) {
+            numMoves = defaultMovesUntil;
+        }
 
         for (; moveCount < numMoves; moveCount++) {
 

@@ -26,7 +26,7 @@ if(INDEX+1>=ARG_COUNT) \
     exit(1); \
 }
 
-#define APGN_VERSION "version 1.1"
+#define APGN_VERSION "version 1.2"
 #define SIZE_T_32BIT 4
 
 #define FLAG_VERSION "--version"
@@ -38,22 +38,22 @@ if(INDEX+1>=ARG_COUNT) \
 #define ANALYSE_DEPTH "-depth"
 #define ANALYSE_COLOR "-color"
 #define ANALYSE_OPENNING_SKIP "-oskip"
+#define ANALYSE_UNTIL "-movesuntil"
 
 #define DEFAULT_THREAD 1
-#define DEFAULT_DEPTH 11
+#define DEFAULT_DEPTH 18
 #define DEFAULT_COLOR 'A'
-#define DEAFULT_OPENNING_MOVE_SKIP 4
+#define DEAFULT_OPENNING_MOVE_SKIP 0
+#define DEFAULT_MOVES_UNTIL 0 // 0 means analyse all moves
 
 static std::string PGN_EXT = ".pgn";
 
 std::string DEFAULT_ENGINE()
 {
     #if defined(__linux__)
-    return apgnFileSys::getExecpath()+"/bin/engines/stockfish11_x64";
-    #elif defined(_WIN64)
-    return apgnFileSys::getExecpath()+"/bin/engines/stockfish11_x64.exe";
-    #elif defined(_WIN32)
-    return apgnFileSys::getExecpath()+"/bin/engines/stockfish11_x86.exe";
+    return apgnFileSys::getExecpath()+"/bin/engines/stockfish";
+    #elif (defined(_WIN64) || defined(_WIN32))
+    return apgnFileSys::getExecpath()+"/bin/engines/stockfish.exe";
     #endif
 }
 
@@ -128,14 +128,17 @@ int main(int argc, char* argv[])
                 "\t                  filename of your pgn file\n\n"
                 "\t" << ANALYSE_COLOR << " [A,W,B]  - select one letter from A, W or B, where\n"
                 "\t                  W = white, B = black, and A = both\n\n"
-                "\t" << ANALYSE_OPENNING_SKIP << " [+I>=0]  - this is the number of moves in the opening\n"
+                "\t" << ANALYSE_OPENNING_SKIP << " [N>=0]  - this is the number of moves in the opening\n"
                 "\t                  that the engine will not analyse\n"
                 "\t                  this value should be >= 0 and < the total moves\n\n"
-                "\t" << ANALYSE_DEPTH << " [+I>0]   - this is how deep the chess engine will analyse\n"
+                "\t" << ANALYSE_UNTIL << " [N>=1 and N > -oskip N]  - this is the number of moves to analyse\n"
+                "\t                  by default if a number is not specified, the program will\n"
+                "\t                  analyse all the moves in a pgn game\n\n"
+                "\t" << ANALYSE_DEPTH << " [N>0]   - this is how deep the chess engine will analyse\n"
                 "\t                  the given pgn file, the larger the number the\n"
                 "\t                  the better the analysis, but will also take\n"
                 "\t                  more time to finish, this value should be >= 1\n\n"
-                "\t" << ANALYSE_THREADS << " [+I>0] - this is the number of the worker threads you want\n"
+                "\t" << ANALYSE_THREADS << " [N>0] - this is the number of the worker threads you want\n"
                 "\t                  your engine to use, the more threads the faster\n"
                 "\t                  the analysis, given that you did not exceed your CPUs\n"
                 "\t                  maximum thread, but if you did a bigger thread will\n"
@@ -143,11 +146,12 @@ int main(int argc, char* argv[])
 
                 "\tif a flags is not specified, the default value of that flag will be used,\n"
                 "\tbelow are the default value of each flags\n\n"
-                "\t    engine  - " << DEFAULT_ENGINE() << "\n"
-                "\t    color   - " << DEFAULT_COLOR << "\n"
-                "\t    oskip   - " << DEAFULT_OPENNING_MOVE_SKIP << "\n"
-                "\t    depth   - " << DEFAULT_DEPTH << "\n"
-                "\t    threads - " << DEFAULT_THREAD << "\n"
+                "\t    engine     - " << DEFAULT_ENGINE() << "\n"
+                "\t    color      - " << DEFAULT_COLOR << "\n"
+                "\t    oskip      - " << DEAFULT_OPENNING_MOVE_SKIP << "\n"
+                "\t    movesuntil - " << DEFAULT_MOVES_UNTIL << "\n"
+                "\t    depth      - " << DEFAULT_DEPTH << "\n"
+                "\t    threads    - " << DEFAULT_THREAD << "\n"
 
                 "\n\n\tExample Using Default Values:\n\n"
                 "\t\tapgn myGame1.pgn myGame2.pgn\n\n\n"
@@ -173,6 +177,7 @@ int main(int argc, char* argv[])
     int depth  = DEFAULT_DEPTH;
     char color = DEFAULT_COLOR;
     int openning_move_skip = DEAFULT_OPENNING_MOVE_SKIP;
+    int movesUntil = DEFAULT_MOVES_UNTIL;
 
     std::vector<std::string> ARGUMENTS;
     std::vector<std::string> FILENAME;
@@ -232,6 +237,16 @@ int main(int argc, char* argv[])
             }
             else ASSERT_INVALID("openning skip counts", ARGUMENTS[i-1], ARGUMENTS[i]);
         }
+        else if(ARGUMENTS[i]==ANALYSE_UNTIL)
+        {
+            // DEBUG_PRINT("MOVE UNTIL FLAG DETECTED");
+            ASSERT_MISSING_FLAGVALUE(i,ARGUMENTS.size(),ARGUMENTS[i]);
+            if(isNumber(ARGUMENTS[++i]))
+            {
+                movesUntil = std::atoi(ARGUMENTS[i].data());
+            }
+            else ASSERT_INVALID("moves to analyse", ARGUMENTS[i-1], ARGUMENTS[i]);
+        }
         else if(isPGN(ARGUMENTS[i]))
         {
             // DEBUG_PRINT("A PGN FILE IS DETECTED");
@@ -255,6 +270,7 @@ int main(int argc, char* argv[])
         "Threads : " << thread << "\n"
         "Depth   : " << depth << "\n"
         "Color   : " << color << "\n"
+        "Moves   : " << movesUntil << "\n"
         "Openning Moves to Skip : " << openning_move_skip << "\n\n";
 
     if(depth>12)
@@ -284,6 +300,7 @@ int main(int argc, char* argv[])
             std::to_string(depth).data(),
             std::to_string(thread).data(),
             std::to_string(openning_move_skip).data(),
+            std::to_string(movesUntil).data(),
             color
         );
         apgn_convert::uci_to_pgn(FILENAME[i]+".analyzed",FILENAME[i]+".analyzed.pgn");

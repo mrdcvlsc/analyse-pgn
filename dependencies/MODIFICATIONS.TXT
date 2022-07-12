@@ -26,6 +26,8 @@ modified result:
     - analyse blacks move only
     - both white and black moves are added, but only black will have analysis comments
 
+added a flag called "--movesuntil N" to stops analysing after a certain "N" number of moves.
+
 --------------------------------------------------------------------------------------------
 
 3.) uci-analyser -> some modification in the "engine.cpp"
