@@ -1,6 +1,8 @@
 #ifndef APGN_WINPROCRUNNER
 #define APGN_WINPROCRUNNER
 
+#if defined(_WIN32) || defined(_WIN64)
+
 #include <iostream>
 #include <exception>
 #include <vector>
@@ -118,4 +120,5 @@ namespace apgn
         return outbuf;
     }
 }
+#endif
 #endif
