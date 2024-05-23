@@ -2,7 +2,7 @@ mkfile_path = $(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 OS := $(shell uname)
 
-CC=g++
+CXX=g++
 CXX_FLAGS=-std=c++17 -static-libgcc -static-libstdc++ -O3
 ifeq ($(OS), Linux)
 EXTENSION=
@@ -25,7 +25,7 @@ ifeq ($(OS), Linux)
 else
 	chmod +x bin/engines/stockfish.exe
 endif
-	${CC} ${CXX_FLAGS} main.cpp -o ${EXECUTABLE}
+	${CXX} ${CXX_FLAGS} main.cpp -o ${EXECUTABLE}
 
 test:
 	./${EXECUTABLE} ./pgn_samples/first.pgn W
