@@ -2,20 +2,56 @@ name: ci
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "working-add-ci" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "working-add-ci" ]
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    name: ${{matrix.platform.name}}
+    runs-on: ${{matrix.platform.os}}
 
     strategy:
+      fail-fast: false
+
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        platform:
+        # - { name: Windows VS2019, ls: dir, os: windows-2019,   disp: type, sample: pgn_samples, testpgn: pgn_samples\first.pgn,    testuci: pgn_samples\first, analyzedpgn: .\pgn_samples\first.analyzed.pgn, bin: .\apgn.exe }
+        # - { name: Windows VS2022, ls: dir, os: windows-2022,   disp: type, sample: pgn_samples, testpgn: pgn_samples\first.pgn,    testuci: pgn_samples\first, analyzedpgn: .\pgn_samples\first.analyzed.pgn, bin: .\apgn.exe }
+        # - { name: Windows-Clang,  ls: dir, os: windows-latest, disp: type, sample: pgn_samples, testpgn: pgn_samples\first.pgn,    testuci: pgn_samples\first, analyzedpgn: .\pgn_samples\first.analyzed.pgn, bin: .\apgn.exe, flags: CC=clang CXX=clang++ }
+        - { name: Windows-GCC,    ls: dir, os: windows-latest, disp: type, sample: pgn_samples,   testpgn: pgn_samples\first.pgn,  testuci: pgn_samples\first,  analyzedpgn: .\pgn_samples\first.analyzed.pgn, bin: .\apgn.exe, flags: CC=gcc CXX=g++ }
+        - { name: Linux-GCC,      ls: ls,  os: ubuntu-latest,  disp: cat,  sample: ./pgn_samples, testpgn: ./pgn_samples/first.pgn, testuci: ./pgn_samples/first, analyzedpgn: ./pgn_samples/first.analyzed.pgn,   bin: ./apgn }
+        - { name: Linux-Clang,    ls: ls,  os: ubuntu-latest,  disp: cat,  sample: ./pgn_samples, testpgn: ./pgn_samples/first.pgn, testuci: ./pgn_samples/first, analyzedpgn: ./pgn_samples/first.analyzed.pgn,   bin: ./apgn,      flags: CC=clang CXX=clang++ }
+        # - { name: MacOS-XCode,    ls: ls,  os: macos-latest,   disp: cat,  sample: ./pgn_samples, testpgn: ./pgn_samples/first.pgn, testuci: ./pgn_samples/first, analyzedpgn: ./pgn_samples/first.analyzed.pgn,   bin: ./apgn }
 
     steps:
     - uses: actions/checkout@v3
 
-    - name: compile and build
-      run: make -j4
+    - run: echo "this is a test" > test.log
+
+    - name: build for -> ${{matrix.platform.os}}
+      run: make ${{matrix.platform.flags}} -j4
+
+    - name: ready executable for execution
+      run: chmod a+rx ${{matrix.platform.bin}}
+
+    - name: ready first.pgn for reading
+      run: chmod a+r ${{matrix.platform.testpgn}}
+
+    - name: run test
+      run: ${{matrix.platform.bin}} -depth 5 ${{matrix.platform.testpgn}}
+
+    - name: show files in current directory
+      run: ${{matrix.platform.ls}}
+
+    - name: show files in sample pgn folder
+      run: ${{matrix.platform.ls}} ${{matrix.platform.sample}}
+
+    # - name: display pgn test subject
+    #   run: ${{matrix.platform.disp}} ${{matrix.platform.testpgn}}
+
+    # - name: display uci test subject
+    #   run: ${{matrix.platform.disp}} ${{matrix.platform.testuci}}
+
+    - name: display results
+      run: ${{matrix.platform.disp}} ${{matrix.platform.analyzedpgn}}

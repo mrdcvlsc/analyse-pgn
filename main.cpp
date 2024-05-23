@@ -53,7 +53,7 @@ std::string DEFAULT_ENGINE()
     #if defined(__linux__)
     return apgnFileSys::getExecpath()+"/bin/engines/stockfish";
     #elif (defined(_WIN64) || defined(_WIN32))
-    return apgnFileSys::getExecpath()+"/bin/engines/stockfish.exe";
+    return apgnFileSys::getExecpath()+"\\bin\\engines\\stockfish.exe";
     #endif
 }
 

@@ -22,7 +22,7 @@
 
 OS := $(shell uname)
 
-CC=g++
+CXX=g++
 
 ifeq ($(OS), Linux)
 # LINUX
@@ -46,10 +46,10 @@ OBJS=analyse.o evaluation.o engine.o utils.o interpret.o
 TARGET=analyse
 
 .cpp.o:
-	$(CC) $(CFLAGS) $< -o $@
+	$(CXX) $(CFLAGS) $< -o $@
 
 $(TARGET) : $(OBJS)
-	$(CC) -o $@ $(OBJS)
+	$(CXX) -o $@ $(OBJS)
 
 clean:
 	rm -f $(OBJS) $(TARGET)
