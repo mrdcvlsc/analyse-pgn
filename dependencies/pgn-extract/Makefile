@@ -46,7 +46,7 @@ OPTIMISE=-O3
 #         $(OPTIMISE)
 
 # PRODUCTION
-CFLAGS+=-c -I/usr/local/lib/ansi-include -static-libgcc -std=c99 \
+CFLAGS+=-c -I/usr/local/lib/ansi-include -std=c99 \
         $(CPPFLAGS) $(OPTIMISE)
 	 
 CC=gcc
@@ -58,7 +58,7 @@ AIX_CFLAGS=-c -D_POSIX_SOURCE -D_XOPEN_SOURCE -D_ALL_SOURCE
 AIX_CC=xlc
 
 pgn-extract : $(OBJS)
-	$(CC) $(DEBUGINFO) $(ORIGCFLAGS) $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) -o pgn-extract
+	$(CC) -static -static-libgcc -std=c99 -O3 $(LDFLAGS) $(OBJS) $(LIBS) -o pgn-extract
 
 purify : $(OBJS)
 	purify $(CC) $(DEBUGINFO) $(OBJS) -o pgn-extract

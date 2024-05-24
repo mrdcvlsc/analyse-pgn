@@ -3,7 +3,7 @@ current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 OS := $(shell uname)
 
 CXX=g++
-CXX_FLAGS=-std=c++17 -static-libgcc -static-libstdc++ -O3
+CXX_FLAGS=-static -static-libgcc -static-libstdc++ -std=c++17 -O3
 ifeq ($(OS), Linux)
 EXTENSION=
 EXECUTABLE=apgn
@@ -21,9 +21,9 @@ all:
 	mv dependencies/uci-analyser/analyse bin/analyse
 
 ifeq ($(OS), Linux)
-	chmod +x bin/engines/stockfish
+	chmod a+rx bin/engines/stockfish
 else
-	chmod +x bin/engines/stockfish.exe
+	chmod a+rx bin/engines/stockfish.exe
 endif
 	${CXX} ${CXX_FLAGS} main.cpp -o ${EXECUTABLE}
 

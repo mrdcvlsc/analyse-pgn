@@ -8,6 +8,8 @@ on:
 
 jobs:
   build:
+    permissions: write-all
+
     name: ${{matrix.platform.name}}
     runs-on: ${{matrix.platform.os}}
 
@@ -16,27 +18,25 @@ jobs:
 
       matrix:
         platform:
-        # - { name: Windows VS2019, ls: dir, os: windows-2019,   disp: type, sample: pgn_samples, testpgn: pgn_samples\first.pgn,    testuci: pgn_samples\first, analyzedpgn: .\pgn_samples\first.analyzed.pgn, bin: .\apgn.exe }
-        # - { name: Windows VS2022, ls: dir, os: windows-2022,   disp: type, sample: pgn_samples, testpgn: pgn_samples\first.pgn,    testuci: pgn_samples\first, analyzedpgn: .\pgn_samples\first.analyzed.pgn, bin: .\apgn.exe }
-        # - { name: Windows-Clang,  ls: dir, os: windows-latest, disp: type, sample: pgn_samples, testpgn: pgn_samples\first.pgn,    testuci: pgn_samples\first, analyzedpgn: .\pgn_samples\first.analyzed.pgn, bin: .\apgn.exe, flags: CC=clang CXX=clang++ }
-        - { name: Windows-GCC,    ls: dir, os: windows-latest, disp: type, sample: pgn_samples,   testpgn: pgn_samples\first.pgn,  testuci: pgn_samples\first,  analyzedpgn: .\pgn_samples\first.analyzed.pgn, bin: .\apgn.exe, flags: CC=gcc CXX=g++ }
-        - { name: Linux-GCC,      ls: ls,  os: ubuntu-latest,  disp: cat,  sample: ./pgn_samples, testpgn: ./pgn_samples/first.pgn, testuci: ./pgn_samples/first, analyzedpgn: ./pgn_samples/first.analyzed.pgn,   bin: ./apgn }
-        - { name: Linux-Clang,    ls: ls,  os: ubuntu-latest,  disp: cat,  sample: ./pgn_samples, testpgn: ./pgn_samples/first.pgn, testuci: ./pgn_samples/first, analyzedpgn: ./pgn_samples/first.analyzed.pgn,   bin: ./apgn,      flags: CC=clang CXX=clang++ }
-        # - { name: MacOS-XCode,    ls: ls,  os: macos-latest,   disp: cat,  sample: ./pgn_samples, testpgn: ./pgn_samples/first.pgn, testuci: ./pgn_samples/first, analyzedpgn: ./pgn_samples/first.analyzed.pgn,   bin: ./apgn }
+        # - { name: MacOS-XCode,    cpyd: cp -R,       cpyf: cp,    ls: ls,  os: macos-latest,   zip: mac-apgn.zip,           zipd: zip -r,     disp: cat,  sample: ./pgn_samples, testpgn: ./pgn_samples/first.pgn, testuci: ./pgn_samples/first, analyzedpgn: ./pgn_samples/first.analyzed.pgn, bindest: build,     bin: ./apgn }
+        # - { name: Windows VS2019, cpyd: xcopy /E /I, cpyf: xcopy, ls: dir, os: windows-2019,   zip: windows-apgn-VS19.zip,  zipd: 7z a -tzip, disp: type, sample: pgn_samples,   testpgn: pgn_samples\first.pgn,   testuci: pgn_samples\first,   analyzedpgn: .\pgn_samples\first.analyzed.pgn, bindest: build\bin, bin: .\apgn.exe }
+        # - { name: Windows VS2022, cpyd: xcopy /E /I, cpyf: xcopy, ls: dir, os: windows-2022,   zip: windows-apgn-VS22.zip,  zipd: 7z a -tzip, disp: type, sample: pgn_samples,   testpgn: pgn_samples\first.pgn,   testuci: pgn_samples\first,   analyzedpgn: .\pgn_samples\first.analyzed.pgn, bindest: build\bin, bin: .\apgn.exe }
+        # - { name: Windows-Clang,  cpyd: xcopy /E /I, cpyf: xcopy, ls: dir, os: windows-latest, zip: windows-apgn-clang.zip, zipd: 7z a -tzip, disp: type, sample: pgn_samples,   testpgn: pgn_samples\first.pgn,   testuci: pgn_samples\first,   analyzedpgn: .\pgn_samples\first.analyzed.pgn, bindest: build\bin, bin: .\apgn.exe, flags: CC=clang CXX=clang++ }
+        - { name: Windows-GCC,    cpyd: xcopy /E /I, cpyf: xcopy, ls: dir, os: windows-latest, zip: windows-apgn-gcc.zip,   zipd: 7z a -tzip, disp: type, sample: pgn_samples,   testpgn: pgn_samples\first.pgn,   testuci: pgn_samples\first,   analyzedpgn: .\pgn_samples\first.analyzed.pgn, bindest: build\bin, bin: .\apgn.exe, flags: CC=gcc CXX=g++ }
+        - { name: Linux-GCC,      cpyd: cp -r,       cpyf: cp,    ls: ls,  os: ubuntu-latest,  zip: ubuntu-apgn-gcc.zip,    zipd: zip -r,     disp: cat,  sample: ./pgn_samples, testpgn: ./pgn_samples/first.pgn, testuci: ./pgn_samples/first, analyzedpgn: ./pgn_samples/first.analyzed.pgn, bindest: build,     bin: ./apgn }
+        - { name: Linux-Clang,    cpyd: cp -r,       cpyf: cp,    ls: ls,  os: ubuntu-latest,  zip: ubuntu-apgn-clang.zip,  zipd: zip -r,     disp: cat,  sample: ./pgn_samples, testpgn: ./pgn_samples/first.pgn, testuci: ./pgn_samples/first, analyzedpgn: ./pgn_samples/first.analyzed.pgn, bindest: build,     bin: ./apgn,     flags: CC=clang CXX=clang++ }
 
     steps:
     - uses: actions/checkout@v3
 
-    - run: echo "this is a test" > test.log
+    - name: Display Tag Name
+      run : echo ${{github.ref_name}}-${{github.sha}}
 
     - name: build for -> ${{matrix.platform.os}}
-      run: make ${{matrix.platform.flags}} -j4
+      run: make ${{matrix.platform.flags}} -j2
 
     - name: ready executable for execution
       run: chmod a+rx ${{matrix.platform.bin}}
-
-    - name: ready first.pgn for reading
-      run: chmod a+r ${{matrix.platform.testpgn}}
 
     - name: run test
       run: ${{matrix.platform.bin}} -depth 5 ${{matrix.platform.testpgn}}
@@ -55,3 +55,39 @@ jobs:
 
     - name: display results
       run: ${{matrix.platform.disp}} ${{matrix.platform.analyzedpgn}}
+
+    - name: make a build folder
+      run: mkdir build
+
+    - name: copy the resources in the build folder
+      run: ${{matrix.platform.cpyd}} bin ${{matrix.platform.bindest}}
+
+    - name: copy the binary to the build folder
+      run: ${{matrix.platform.cpyf}} ${{matrix.platform.bin}} build
+
+    - name: display the contents of the build folder
+      run: cd build && ${{matrix.platform.ls}}
+      
+    - name: display the contents of the bin folder
+      run: cd build && cd bin && ${{matrix.platform.ls}}
+      
+    - name: display the contents of the engines folder
+      run: cd build && cd bin && cd engines && ${{matrix.platform.ls}}
+
+    - name: zip the build folder
+      run: ${{matrix.platform.zipd}} ${{matrix.platform.zip}} build
+
+    - name: Create github release and upload ${{matrix.platform.zip}}
+      run: gh release create ${{github.ref_name}}-${{github.sha}} ${{matrix.platform.zip}} --title "${{github.ref_name}}-${{github.sha}}" --notes "Release notes for ${{github.ref_name}}-${{github.sha}}" --draft=false --prerelease=true
+      continue-on-error: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload ${{matrix.platform.zip}} to release
+      run: gh release upload ${{github.ref_name}}-${{github.sha}} ${{matrix.platform.zip}}
+      continue-on-error: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Done
+      run: echo Workflow Done

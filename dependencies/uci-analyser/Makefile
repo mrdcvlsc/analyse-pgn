@@ -31,7 +31,7 @@ ifeq ($(OS), Linux)
 # CFLAGS=-c -g -Wall -O3 -D__unix__
 
 # PRODUCTION
-CFLAGS= -static-libgcc -static-libstdc++ -std=c++17 -c -O3 -DPRODUCTION -D__unix__
+CFLAGS=-std=c++17 -c -O3 -DPRODUCTION -D__unix__
 else 
 # WINDOWS
 
@@ -39,7 +39,7 @@ else
 # CFLAGS= -std=c++17 -c -g -Wall -O3
 
 # PRODUCTION
-CFLAGS= -static-libgcc -static-libstdc++ -std=c++17 -c -O3 -DPRODUCTION
+CFLAGS=-std=c++17 -c -O3 -DPRODUCTION
 endif
 
 OBJS=analyse.o evaluation.o engine.o utils.o interpret.o
@@ -49,7 +49,7 @@ TARGET=analyse
 	$(CXX) $(CFLAGS) $< -o $@
 
 $(TARGET) : $(OBJS)
-	$(CXX) -o $@ $(OBJS)
+	$(CXX) -static -static-libgcc -static-libstdc++ -std=c++17 -O3 -o $@ $(OBJS)
 
 clean:
 	rm -f $(OBJS) $(TARGET)
