@@ -16,6 +16,17 @@
 #include <codecvt>
 #endif
 
+#if defined(__linux__)
+#include <libgen.h>
+#include <unistd.h>
+#elif defined(__APPLE__)
+#include <mach-o/dyld.h>
+#elif defined(_WIN32) || defined(_WIN64)
+#include <codecvt>
+#include <locale>
+#include <windows.h>
+#endif
+
 namespace apgnFileSys
 {
     void deleteFile(const std::string& filename)
@@ -34,28 +45,41 @@ namespace apgnFileSys
 
     std::string getExecpath()
     {
-        #if defined(__linux__)
+      #if defined(__linux__)
         char result[PATH_MAX];
-        ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
-        const char *path;
-        if (count != -1) {
-            path = dirname(result);
+        ssize_t count = readlink("/proc/self/exe", result, PATH_MAX - 1);
+        if (count == -1) {
+            throw std::runtime_error(
+                "Cannot determine executable path (readlink failed)");
         }
-        return path;
+        result[count] = '\0';  // Null-terminate
+        std::filesystem::path exePath(result);
+        return exePath.parent_path().string();
+
+        #elif defined(__APPLE__)
+        uint32_t size = PATH_MAX;
+        char result[PATH_MAX];
+        if (_NSGetExecutablePath(result, &size) != 0) {
+            throw std::runtime_error(
+                "Cannot determine executable path (_NSGetExecutablePath failed)");
+        }
+        std::filesystem::path exePath(result);
+        return exePath.parent_path().string();
+
         #elif defined(_WIN32)
-        WCHAR path[MAX_PATH];
-        GetModuleFileNameW(NULL, path, MAX_PATH);
+        std::wstring wpath(MAX_PATH, L'\0');
+        DWORD length =
+            GetModuleFileNameW(NULL, wpath.data(), static_cast<DWORD>(wpath.size()));
+        if (length == 0) {
+            throw std::runtime_error(
+                "Cannot determine executable path (GetModuleFileNameW failed)");
+        }
+        wpath.resize(length);
+        std::filesystem::path exePath(wpath);
+        return exePath.parent_path().string();
 
-        std::wstring string_to_convert = path;
-
-        //setup converter
-        using convert_type = std::codecvt_utf8<wchar_t>;
-        std::wstring_convert<convert_type, wchar_t> converter;
-
-        //use converter (.to_bytes: wstr->str, .from_bytes: str->wstr)
-        std::string converted_str = converter.to_bytes( string_to_convert );
-        
-        return converted_str.substr(0,converted_str.size()-9);
+        #else
+        throw std::runtime_error("Platform not supported");
         #endif
     }
 }
