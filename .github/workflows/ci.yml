@@ -1,0 +1,220 @@
+name: ci
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  release:
+    types: [ "created" ]
+
+jobs:
+  build:
+    name: build-and-test-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+
+    - name: compile and build for windows
+      if: runner.os == 'Windows'
+      run: make -j4 TARGET=windows
+      shell: pwsh
+
+    - name: compile and build for ubuntu
+      if: runner.os == 'Linux'
+      run: make -j4
+      shell: bash
+
+    - name: run tests
+      run: make test
+      shell: bash
+
+    - name: verify pgn_samples files - linux
+      if: runner.os == 'Linux'
+      run: |
+        set -e
+        files=( "pgn_samples/first.analyzed.pgn" "pgn_samples/first.pgn" "pgn_samples/first.stats.txt" )
+        errors=()
+        for f in "${files[@]}"; do
+          if [ ! -e "$f" ]; then
+            echo "$f does not exist"
+            errors+=("$f")
+          elif [ -s "$f" ]; then
+            echo "$f has contents ($(stat -c%s "$f") bytes)"
+          else
+            echo "$f is empty"
+            errors+=("$f")
+          fi
+        done
+        if [ ${#errors[@]} -gt 0 ]; then
+          echo "One or more files are missing or empty: ${errors[*]}"
+          exit 1
+        fi
+      shell: bash
+
+    - name: verify pgn_samples files - windows
+      if: runner.os == 'Windows'
+      run: |
+        $ErrorActionPreference = "Stop"
+        $files = @("pgn_samples\first.analyzed.pgn","pgn_samples\first.pgn","pgn_samples\first.stats.txt")
+        $errors = @()
+        foreach ($f in $files) {
+          if (-not (Test-Path $f)) {
+            Write-Host "$f does not exist"
+            $errors += $f
+          } else {
+            $len = (Get-Item $f).Length
+            if ($len -gt 0) {
+              Write-Host "$f has contents ($len bytes)"
+            } else {
+              Write-Host "$f is empty"
+              $errors += $f
+            }
+          }
+        }
+        if ($errors.Count -gt 0) {
+          Write-Host "One or more files are missing or empty: $($errors -join ', ')"
+          exit 1
+        }
+      shell: pwsh
+
+    - name: compress runtime binaries for linux
+      if: runner.os == 'Linux'
+      run: |
+        set -e
+        # consider both possible names (with/without .exe) but only include existing ones
+        candidates=( "apgn" "apgn.exe" "bin/analyse/analyse" "bin/analyse/analyse.exe" "bin/engines/stockfish" "bin/engines/stockfish.exe" "bin/pgn-extract/pgn-extract" "bin/pgn-extract/pgn-extract.exe" )
+        picks=()
+        for f in "${candidates[@]}"; do
+          if [ -e "$f" ]; then
+            if [ -s "$f" ]; then
+              picks+=("$f")
+            else
+              echo "$f exists but is empty"
+              exit 1
+            fi
+          fi
+        done
+        if [ ${#picks[@]} -eq 0 ]; then
+          echo "No runtime binaries found to compress"
+          exit 1
+        fi
+        # create a deterministic zip for the linux build
+        zip -r apgn-linux.zip "${picks[@]}"
+        echo "Created apgn-linux.zip containing: ${picks[*]}"
+      shell: bash
+
+    - name: compress runtime binaries for windows
+      if: runner.os == 'Windows'
+      run: |
+        $ErrorActionPreference = "Stop"
+        $candidates = @("apgn.exe","apgn","bin\analyse\analyse.exe","bin\analyse\analyse","bin\engines\stockfish.exe","bin\engines\stockfish","bin\pgn-extract\pgn-extract.exe","bin\pgn-extract\pgn-extract")
+        $picks = @()
+        foreach ($f in $candidates) {
+          if (Test-Path $f) {
+            $len = (Get-Item $f).Length
+            if ($len -eq 0) {
+              Write-Host "$f exists but is empty"
+              exit 1
+            }
+            $picks += $f
+          }
+        }
+        if ($picks.Count -eq 0) {
+          Write-Host "No runtime binaries found to compress"
+          exit 1
+        }
+        # compress into zip; Compress-Archive accepts forward slashes too but use windows paths
+        Compress-Archive -Path $picks -DestinationPath apgn-windows.zip -Force
+        Write-Host "Created apgn-windows.zip containing: $($picks -join ', ')"
+      shell: pwsh
+
+  release:
+    name: build-and-upload-release-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'release' && github.event.action == 'created'
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+
+    - name: compile and build for windows (release)
+      if: runner.os == 'Windows'
+      run: make -j4 TARGET=windows
+      shell: pwsh
+
+    - name: compile and build for ubuntu (release)
+      if: runner.os == 'Linux'
+      run: make -j4
+      shell: bash
+
+    - name: run tests (release)
+      run: make test
+      shell: bash
+
+    - name: prepare zip for upload - linux
+      if: runner.os == 'Linux'
+      run: |
+        set -e
+        candidates=( "apgn" "apgn.exe" "bin/analyse/analyse" "bin/analyse/analyse.exe" "bin/engines/stockfish" "bin/engines/stockfish.exe" "bin/pgn-extract/pgn-extract" "bin/pgn-extract/pgn-extract.exe" )
+        picks=()
+        for f in "${candidates[@]}"; do
+          if [ -e "$f" ]; then
+            if [ -s "$f" ]; then
+              picks+=("$f")
+            else
+              echo "$f exists but is empty"
+              exit 1
+            fi
+          fi
+        done
+        if [ ${#picks[@]} -eq 0 ]; then
+          echo "No runtime binaries found to compress for release"
+          exit 1
+        fi
+        zip -r apgn-linux.zip "${picks[@]}"
+        echo "Created apgn-linux.zip"
+      shell: bash
+
+    - name: prepare zip for upload - windows
+      if: runner.os == 'Windows'
+      run: |
+        $ErrorActionPreference = "Stop"
+        $candidates = @("apgn.exe","apgn","bin\analyse\analyse.exe","bin\analyse\analyse","bin\engines\stockfish.exe","bin\engines\stockfish","bin\pgn-extract\pgn-extract.exe","bin\pgn-extract\pgn-extract")
+        $picks = @()
+        foreach ($f in $candidates) {
+          if (Test-Path $f) {
+            $len = (Get-Item $f).Length
+            if ($len -eq 0) {
+              Write-Host "$f exists but is empty"
+              exit 1
+            }
+            $picks += $f
+          }
+        }
+        if ($picks.Count -eq 0) {
+          Write-Host "No runtime binaries found to compress for release"
+          exit 1
+        }
+        Compress-Archive -Path $picks -DestinationPath apgn-windows.zip -Force
+        Write-Host "Created apgn-windows.zip"
+      shell: pwsh
+
+    - name: upload zip to release assets
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ${{ runner.os == 'Windows' && 'apgn-windows.zip' || 'apgn-linux.zip' }}
+        asset_name: ${{ runner.os == 'Windows' && 'apgn-windows.zip' || 'apgn-linux.zip' }}
+        asset_content_type: application/zip
+      # GITHUB_TOKEN is automatically provided in the runner, no need to pass explicitly

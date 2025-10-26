@@ -1,6 +1,6 @@
 # analyse-pgn
 
-![build](https://github.com/mrdcvlsc/analyse-pgn/actions/workflows/build.yml/badge.svg)
+![ci](https://github.com/mrdcvlsc/analyse-pgn/actions/workflows/ci.yml/badge.svg)
 
 a simple chess game PGN file analyser on command line terminal
 
