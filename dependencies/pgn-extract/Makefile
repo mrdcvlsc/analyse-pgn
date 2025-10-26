@@ -22,7 +22,8 @@
 OBJS=grammar.o lex.o map.o decode.o moves.o lists.o apply.o output.o eco.o \
 	lines.o end.o main.o hashing.o argsfile.o mymalloc.o fenmatcher.o \
 	taglines.o zobrist.o
-DEBUGINFO=-g
+# DEBUGINFO=-g
+DEBUGINFO=
 
 # These flags are particularly severe on checking warnings.
 # It may be that they are not all appropriate to your environment.
