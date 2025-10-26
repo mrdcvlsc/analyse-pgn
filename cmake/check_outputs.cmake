@@ -1,12 +1,7 @@
-# Cross-platform checks performed by CI after running tests
-if(NOT DEFINED PROJECT_SOURCE_DIR)
-  message(FATAL_ERROR "PROJECT_SOURCE_DIR must be passed as -DPROJECT_SOURCE_DIR=<path>")
-endif()
-
 set(files
-  "${PROJECT_SOURCE_DIR}/pgn_samples/first.analyzed.pgn"
-  "${PROJECT_SOURCE_DIR}/pgn_samples/first.pgn"
-  "${PROJECT_SOURCE_DIR}/pgn_samples/first.stats.txt"
+  pgn_samples/first.analyzed.pgn
+  pgn_samples/first.pgn
+  pgn_samples/first.stats.txt
 )
 
 set(missing)
