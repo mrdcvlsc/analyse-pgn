@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <iostream>
 #include <vector>
 #include <cstring>
@@ -51,9 +52,9 @@ static std::string PGN_EXT = ".pgn";
 std::string DEFAULT_ENGINE()
 {
     #if defined(__linux__)
-    return apgnFileSys::getExecpath()+"/bin/engines/stockfish";
+    return (std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "engines" / "stockfish").string();
     #elif (defined(_WIN64) || defined(_WIN32))
-    return apgnFileSys::getExecpath()+"/bin/engines/stockfish.exe";
+    return (std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "engines" / "stockfish.exe").string();
     #endif
 }
 
@@ -285,7 +286,7 @@ int main(int argc, char* argv[])
     {
         std::cout << "Analysing " << PGN_GAMES[i] << " please wait...\n";
 
-        apgn_convert::pgn_to_uci(PGN_GAMES[i],FILENAME[i]);
+        apgn_convert::pgn_to_uci(std::filesystem::path(PGN_GAMES[i]).string(),std::filesystem::path(FILENAME[i]).string());
 
         /* clear the stats file if it exists */ {
             std::ofstream existing_stat_file;

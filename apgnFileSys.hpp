@@ -41,7 +41,7 @@ namespace apgnFileSys
         if (count != -1) {
             path = dirname(result);
         }
-        return path;
+        return std::filesystem::path(path).to_string();
         #elif defined(_WIN32)
         WCHAR path[MAX_PATH];
         GetModuleFileNameW(NULL, path, MAX_PATH);
@@ -55,7 +55,7 @@ namespace apgnFileSys
         //use converter (.to_bytes: wstr->str, .from_bytes: str->wstr)
         std::string converted_str = converter.to_bytes( string_to_convert );
         
-        return converted_str.substr(0,converted_str.size()-9);
+        return std::filesystem::path(converted_str.substr(0,converted_str.size()-9)).string();
         #endif
     }
 }

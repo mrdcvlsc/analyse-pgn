@@ -63,14 +63,24 @@ namespace apgn_convert
     {
         std::string PGN_EXTRACT = "pgn-extract", FLG1 = "-WsanPNBRQK", FLG2 = "--output";
         char *const args[] = {PGN_EXTRACT.data(),FLG1.data(),FLG2.data(),(char* const)output.c_str(),(char* const)input.c_str(),NULL};
-        run_subprog(apgnFileSys::getExecpath()+"/bin/pgn-extract",args);
+
+        #if defined(__linux__)
+        run_subprog((std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "pgn-extract").string(),args);
+        #elif defined(_WIN32)
+        run_subprog((std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "pgn-extract" / "pgn-extract.exe").string(),args);
+        #endif
     }
 
     void pgn_to_uci(const std::string& input, const std::string output)
     {
         std::string PGN_EXTRACT = "pgn-extract", FLG1 = "-Wuci", FLG2 = "--output";
         char *const args[] = {PGN_EXTRACT.data(),FLG1.data(),FLG2.data(),(char* const)output.c_str(),(char* const)input.c_str(),NULL};
-        run_subprog(apgnFileSys::getExecpath()+"/bin/pgn-extract",args);
+
+        #if defined(__linux__)
+        run_subprog((std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "pgn-extract").string(),args);
+        #elif defined(_WIN32)
+        run_subprog((std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "pgn-extract" / "pgn-extract.exe").string(),args);
+        #endif
     }
 
     void analyse_game(
@@ -194,7 +204,14 @@ namespace apgn_convert
             wait(NULL);
         }
         #else
-        std::string analyse_executable_path = apgnFileSys::getExecpath()+"/bin/analyse";
+        std::string analyse_executable_path = "";
+        
+        #if defined(__linux__)
+        analyse_executable_path = (std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "analyse").string();
+        #elif defined(_WIN32)
+        analyse_executable_path = (std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "analyse" / "analyse.exe").string();
+        #endif
+
         std::string result_pgn;
 
         switch (apgn_COLOR)
