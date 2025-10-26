@@ -34,6 +34,10 @@ The **.stats.txt** file will contain
 
 **Build apgn**
 
+- For windows use `make TARGET=windows` instead of `make`.
+
+- For windows debug build use `make TARGET=windows BUILD=Debug` instead of `make`.
+
 ```
 git clone https://github.com/mrdcvlsc/analyse-pgn.git
 cd analyse-pgn
