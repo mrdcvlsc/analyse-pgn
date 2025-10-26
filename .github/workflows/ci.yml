@@ -35,7 +35,7 @@ jobs:
     - name: compile and build for windows
       if: runner.os == 'Windows'
       run: make -j4 TARGET=windows
-      shell: pwsh
+      shell: cmd
 
     - name: compile and build for ubuntu
       if: runner.os == 'Linux'
@@ -50,7 +50,7 @@ jobs:
     - name: run tests - windows
       if: runner.os == 'Windows'
       run: make test
-      shell: pwsh
+      shell: cmd
 
     - name: verify pgn_samples files - linux
       if: runner.os == 'Linux'
