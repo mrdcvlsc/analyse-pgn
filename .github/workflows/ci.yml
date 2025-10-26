@@ -1,5 +1,8 @@
 name: ci
 
+permissions:
+  contents: write
+
 on:
   push:
     branches: [ "main" ]
@@ -22,6 +25,13 @@ jobs:
     - name: checkout
       uses: actions/checkout@v3
 
+    - name: install make on windows
+      if: runner.os == 'Windows'
+      run: |
+        choco install make -y
+        refreshenv
+      shell: pwsh
+
     - name: compile and build for windows
       if: runner.os == 'Windows'
       run: make -j4 TARGET=windows
@@ -32,9 +42,15 @@ jobs:
       run: make -j4
       shell: bash
 
-    - name: run tests
+    - name: run tests - linux
+      if: runner.os == 'Linux'
       run: make test
       shell: bash
+
+    - name: run tests - windows
+      if: runner.os == 'Windows'
+      run: make test
+      shell: pwsh
 
     - name: verify pgn_samples files - linux
       if: runner.os == 'Linux'
@@ -106,8 +122,8 @@ jobs:
           echo "No runtime binaries found to compress"
           exit 1
         fi
-        # create a deterministic zip for the linux build
-        zip -r apgn-linux.zip "${picks[@]}"
+        # create a deterministic zip for the linux build (exclude extra attributes, max compression)
+        zip -r -X -9 apgn-linux.zip "${picks[@]}"
         echo "Created apgn-linux.zip containing: ${picks[*]}"
       shell: bash
 
@@ -142,6 +158,7 @@ jobs:
     if: github.event_name == 'release' && github.event.action == 'created'
 
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
 
@@ -149,19 +166,32 @@ jobs:
     - name: checkout
       uses: actions/checkout@v3
 
+    - name: install make on windows (release)
+      if: runner.os == 'Windows'
+      run: |
+        choco install make -y
+        refreshenv
+      shell: pwsh
+
     - name: compile and build for windows (release)
       if: runner.os == 'Windows'
-      run: make -j4 TARGET=windows
+      run: make -j4 TARGET=windows BUILD_TYPE=Release
       shell: pwsh
 
     - name: compile and build for ubuntu (release)
       if: runner.os == 'Linux'
-      run: make -j4
+      run: make -j4 BUILD_TYPE=Release
       shell: bash
 
-    - name: run tests (release)
+    - name: run tests (release) - linux
+      if: runner.os == 'Linux'
       run: make test
       shell: bash
+
+    - name: run tests (release) - windows
+      if: runner.os == 'Windows'
+      run: make test
+      shell: pwsh
 
     - name: prepare zip for upload - linux
       if: runner.os == 'Linux'
@@ -183,7 +213,7 @@ jobs:
           echo "No runtime binaries found to compress for release"
           exit 1
         fi
-        zip -r apgn-linux.zip "${picks[@]}"
+        zip -r -X -9 apgn-linux.zip "${picks[@]}"
         echo "Created apgn-linux.zip"
       shell: bash
 
