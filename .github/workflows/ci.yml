@@ -175,12 +175,12 @@ jobs:
 
     - name: compile and build for windows (release)
       if: runner.os == 'Windows'
-      run: make -j4 TARGET=windows BUILD_TYPE=Release
+      run: make -j4 TARGET=windows BUILD=Release
       shell: pwsh
 
     - name: compile and build for ubuntu (release)
       if: runner.os == 'Linux'
-      run: make -j4 BUILD_TYPE=Release
+      run: make -j4 BUILD=Release
       shell: bash
 
     - name: run tests (release) - linux

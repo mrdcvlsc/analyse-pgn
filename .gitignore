@@ -39,3 +39,5 @@ bin/pgn-extract
 
 *.stats.txt
 *.analyzed.pgn
+
+./pgn_samples/first

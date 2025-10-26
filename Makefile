@@ -23,7 +23,7 @@ else ifeq ($(BUILD),Debug)
 endif
 
 ifeq ($(TARGET),windows)
-  MKDIR = @if not exist "$(subst /,\,$(1))" mkdir "$(subst /,\,$(1))
+  MKDIR = @if not exist "$(subst /,\,$(1))" mkdir "$(subst /,\,$(1))"
 else
   MKDIR = @mkdir -p $(1)
 endif
@@ -46,6 +46,7 @@ ifeq ($(OS), Linux)
 else
 	chmod +x bin/engines/stockfish.exe
 endif
+	@echo compiling main.cpp
 	${CXX} ${CXX_FLAGS} ${BUILD_TYPE} main.cpp -o ${EXECUTABLE}
 
 test:
@@ -79,4 +80,4 @@ clean:
 	@echo "removing uci-analyse object files"
 	@$(MAKE) -C dependencies/uci-analyser clean
 	@echo "removing analyse-pgn binaries files"
-	@rm ./bin/analyse${EXTENSION} ./bin/pgn-extract${EXTENSION} ./${EXECUTABLE}
+	@rm ./bin/analyse${EXTENSION} ./bin/pgn-extract${EXTENSION} ./bin/analyse/analyse${EXTENSION} ./bin/pgn-extract/pgn-extract${EXTENSION} ./${EXECUTABLE} ./pgn_samples/first ./pgn_samples/first.analyzed.pgn ./pgn_samples/first.stats.txt ./dependencies/pgn-extract/*.o ./dependencies/uci-analyser/*.o
