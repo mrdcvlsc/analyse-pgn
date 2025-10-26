@@ -1,81 +1,34 @@
-OS := $(shell uname)
-TARGET:=
-BUILD:=Release
+CMAKE_BUILD_DIR := build
+CMAKE_CONFIG ?= Release
 
-CXX=g++
-CXX_FLAGS:=-std=c++17 -static-libgcc -static-libstdc++ -Werror=shadow
-BUILD_TYPE:=-O2
-ifeq ($(OS), Linux)
-EXTENSION=
-EXECUTABLE=apgn
-else
-EXECUTABLE=apgn.exe
-EXTENSION=.exe
-endif
-INSTALLPATH=/usr/local/bin
-
-ifeq ($(BUILD),Release)
-	BUILD_TYPE=-O3
-else ifeq ($(BUILD),Debug)
-	BUILD_TYPE=-g3 -O0 -fno-omit-frame-pointer
-endif
-
-ifeq ($(TARGET),windows)
-  MKDIR = @if not exist "$(subst /,\,$(1))" mkdir "$(subst /,\,$(1))"
-else
-  MKDIR = @mkdir -p $(1)
-endif
+# choose compiler: default gcc. On Ubuntu you can pass COMPILER=clang to use clang.
+COMPILER ?= gcc
 
 all:
-	@echo OS : $(OS)
-	$(call MKDIR,bin)
-	$(call MKDIR,bin/engines)
-	$(call MKDIR,bin/pgn-extract)
-	$(call MKDIR,bin/analyse)
-
-	$(MAKE) -C dependencies/pgn-extract
-	mv dependencies/pgn-extract/pgn-extract$(EXTENSION)  bin/pgn-extract/
-
-	$(MAKE) -C dependencies/uci-analyser
-	mv dependencies/uci-analyser/analyse$(EXTENSION) bin/analyse/
-
-ifeq ($(OS), Linux)
-	chmod +x bin/engines/stockfish
-else
-	chmod +x bin/engines/stockfish.exe
-endif
-	@echo compiling main.cpp
-	${CXX} ${CXX_FLAGS} ${BUILD_TYPE} main.cpp -o ${EXECUTABLE}
+	@echo "Configuring and building with CMake (build dir: ${CMAKE_BUILD_DIR}, config: ${CMAKE_CONFIG}, compiler: ${COMPILER}, target: ${TARGET})"
+	@{ \
+	if [ "${TARGET}" = "windows" ]; then \
+	  CMAKE_CC=gcc; CMAKE_CXX=g++; GENARGS="-G \"MinGW Makefiles\""; \
+	else \
+	  if [ "${COMPILER}" = "clang" ]; then CMAKE_CC=clang; CMAKE_CXX=clang++; else CMAKE_CC=gcc; CMAKE_CXX=g++; fi; \
+	  GENARGS=""; \
+	fi; \
+	cmake -S . -B ${CMAKE_BUILD_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_CONFIG} -DCMAKE_C_COMPILER=$${CMAKE_CC} -DCMAKE_CXX_COMPILER=$${CMAKE_CXX} $${GENARGS}; \
+	cmake --build ${CMAKE_BUILD_DIR} --config ${CMAKE_CONFIG} -- -j4; \
+	}
 
 test:
-	./${EXECUTABLE} ./pgn_samples/first.pgn -color W
+	@cmake --build ${CMAKE_BUILD_DIR} --config ${CMAKE_CONFIG} --target test
 
-test_clean:
-ifeq ($(OS), Linux)
-	rm ./pgn_samples/firstAnalyzed.pgn
-else
-	rm pgn_samples/firstAnalyzed.pgn
-endif
-
-install:
-ifeq ($(OS), Linux)
-	@ln -s $(dir $(abspath $(lastword $(MAKEFILE_LIST))))${EXECUTABLE} ${INSTALLPATH}
-else
-	@echo "make install is not supported for windows"
-# SETX /M PATH "%PATH%;$(dir $(abspath $(lastword $(MAKEFILE_LIST))))"
-endif
-
-uninstall:
-ifeq ($(OS), Linux)
-	@rm ${INSTALLPATH}/${EXECUTABLE}
-else
-	@echo "make uninstall is not supported for windows"
-endif
+package:
+	@cmake --build ${CMAKE_BUILD_DIR} --config ${CMAKE_CONFIG} --target package
 
 clean:
 	@echo "removing pgn-extract object files"
-	@$(MAKE) -C dependencies/pgn-extract clean
+	@$(MAKE) -C dependencies/pgn-extract clean || true
 	@echo "removing uci-analyse object files"
-	@$(MAKE) -C dependencies/uci-analyser clean
+	@$(MAKE) -C dependencies/uci-analyser clean || true
 	@echo "removing analyse-pgn binaries files"
-	@rm ./bin/analyse${EXTENSION} ./bin/pgn-extract${EXTENSION} ./bin/analyse/analyse${EXTENSION} ./bin/pgn-extract/pgn-extract${EXTENSION} ./${EXECUTABLE} ./pgn_samples/first ./pgn_samples/first.analyzed.pgn ./pgn_samples/first.stats.txt ./dependencies/pgn-extract/*.o ./dependencies/uci-analyser/*.o
+	@rm -f ./bin/analyse ./bin/analyse/analyse ./bin/analyse/analyse.exe ./bin/pgn-extract/pgn-extract ./bin/pgn-extract/pgn-extract.exe ./apgn ./apgn.exe ./pgn_samples/first.analyzed.pgn ./pgn_samples/first.stats.txt || true
+	@echo "Removing CMake build directory"
+	@if [ -d "${CMAKE_BUILD_DIR}" ]; then rm -rf ${CMAKE_BUILD_DIR}; fi

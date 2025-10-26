@@ -41,3 +41,4 @@ bin/pgn-extract
 *.analyzed.pgn
 
 ./pgn_samples/first
+build

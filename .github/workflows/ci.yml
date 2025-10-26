@@ -5,9 +5,9 @@ permissions:
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "cmake-support" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "cmake-support" ]
   release:
     types: [ "created" ]
 
@@ -19,138 +19,93 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            compiler: gcc
+          - os: ubuntu-latest
+            compiler: clang
+          - os: windows-latest
+            compiler: gcc
 
     steps:
     - name: checkout
       uses: actions/checkout@v3
 
-    - name: install make on windows
-      if: runner.os == 'Windows'
+    - name: Configure (CMake) - Ubuntu + gcc
+      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
       run: |
-        choco install make -y
-        refreshenv
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+      shell: bash
+
+    - name: Configure (CMake) - Ubuntu + clang
+      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
+      run: |
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+      shell: bash
+
+    - name: Configure (CMake) - Windows (gcc)
+      if: matrix.os == 'windows-latest'
+      run: |
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G "MinGW Makefiles"
       shell: pwsh
 
-    - name: compile and build for windows
-      if: runner.os == 'Windows'
-      run: make -j4 TARGET=windows
-      shell: cmd
-
-    - name: compile and build for ubuntu
-      if: runner.os == 'Linux'
-      run: make -j4
-      shell: bash
-
-    - name: run tests - linux
-      if: runner.os == 'Linux'
-      run: make test
-      shell: bash
-
-    - name: run tests - windows
-      if: runner.os == 'Windows'
-      run: make test
-      shell: cmd
-
-    - name: verify pgn_samples files - linux
-      if: runner.os == 'Linux'
+    - name: Build (CMake) - Linux
+      if: matrix.os == 'ubuntu-latest'
       run: |
-        set -e
-        files=( "pgn_samples/first.analyzed.pgn" "pgn_samples/first.pgn" "pgn_samples/first.stats.txt" )
-        errors=()
-        for f in "${files[@]}"; do
-          if [ ! -e "$f" ]; then
-            echo "$f does not exist"
-            errors+=("$f")
-          elif [ -s "$f" ]; then
-            echo "$f has contents ($(stat -c%s "$f") bytes)"
-          else
-            echo "$f is empty"
-            errors+=("$f")
-          fi
-        done
-        if [ ${#errors[@]} -gt 0 ]; then
-          echo "One or more files are missing or empty: ${errors[*]}"
-          exit 1
-        fi
+        cmake --build build --config Release -- -j4
       shell: bash
 
-    - name: verify pgn_samples files - windows
-      if: runner.os == 'Windows'
+    - name: Build (CMake) - Windows
+      if: matrix.os == 'windows-latest'
       run: |
-        $ErrorActionPreference = "Stop"
-        $files = @("pgn_samples\first.analyzed.pgn","pgn_samples\first.pgn","pgn_samples\first.stats.txt")
-        $errors = @()
-        foreach ($f in $files) {
-          if (-not (Test-Path $f)) {
-            Write-Host "$f does not exist"
-            $errors += $f
-          } else {
-            $len = (Get-Item $f).Length
-            if ($len -gt 0) {
-              Write-Host "$f has contents ($len bytes)"
-            } else {
-              Write-Host "$f is empty"
-              $errors += $f
-            }
-          }
-        }
-        if ($errors.Count -gt 0) {
-          Write-Host "One or more files are missing or empty: $($errors -join ', ')"
-          exit 1
-        }
+        cmake --build build --config Release -- -j4
       shell: pwsh
 
-    - name: compress runtime binaries for linux
-      if: runner.os == 'Linux'
+    - name: Run tests (CTest) - Linux
+      if: matrix.os == 'ubuntu-latest'
       run: |
-        set -e
-        # consider both possible names (with/without .exe) but only include existing ones
-        candidates=( "apgn" "apgn.exe" "bin/analyse/analyse" "bin/analyse/analyse.exe" "bin/engines/stockfish" "bin/engines/stockfish.exe" "bin/pgn-extract/pgn-extract" "bin/pgn-extract/pgn-extract.exe" )
-        picks=()
-        for f in "${candidates[@]}"; do
-          if [ -e "$f" ]; then
-            if [ -s "$f" ]; then
-              picks+=("$f")
-            else
-              echo "$f exists but is empty"
-              exit 1
-            fi
-          fi
-        done
-        if [ ${#picks[@]} -eq 0 ]; then
-          echo "No runtime binaries found to compress"
-          exit 1
-        fi
-        # create a deterministic zip for the linux build (exclude extra attributes, max compression)
-        zip -r -X -9 apgn-linux.zip "${picks[@]}"
-        echo "Created apgn-linux.zip containing: ${picks[*]}"
+        cmake --build build --config Release --target test || true
+        ctest --test-dir build --output-on-failure -C Release
       shell: bash
 
-    - name: compress runtime binaries for windows
-      if: runner.os == 'Windows'
+    - name: Run tests (CTest) - Windows
+      if: matrix.os == 'windows-latest'
       run: |
-        $ErrorActionPreference = "Stop"
-        $candidates = @("apgn.exe","apgn","bin\analyse\analyse.exe","bin\analyse\analyse","bin\engines\stockfish.exe","bin\engines\stockfish","bin\pgn-extract\pgn-extract.exe","bin\pgn-extract\pgn-extract")
-        $picks = @()
-        foreach ($f in $candidates) {
-          if (Test-Path $f) {
-            $len = (Get-Item $f).Length
-            if ($len -eq 0) {
-              Write-Host "$f exists but is empty"
-              exit 1
-            }
-            $picks += $f
-          }
-        }
-        if ($picks.Count -eq 0) {
-          Write-Host "No runtime binaries found to compress"
-          exit 1
-        }
-        # compress into zip; Compress-Archive accepts forward slashes too but use windows paths
-        Compress-Archive -Path $picks -DestinationPath apgn-windows.zip -Force
-        Write-Host "Created apgn-windows.zip containing: $($picks -join ', ')"
+        cmake --build build --config Release --target test || true
+        ctest --test-dir build --output-on-failure -C Release
       shell: pwsh
+
+    - name: Verify expected output files (CMake script) - Linux
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        cmake -P cmake/check_outputs.cmake -DPROJECT_SOURCE_DIR=${{ github.workspace }}
+      shell: bash
+
+    - name: Verify expected output files (CMake script) - Windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        cmake -P cmake/check_outputs.cmake -DPROJECT_SOURCE_DIR=${{ github.workspace }}
+      shell: pwsh
+
+
+    - name: Create package (CPack) - Linux
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        cmake --build build --config Release --target package
+      shell: bash
+
+    - name: Create package (CPack) - Windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        cmake --build build --config Release --target package
+      shell: pwsh
+
+    - name: Upload package artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: apgn-package-${{ matrix.os }}
+        path: |
+          build/*.zip
 
   release:
     name: build-and-upload-release-${{ matrix.os }}
@@ -160,85 +115,72 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            compiler: gcc
+          - os: ubuntu-latest
+            compiler: clang
+          - os: windows-latest
+            compiler: gcc
 
     steps:
     - name: checkout
       uses: actions/checkout@v3
 
-    - name: install make on windows (release)
-      if: runner.os == 'Windows'
+    - name: Configure (CMake) - Ubuntu + gcc (release)
+      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
       run: |
-        choco install make -y
-        refreshenv
-      shell: pwsh
-
-    - name: compile and build for windows (release)
-      if: runner.os == 'Windows'
-      run: make -j4 TARGET=windows BUILD=Release
-      shell: pwsh
-
-    - name: compile and build for ubuntu (release)
-      if: runner.os == 'Linux'
-      run: make -j4 BUILD=Release
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
       shell: bash
 
-    - name: run tests (release) - linux
-      if: runner.os == 'Linux'
-      run: make test
+    - name: Configure (CMake) - Ubuntu + clang (release)
+      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
+      run: |
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
       shell: bash
 
-    - name: run tests (release) - windows
-      if: runner.os == 'Windows'
-      run: make test
+    - name: Configure (CMake) - Windows (gcc) (release)
+      if: matrix.os == 'windows-latest'
+      run: |
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G "MinGW Makefiles"
       shell: pwsh
 
-    - name: prepare zip for upload - linux
-      if: runner.os == 'Linux'
+    - name: Build (CMake) - Linux (release)
+      if: matrix.os == 'ubuntu-latest'
       run: |
-        set -e
-        candidates=( "apgn" "apgn.exe" "bin/analyse/analyse" "bin/analyse/analyse.exe" "bin/engines/stockfish" "bin/engines/stockfish.exe" "bin/pgn-extract/pgn-extract" "bin/pgn-extract/pgn-extract.exe" )
-        picks=()
-        for f in "${candidates[@]}"; do
-          if [ -e "$f" ]; then
-            if [ -s "$f" ]; then
-              picks+=("$f")
-            else
-              echo "$f exists but is empty"
-              exit 1
-            fi
-          fi
-        done
-        if [ ${#picks[@]} -eq 0 ]; then
-          echo "No runtime binaries found to compress for release"
-          exit 1
-        fi
-        zip -r -X -9 apgn-linux.zip "${picks[@]}"
-        echo "Created apgn-linux.zip"
+        cmake --build build --config Release -- -j4
       shell: bash
 
-    - name: prepare zip for upload - windows
-      if: runner.os == 'Windows'
+    - name: Build (CMake) - Windows (release)
+      if: matrix.os == 'windows-latest'
       run: |
-        $ErrorActionPreference = "Stop"
-        $candidates = @("apgn.exe","apgn","bin\analyse\analyse.exe","bin\analyse\analyse","bin\engines\stockfish.exe","bin\engines\stockfish","bin\pgn-extract\pgn-extract.exe","bin\pgn-extract\pgn-extract")
-        $picks = @()
-        foreach ($f in $candidates) {
-          if (Test-Path $f) {
-            $len = (Get-Item $f).Length
-            if ($len -eq 0) {
-              Write-Host "$f exists but is empty"
-              exit 1
-            }
-            $picks += $f
-          }
-        }
-        if ($picks.Count -eq 0) {
-          Write-Host "No runtime binaries found to compress for release"
-          exit 1
-        }
-        Compress-Archive -Path $picks -DestinationPath apgn-windows.zip -Force
-        Write-Host "Created apgn-windows.zip"
+        cmake --build build --config Release -- -j4
+      shell: pwsh
+
+    - name: Run tests (release) - Linux
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        cmake --build build --config Release --target test || true
+        ctest --test-dir build --output-on-failure -C Release
+      shell: bash
+
+    - name: Run tests (release) - Windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        cmake --build build --config Release --target test || true
+        ctest --test-dir build --output-on-failure -C Release
+      shell: pwsh
+
+    - name: Create package (CPack) - Linux
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        cmake --build build --config Release --target package
+      shell: bash
+
+    - name: Create package (CPack) - Windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        cmake --build build --config Release --target package
       shell: pwsh
 
     - name: upload zip to release assets
