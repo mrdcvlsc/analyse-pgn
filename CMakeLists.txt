@@ -30,7 +30,7 @@ set_target_properties(apgn PROPERTIES
 enable_testing()
 # Basic functional test: run apgn against the provided sample PGN
 add_test(NAME run_apgn_sample
-  COMMAND $<TARGET_FILE:apgn> ${CMAKE_SOURCE_DIR}/pgn_samples/first.pgn -color W
+  COMMAND $<TARGET_FILE:apgn> ${CMAKE_SOURCE_DIR}/pgn_samples/first.pgn -color W -depth 11
 )
 
 # Install rules (used by CPack/package)
