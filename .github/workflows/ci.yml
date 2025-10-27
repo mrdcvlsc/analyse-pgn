@@ -34,38 +34,38 @@ jobs:
     - name: Configure (CMake) - Ubuntu + gcc
       if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
       run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
       shell: bash
 
     - name: Configure (CMake) - Ubuntu + clang
       if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
       run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
       shell: bash
 
     - name: Configure (CMake) - Windows (gcc)
       if: matrix.os == 'windows-latest'
       run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G "MinGW Makefiles"
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G "MinGW Makefiles"
       shell: pwsh
 
     - name: Build (CMake) - Linux
       if: matrix.os == 'ubuntu-latest'
       run: |
-        cmake --build build --config Release -- -j2
+        cmake --build build --config Debug -- -j2
       shell: bash
 
     - name: Build (CMake) - Windows
       if: matrix.os == 'windows-latest'
       run: |
-        cmake --build build --config Release -- -j2
+        cmake --build build --config Debug -- -j2
       shell: pwsh
 
     - name: Run tests (CTest) - Linux
       if: matrix.os == 'ubuntu-latest'
       run: |
-        cmake --build build --config Release --target test
-        CTEST_OUTPUT_ON_FAILURE=1 ctest --test-dir build -C Release
+        cmake --build build --config Debug --target test
+        CTEST_OUTPUT_ON_FAILURE=1 ctest --test-dir build -C Debug
       shell: bash
 
     - name: Show test program output - Linux
@@ -79,8 +79,8 @@ jobs:
     - name: Run tests (CTest) - Windows
       if: matrix.os == 'windows-latest'
       run: |
-        cmake --build build --config Release --target test
-        $env:CTEST_OUTPUT_ON_FAILURE=1; ctest --test-dir build -C Release
+        cmake --build build --config Debug --target test
+        $env:CTEST_OUTPUT_ON_FAILURE=1; ctest --test-dir build -C Debug
       shell: pwsh
 
     - name: Show test program output - Windows
@@ -126,13 +126,13 @@ jobs:
     - name: Create package (CPack) - Linux
       if: matrix.os == 'ubuntu-latest'
       run: |
-        cmake --build build --config Release --target package
+        cmake --build build --config Debug --target package
       shell: bash
 
     - name: Create package (CPack) - Windows
       if: matrix.os == 'windows-latest'
       run: |
-        cmake --build build --config Release --target package
+        cmake --build build --config Debug --target package
       shell: pwsh
 
     - name: Upload package artifact
