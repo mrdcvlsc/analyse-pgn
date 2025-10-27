@@ -39,8 +39,14 @@ install(TARGETS analyse RUNTIME DESTINATION "bin/analyse")
 install(TARGETS pgn-extract RUNTIME DESTINATION "bin/pgn-extract")
 
 # If a bundled engine exists in source tree, include it in the package
-if(EXISTS "${CMAKE_SOURCE_DIR}/bin/engines/stockfish")
-  install(FILES "${CMAKE_SOURCE_DIR}/bin/engines/stockfish" DESTINATION "bin/engines")
+set(DEFAULT_CHESS_ENGINE "${CMAKE_SOURCE_DIR}/bin/engines/stockfish")
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  set(DEFAULT_CHESS_ENGINE "${CMAKE_SOURCE_DIR}/bin/engines/stockfish.exe")
+endif()
+
+if(EXISTS ${DEFAULT_CHESS_ENGINE})
+  install(FILES ${DEFAULT_CHESS_ENGINE} DESTINATION "bin/engines")
 endif()
 
 # CPack packaging configuration (produce a deterministic ZIP)
