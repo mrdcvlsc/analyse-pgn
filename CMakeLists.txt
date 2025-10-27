@@ -14,7 +14,12 @@ add_subdirectory(dependencies/pgn-extract)
 add_subdirectory(dependencies/uci-analyser)
 
 # Top-level executable
-add_executable(apgn ${CMAKE_SOURCE_DIR}/main.cpp)
+add_executable(apgn
+    ${CMAKE_SOURCE_DIR}/main.cpp
+    ${CMAKE_SOURCE_DIR}/apgnFileSys.cpp
+    ${CMAKE_SOURCE_DIR}/convert.cpp
+    ${CMAKE_SOURCE_DIR}/winProcRun.cpp
+)
 target_compile_features(apgn PRIVATE cxx_std_17)
 
 # Put the top-level executable in the repository root (matches previous Makefile)
