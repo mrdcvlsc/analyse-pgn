@@ -29,7 +29,7 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v5
 
     - name: Configure (CMake) - Ubuntu + gcc
       if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
@@ -160,7 +160,7 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v5
 
     - name: Configure (CMake) - Ubuntu + gcc (release)
       if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
