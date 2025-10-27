@@ -138,7 +138,7 @@ jobs:
     - name: Upload package artifact
       uses: actions/upload-artifact@v4
       with:
-        name: apgn-package-${{ matrix.os }}
+        name: apgn-package-${{ matrix.os }}-${{ matrix.compiler }}-Debug
         path: |
           build/*.zip
 
