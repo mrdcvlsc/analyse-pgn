@@ -5,6 +5,21 @@ namespace apgn_convert
 {
     int run_subprog(std::string program, char *const args[])
     {
+        std::cout << "run sub-program: " << program << '\n';
+        std::cout << "      arguments: " << '\n';
+
+        try {
+            for (size_t i = 0; args[i] != nullptr; i++) {
+                if (args[i]) {
+                    std::cout << "\t\t" << std::string(args[i]) << '\n';
+                }
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Error printing args: " << e.what() << '\n';
+        }
+
+        std::cout << '\n';
+
         #if defined(__linux__)
         int status;
 
