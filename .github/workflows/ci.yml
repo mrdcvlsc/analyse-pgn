@@ -75,6 +75,26 @@ jobs:
         ctest --test-dir build --output-on-failure -C Release
       shell: pwsh
 
+    - name: Check output files content - Linux
+      if: matrix.os == 'ubuntu-latest'
+      continue-on-error: true
+      run: |
+        echo "=== Contents of first.analyzed.pgn ==="
+        cat ./pgn_samples/first.analyzed.pgn
+        echo "=== Contents of first.stats.txt ==="
+        cat ./pgn_samples/first.stats.txt
+      shell: bash
+
+    - name: Check output files content - Windows
+      if: matrix.os == 'windows-latest'
+      continue-on-error: true
+      run: |
+        Write-Host "=== Contents of first.analyzed.pgn ==="
+        Get-Content ./pgn_samples/first.analyzed.pgn
+        Write-Host "=== Contents of first.stats.txt ==="
+        Get-Content ./pgn_samples/first.stats.txt
+      shell: pwsh
+
     - name: Verify expected output files (CMake script) - Linux
       if: matrix.os == 'ubuntu-latest'
       run: |
@@ -86,7 +106,6 @@ jobs:
       run: |
         cmake -P cmake/check_outputs.cmake -DPROJECT_SOURCE_DIR=${{ github.workspace }}
       shell: pwsh
-
 
     - name: Create package (CPack) - Linux
       if: matrix.os == 'ubuntu-latest'
