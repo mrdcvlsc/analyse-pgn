@@ -52,26 +52,26 @@ jobs:
     - name: Build (CMake) - Linux
       if: matrix.os == 'ubuntu-latest'
       run: |
-        cmake --build build --config Release -- -j4
+        cmake --build build --config Release -- -j2
       shell: bash
 
     - name: Build (CMake) - Windows
       if: matrix.os == 'windows-latest'
       run: |
-        cmake --build build --config Release -- -j4
+        cmake --build build --config Release -- -j2
       shell: pwsh
 
     - name: Run tests (CTest) - Linux
       if: matrix.os == 'ubuntu-latest'
       run: |
-        cmake --build build --config Release --target test || true
+        cmake --build build --config Release --target test
         ctest --test-dir build --output-on-failure -C Release
       shell: bash
 
     - name: Run tests (CTest) - Windows
       if: matrix.os == 'windows-latest'
       run: |
-        cmake --build build --config Release --target test || true
+        cmake --build build --config Release --target test
         ctest --test-dir build --output-on-failure -C Release
       shell: pwsh
 
@@ -148,13 +148,13 @@ jobs:
     - name: Build (CMake) - Linux (release)
       if: matrix.os == 'ubuntu-latest'
       run: |
-        cmake --build build --config Release -- -j4
+        cmake --build build --config Release -- -j2
       shell: bash
 
     - name: Build (CMake) - Windows (release)
       if: matrix.os == 'windows-latest'
       run: |
-        cmake --build build --config Release -- -j4
+        cmake --build build --config Release -- -j2
       shell: pwsh
 
     - name: Run tests (release) - Linux
