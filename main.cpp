@@ -282,6 +282,8 @@ int main(int argc, char* argv[])
     }
     
     // start analysing games
+    std::cout << "++++++ Games Found : " << PGN_GAMES.size() << '\n';
+
     for(size_t i=0; i<PGN_GAMES.size(); ++i)
     {
         std::cout << "Analysing " << PGN_GAMES[i] << " please wait...\n";
@@ -298,10 +300,10 @@ int main(int argc, char* argv[])
             FILENAME[i],
             FILENAME[i]+".analyzed",
             engine,
-            std::to_string(depth).data(),
-            std::to_string(thread).data(),
-            std::to_string(openning_move_skip).data(),
-            std::to_string(movesUntil).data(),
+            depth,
+            thread,
+            openning_move_skip,
+            movesUntil,
             color
         );
         apgn_convert::uci_to_pgn(FILENAME[i]+".analyzed",FILENAME[i]+".analyzed.pgn");

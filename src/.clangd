@@ -1,0 +1,59 @@
+InlayHints:
+  Designators: No
+  Enabled: Yes
+  ParameterNames: No
+  DeducedTypes: No
+
+CompileFlags:
+  Add: [
+    -std=c++17,
+    -Werror=shadow,
+    -IC:\Program Files\OpenSSL\include,
+    -I../build/_deps/boost-src/libs/process/include/,
+    -I../build/_deps/screen_capture_lite/src/screen_capture_lite/include,
+    -I../build/_deps/boost-src/libs/asio/include,
+    -I../build/_deps/boost-src/libs/beast/include,
+    -I../build/_deps/boost-src/libs/config/include,
+    -I../build/_deps/boost-src/libs/assert/include,
+    -I../build/_deps/boost-src/libs/throw_exception/include,
+    -I../build/_deps/boost-src/libs/core/include,
+    -I../build/_deps/boost-src/libs/system/include,
+    -I../build/_deps/boost-src/libs/filesystem/include,
+    -I../build/_deps/boost-src/libs/align/include,
+    -I../build/_deps/boost-src/libs/winapi/include,
+    -I../build/_deps/boost-src/libs/predef/include,
+    -I../build/_deps/boost-src/libs/date_time/include,
+    -I../build/_deps/boost-src/libs/smart_ptr/include,
+    -I../build/_deps/boost-src/libs/utility/include,
+    -I../build/_deps/boost-src/libs/static_assert/include,
+    -I../build/_deps/boost-src/libs/type_traits/include,
+    -I../build/_deps/boost-src/libs/numeric/conversion/include,
+    -I../build/_deps/boost-src/libs/conversion/include,
+    -I../build/_deps/boost-src/libs/mpl/include,
+    -I../build/_deps/boost-src/libs/io/include,
+    -I../build/_deps/boost-src/libs/describe/include,
+    -I../build/_deps/boost-src/libs/mp11/include,
+    -I../build/_deps/boost-src/libs/bind/include,
+    -I../build/_deps/boost-src/libs/move/include,
+    -I../build/_deps/boost-src/libs/intrusive/include,
+    -I../build/_deps/boost-src/libs/logic/include,
+    -I../build/_deps/boost-src/libs/container_hash/include,
+    -I../build/_deps/boost-src/libs/static_string/include,
+    -I../build/_deps/boost-src/libs/endian/include,
+    -I../build/_deps/boost-src/libs/optional/include,
+    -I../build/_deps/boost-src/libs/preprocessor/include,
+    -I../build/_deps/boost-src/libs/iterator/include,
+    -I../build/_deps/boost-src/libs/detail/include,
+    -I../build/_deps/sfml-src/include,
+    -I../build/_deps/torch-src/include,
+  ]
+  Compiler: g++
+
+Diagnostics:
+  ClangTidy:
+    Add: [ cppcoreguidelines*, performance*, bugprone*, clang-analyzer*, darwin*, abseil* ]
+    Remove: [
+      modernize-use-trailing-return-type,
+      cppcoreguidelines-avoid-magic-numbers,
+      cppcoreguidelines-special-member-functions,
+    ]

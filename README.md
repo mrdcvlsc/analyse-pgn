@@ -28,9 +28,9 @@ The **.stats.txt** file will contain
 ---------------------------
 
 ## Build Support
-  - standard >= C++17
-  - Windows MinGW Makefile
-  - Linux GCC Makefile
+  - c++ standard: `>= C++17`.
+  - Windows: `MinGW Makefile` + `gcc/g++` & `cmake v3.30+`.
+  - Linux `gcc/g++` + `Makefile` (available by default in ubuntu flavors)
 
 **Build apgn**
 

@@ -47,7 +47,7 @@ static const char *VERSION = "2017.04.07";
 // The length of algebraic moves expected by a UCI engine.
 #define ALGEBRAIC_MOVELEN 4
 
-void extractInfo(string& info, vector<string> infoTokens, int searchDepth);
+void extractInfo(string& info, vector<string> infoTokens);
 bool readGame(istream &movestream, vector<string> &movelist,
         string& fenstring, int& bookDepth);
 void sendGame(vector<string> &movelist, const string& fenstring, int bookDepth);
@@ -186,6 +186,7 @@ int main(int argc, char *argv[]) {
                 string vars(argv[argnum]);
                 argnum++;
                 numVariations = strToInt(vars);
+
             } else {
                 cerr << "Missing value argument to " << arg << endl;
                 ok = false;
@@ -210,7 +211,7 @@ int main(int argc, char *argv[]) {
                 ok = false;
             }
         } else {
-            cerr << "Unknown argument: " << arg << endl;
+            cerr << "Unknown argument input: " << arg << endl;
             ok = false;
         }
     }
@@ -220,6 +221,7 @@ int main(int argc, char *argv[]) {
         for (; argnum < argc; argnum++) {
             files.push_back(argv[argnum]);
         }
+
         ok = runEngine(files);
         return ok ? 0 : -1;
     } else {
@@ -618,7 +620,7 @@ void sendGame(vector<string> &movelist, const string& fenstring, int bookDepth) 
  * Extract the information from an info line returned
  * by the engine.
  */
-void extractInfo(string &info, vector<string> infoTokens, int searchDepth) {
+void extractInfo(string &info, vector<string> infoTokens) {
     ASSERT_IS("info", infoTokens[0]);
     if (info.find("multipv ") != string::npos) {
         int numTokens = infoTokens.size();
@@ -960,7 +962,7 @@ void obtainEvaluations(void) {
             if (tokens.size() > 0) {
                 string tokenType = tokens[0];
                 if (tokenType == "info") {
-                    extractInfo(reply, tokens, searchDepth);
+                    extractInfo(reply, tokens);
                 } else if (tokenType == "bestmove") {
                     bestMoveFound = true;
                 }

@@ -1,224 +1,145 @@
 #include "convert.hpp"
 
-
 namespace apgn_convert
 {
-    int run_subprog(std::string program, char *const args[])
+    int run_process(const std::string& program, const std::vector<std::string>& args)
     {
+        std::cout << "---------------------\n";
         std::cout << "run sub-program: " << program << '\n';
-        std::cout << "      arguments: " << '\n';
-
-        try {
-            for (size_t i = 0; args[i] != nullptr; i++) {
-                if (args[i]) {
-                    std::cout << "\t\t" << std::string(args[i]) << '\n';
-                }
-            }
-        } catch (const std::exception& e) {
-            std::cerr << "Error printing args: " << e.what() << '\n';
+        std::cout << "      arguments:\n";
+        for (const auto& arg : args) {
+            std::cout << "\t\t" << arg << '\n';
         }
-
         std::cout << '\n';
 
-        #if defined(__linux__)
-        int status;
-
-        if(!std::filesystem::exists(program))
-            throw std::logic_error("'"+std::string(program)+"' file not found");
-
-        int pid = fork();
-
-        if(pid==-1) throw std::runtime_error("error forking subprocess");
-
-        if(pid==0) execv(program.data(),args);
-        else       waitpid(pid, &status, 0);
-
-        return status;
-        #elif defined(_WIN32)
-        std::vector<std::string> cmdArguments;
-
-        size_t ARGI = 0;
-        while(args[ARGI]!=NULL)
-        {
-            cmdArguments.push_back(args[ARGI]);
-            ARGI++;
+        if (!std::filesystem::exists(program)) {
+            throw std::logic_error("'" + program + "' executable file not found");
         }
-        apgn::runAndGrabOutput(program.c_str(),cmdArguments);
-        return 0;
-        #endif
+
+        boost::asio::io_context io_context;
+        
+        // Set up pipes for stdout and stderr
+        boost::process::ipstream pipe_out;
+        boost::process::ipstream pipe_err;
+        
+        // Start the process
+        boost::process::child c(
+            program,
+            boost::process::args(args),
+            boost::process::std_out > pipe_out,
+            boost::process::std_err > pipe_err
+        );
+
+        // Read and print output (synchronously)
+        std::string line;
+        while (pipe_out && std::getline(pipe_out, line)) {
+            std::cout << line << '\n';
+        }
+
+        while (pipe_err && std::getline(pipe_err, line)) {
+            std::cerr << line << '\n';
+        }
+        
+        // Wait for process to complete
+        c.wait();
+        
+        std::cout << "=====================\n";
+
+        return c.exit_code();
     }
 
-    void uci_to_pgn(const std::string& input, const std::string output)
+    void uci_to_pgn(const std::string& input, const std::string& output)
     {
-        std::string PGN_EXTRACT = "pgn-extract", FLG1 = "-WsanPNBRQK", FLG2 = "--output";
-        char *const args[] = {PGN_EXTRACT.data(),FLG1.data(),FLG2.data(),(char* const)output.c_str(),(char* const)input.c_str(),NULL};
+        auto program = (std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "pgn-extract" / 
+            #if defined(_WIN32)
+                "pgn-extract.exe"
+            #else
+                "pgn-extract"
+            #endif
+        ).string();
+        
+        std::vector<std::string> args = {
+            "-WsanPNBRQK",
+            "--output", output,
+            input
+        };
 
-        #if defined(__linux__)
-        run_subprog((std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "pgn-extract" / "pgn-extract").string(),args);
-        #elif defined(_WIN32)
-        run_subprog((std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "pgn-extract" / "pgn-extract.exe").string(),args);
-        #endif
+        run_process(program, args);
     }
 
-    void pgn_to_uci(const std::string& input, const std::string output)
+    void pgn_to_uci(const std::string& input, const std::string& output)
     {
-        std::string PGN_EXTRACT = "pgn-extract", FLG1 = "-Wuci", FLG2 = "--output";
-        char *const args[] = {PGN_EXTRACT.data(),FLG1.data(),FLG2.data(),(char* const)output.c_str(),(char* const)input.c_str(),NULL};
+        auto program = (std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "pgn-extract" / 
+            #if defined(_WIN32)
+                "pgn-extract.exe"
+            #else
+                "pgn-extract"
+            #endif
+        ).string();
 
-        #if defined(__linux__)
-        run_subprog((std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "pgn-extract" / "pgn-extract").string(),args);
-        #elif defined(_WIN32)
-        run_subprog((std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "pgn-extract" / "pgn-extract.exe").string(),args);
-        #endif
+        std::vector<std::string> args = {
+            "-Wuci",
+            "--output", output,
+            input
+        };
+
+        run_process(program, args);
     }
 
     void analyse_game(
-        std::string input,
-        std::string output,
-        std::string engine,
-        char* search_depth,
-        char* threads,
-        char* opening_move_skips,
-        char* moves_until,
-        char apgn_COLOR
-    )   
+        const std::string& input,
+        const std::string& output,
+        const std::string& engine,
+        int search_depth,
+        int threads,
+        int opening_move_skips,
+        int moves_until,
+        char color
+    )
     {
-        std::string analyse_ = "analyse", engine_ = "--engine", searchd_ = "--searchdepth", bookd_ = "--bookdepth", setopt_ = "--setoption",
-                    movesuntil_ = "--movesuntil", threads_ = "Threads", annotate_ = "--annotatePGN", white_ = "--whiteonly", black_ = "--blackonly";
+        std::cout << "==>>>>> game analysis\n";
 
-        #if defined(__linux__)
-        char *const args[] = {
-        #else
+        auto analyse_executable = (std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "analyse" / 
+            #if defined(_WIN32)
+                "analyse.exe"
+            #else
+                "analyse"
+            #endif
+        ).string();
+
+        // Base arguments that are always used
         std::vector<std::string> args = {
-        #endif
-            analyse_.data(),
-            engine_.data(),engine.data(),
-            searchd_.data(),search_depth,
-            bookd_.data(),opening_move_skips,
-            movesuntil_.data(),moves_until,
-            setopt_.data(),threads_.data(),threads,
-            #if defined(__linux__)
-            annotate_.data(),input.data(),
-            NULL
-            #else
-            annotate_.data(),input.data()
-            #endif
+            "--engine", engine,
+            "--searchdepth", std::to_string(search_depth),
+            "--bookdepth", std::to_string(opening_move_skips),
+            "--movesuntil", std::to_string(moves_until),
+            "--setoption", "Threads", std::to_string(threads),
+            "--annotatePGN"
         };
 
-        #if defined(__linux__)
-        char *const args_white[] = {
-        #else
-        std::vector<std::string> args_white = {
-        #endif
-            analyse_.data(),
-            engine_.data(),engine.data(),
-            white_.data(),
-            searchd_.data(),search_depth,
-            bookd_.data(),opening_move_skips,
-            movesuntil_.data(),moves_until,
-            setopt_.data(),threads_.data(),threads,
-            #if defined(__linux__)
-            annotate_.data(),input.data(),
-            NULL
-            #else
-            annotate_.data(),input.data()
-            #endif
-        };
-
-        #if defined(__linux__)
-        char *const args_black[] = {
-        #else
-        std::vector<std::string> args_black = {
-        #endif
-            analyse_.data(),
-            engine_.data(),engine.data(),
-            black_.data(),
-            searchd_.data(),search_depth,
-            bookd_.data(),opening_move_skips,
-            movesuntil_.data(),moves_until,
-            setopt_.data(),threads_.data(),threads,
-            #if defined(__linux__)
-            annotate_.data(),input.data(),
-            NULL
-            #else
-            annotate_.data(),input.data()
-            #endif
-        };
-
-        #if defined(__linux__)
-        std::string result_pgn = "";
-        char std_output[4096+1];
-        memset(std_output,0,4096);
-
-        int reader[2];
-        if(pipe(reader)==-1) std::runtime_error("error creating pipe for stdout reading in analyse_game()");
-
-        int pid = fork();
-
-        if(pid==-1) std::runtime_error("error forking parent process, unable to create a child process in analyse_game()");
-
-        std::string analyse_executable_path = (std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "analyse" / "analyse").string();
-
-        if(pid==0)
+        // Add color-specific flags
+        switch (color)
         {
-            dup2(reader[1], STDOUT_FILENO);
-            close(reader[0]);
-            switch (apgn_COLOR)
-            {
-            case COLOR::ALL:
-                execv(analyse_executable_path.data(),args);
-                break;
             case COLOR::WHITE:
-                execv(analyse_executable_path.data(),args_white);
+                args.push_back("--whiteonly");
                 break;
             case COLOR::BLACK:
-                execv(analyse_executable_path.data(),args_black);
+                args.push_back("--blackonly");
                 break;
-            default:
-                throw std::runtime_error("something happend - error in convert.hpp");
-                break;
-            }
-            close(reader[1]);
-        }
-        else
-        {
-            close(reader[1]);
-            int nbytes = 0;
-            while(read(reader[0], std_output, sizeof(std_output)) != 0)
-            {
-                result_pgn+=std_output;
-                memset(std_output,0,4096);
-            }
-            close(reader[0]);
-            wait(NULL);
-        }
-        #else
-
-        #if !defined(_WIN32)
-            #error operating system not supported
-        #endif
-
-        std::string analyse_executable_path = (std::filesystem::path(apgnFileSys::getExecpath()) / "bin" / "analyse" / "analyse.exe").string();
-        std::string result_pgn;
-
-        switch (apgn_COLOR)
-        {
             case COLOR::ALL:
-                result_pgn = apgn::runAndGrabOutput(analyse_executable_path.data(),args);
-                break;
-            case COLOR::WHITE:
-                result_pgn = apgn::runAndGrabOutput(analyse_executable_path.data(),args_white);
-                break;
-            case COLOR::BLACK:
-                result_pgn = apgn::runAndGrabOutput(analyse_executable_path.data(),args_black);
+                // No additional flags needed for analyzing all moves
                 break;
             default:
-                throw std::runtime_error("something happend - error in convert.hpp");
-                break;
+                throw std::invalid_argument("Invalid color option");
         }
-        #endif
 
-        // check if file exist
+        args.push_back(input);
+
+        if (!std::filesystem::exists(analyse_executable)) {
+            throw std::logic_error("'" + analyse_executable + "' executable file not found");
+        }
+
+        // check if output file exist
         std::ifstream readf;
         readf.open(output);
 
@@ -232,7 +153,39 @@ namespace apgn_convert
 
         std::ofstream outfile;
         outfile.open(output,std::ios_base::trunc);
-        outfile<<result_pgn;
+
+        // Run analyse executable
+
+        boost::asio::io_context io_context;
+        
+        boost::process::ipstream pipe_out;
+        
+        std::cout << "==>>>>> analyse executable : " << analyse_executable << '\n';
+
+        for (const auto& eeee: args) {
+            std::cout << eeee << ' ';
+        }
+
+        std::cout << '\n';
+
+        boost::process::child c(
+            analyse_executable,
+            boost::process::args(args),
+            boost::process::std_out > pipe_out
+        );
+
+        std::string line;
+
+        while (pipe_out && std::getline(pipe_out, line)) {
+            std::cout << "reading analyse standard output...\n";
+            std::cout << "line = " << line << '\n';
+            outfile << line << '\n';
+        }
+        
+        // Wait for process to complete
+        c.wait();
+
+        // outfile<<result_pgn;
         outfile.close();
     }
 }

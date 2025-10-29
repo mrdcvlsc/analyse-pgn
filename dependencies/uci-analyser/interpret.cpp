@@ -86,6 +86,8 @@ namespace interpret
         cpPrec.str("");
         cpPrec.clear();
 
+        cout << "STATS SAVE FILE : " << saveFile << "\n";
+
         ofstream outfile;
         outfile.open(saveFile+".stats.txt",ios_base::out | ios_base::app);
         outfile<<"==============================================================\n";

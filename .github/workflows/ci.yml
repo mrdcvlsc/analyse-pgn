@@ -5,9 +5,9 @@ permissions:
 
 on:
   push:
-    branches: [ "main", "cmake-support" ]
+    branches: [ "main", "cmake-support", "boost_v1.89-process-support-removed-uci-analyser" ]
   pull_request:
-    branches: [ "main", "cmake-support" ]
+    branches: [ "main" ]
   release:
     types: [ "created" ]
 

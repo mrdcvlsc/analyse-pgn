@@ -23,6 +23,12 @@ test:
 package:
 	@cmake --build ${CMAKE_BUILD_DIR} --config ${CMAKE_CONFIG} --target package
 
+win_config:
+	cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles"
+
+win_build:
+	cmake --build build --config Debug
+
 clean:
 	@echo "removing pgn-extract object files"
 	@$(MAKE) -C dependencies/pgn-extract clean || true
