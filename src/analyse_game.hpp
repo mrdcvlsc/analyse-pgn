@@ -16,5 +16,18 @@ using error_code = boost::system::error_code;
 namespace process = boost::process;
 namespace asio = boost::asio;
 
+enum struct Piece : char {
+    White,
+    Black,
+    Both,
+};
 
-std::string analyse_game(const ChessGame &chess_game, const std::string &chess_engine);
+struct UciOptions {
+    int depth;
+    int threads;
+    int hash_size;
+    Piece piece;
+};
+
+std::string
+analyse_game(const ChessGame &chess_game, const std::string &chess_engine, const UciOptions &opts);

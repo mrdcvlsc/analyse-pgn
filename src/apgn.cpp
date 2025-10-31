@@ -5,6 +5,7 @@
 #include "analyse_game.hpp"
 #include "get_exe_dir.hpp"
 #include "load_games.hpp"
+#include "logger.hpp"
 
 #include <cstdlib>
 #include <filesystem>
@@ -12,6 +13,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 // always put this at the end
@@ -57,7 +59,19 @@ int main() {
 
     for (const auto &game : games) {
         std::cout << "==============================\n";
-        std::cout << analyse_game(game, chess_engine) << '\n';
+
+        auto thread_cnt = std::thread::hardware_concurrency();
+        auto threads_to_use = static_cast<int>(static_cast<float>(thread_cnt) * 0.75f);
+
+        if (threads_to_use <= 0 || threads_to_use > 512) {
+            threads_to_use = 1;
+        }
+
+        DEBUG_LOG("Threads to use by the chess engine : " + std::to_string(threads_to_use));
+
+        auto options = UciOptions{9, threads_to_use, 850, Piece::Both};
+
+        std::cout << analyse_game(game, chess_engine, options) << '\n';
     }
 
     return 0;
