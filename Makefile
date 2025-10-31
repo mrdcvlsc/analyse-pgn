@@ -29,6 +29,13 @@ win_config:
 win_build:
 	cmake --build build --config Debug
 
+win_config_rel:
+	cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release -G "MinGW Makefiles"
+
+win_build_rel:
+	cmake --build build-release --config Release
+
+
 clean:
 	@echo "removing pgn-extract object files"
 	@$(MAKE) -C dependencies/pgn-extract clean || true

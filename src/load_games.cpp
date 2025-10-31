@@ -12,9 +12,12 @@
 #include <filesystem>
 #include <iostream>
 #include <sstream>
+#include <utility>
 
 #include "chess_games.hpp"
 #include "get_exe_dir.hpp"
+#include "logger.hpp"
+#include "process.hpp"
 
 std::vector<ChessGame> load_games(const std::string &filename) {
     namespace asio = boost::asio;
@@ -35,23 +38,23 @@ std::vector<ChessGame> load_games(const std::string &filename) {
 
     auto child_process = process::process(ctx.get_executor(), pgn_extract,
         // {"-Wlalg", "--nocomments", "--nonags", "--nomovenumbers", "--nochecks", filename},
-        {"-Wlalg", "--nocomments", "--nomovenumbers", filename},
-        process::process_stdio{{}, pipe_stdout, {}});
+        {"-Wlalg", "--nocomments", "--nomovenumbers", filename}, process::process_stdio{{}, pipe_stdout, {}});
 
     std::string std_output;
     boost::system::error_code ec;
 
     asio::read(pipe_stdout, asio::dynamic_buffer(std_output), ec);
-    if (!ec || (ec != asio::error::eof)) {
-        std::cerr << "asio::dynamic_buffer result : " << ec.value() << " : " << ec.message()
-                  << '\n';
-    }
-
     int exit_code = child_process.wait();
 
-    std::cout << "PGN FILE:\n";
-    std::cout << std_output << '\n';
-    std::cout << "-----eof-----\n";
+    if (ec && ec != asio::error::broken_pipe) {
+        // broken pipe is normal here since the program ends after
+        // reading every standard output from the child process.
+        check_for_error("unable to run pgn-extract: " + ec.message(), child_process, ec);
+    }
+
+    DEBUG_LOG("PGN FILE:\n");
+    DEBUG_LOG(std_output + '\n');
+    DEBUG_LOG("-----eof-----\n");
 
     std::vector<ChessGame> games;
     ChessGame curr_game;
@@ -80,7 +83,7 @@ std::vector<ChessGame> load_games(const std::string &filename) {
             if (tag_end != npos && val_start != npos && val_end != npos && val_end > val_start) {
                 std::string tag = line.substr(1, tag_end - 1);
                 std::string val = line.substr(val_start + 1, val_end - val_start - 1);
-                curr_game.tags[tag] = val;
+                curr_game.tags.push_back(std::make_pair(tag, val));
             }
 
             continue;
@@ -112,6 +115,5 @@ std::vector<ChessGame> load_games(const std::string &filename) {
         }
     }
 
-    child_process.wait();
     return games;
 }

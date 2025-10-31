@@ -1,5 +1,6 @@
 #include "analyse_game.hpp"
 #include "logger.hpp"
+#include "process.hpp"
 
 #include <cstddef>
 #include <filesystem>
@@ -26,26 +27,6 @@
 namespace fs = std::filesystem;
 
 const int NOT_EXPECTED_LINE_OUTPUT_LIMIT = 1'000;
-
-void check_for_error(const std::string &msg, process::process &child_process, const error_code &ec) {
-    if (ec && ec != asio::error::eof) {
-        child_process.request_exit();
-        child_process.wait();
-        throw std::runtime_error(std::string("running chess engine failed: ") + ec.message());
-    }
-}
-
-std::string readline_child_stdout(asio::streambuf &child_stdout_buf) {
-    std::istream read_istream(&child_stdout_buf);
-    std::string child_output_line;
-    std::getline(read_istream, child_output_line);
-
-    if (!child_output_line.empty() && child_output_line.back() == '\r') {
-        child_output_line.pop_back();
-    }
-
-    return child_output_line;
-}
 
 std::string analyse_game(const ChessGame &chess_game, const std::string &chess_engine) {
 

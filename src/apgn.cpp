@@ -20,20 +20,17 @@
 #endif
 
 int main() {
-
     namespace fs = std::filesystem;
 
     auto games = load_games((fs::current_path() / "pgn_samples" / "first.pgn").string());
-
     std::cout << "number of games : " << games.size() << '\n';
 
     for (const auto &game : games) {
-        std::cout << "==============================\n";
+        std::cout << "===========LD===================\n";
 
         for (const auto &tag : game.tags) {
             auto key = tag.first;
             auto val = tag.second;
-
             std::cout << key << ":" << val << '\n';
         }
 
