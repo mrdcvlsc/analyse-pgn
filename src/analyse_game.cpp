@@ -3,9 +3,11 @@
 #include "process.hpp"
 
 #include <cstddef>
+#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <iterator>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -47,12 +49,15 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
     n = asio::read_until(pipe_stdout, child_stdout_buf, '\n', ec);
     check_for_error("running chess engine failed: ", uci_process, ec);
-    std::cout << "engine: " << readline_child_stdout(child_stdout_buf) << '\n';
+    auto uci_output = readline_child_stdout(child_stdout_buf);
+    DEBUG_LOG("engine: " + uci_output);
 
     // initialize uci chess engine
 
+    std::cout << "running " << chess_engine << "...\n";
+
     std::string init_uci = "uci\n";
-    std::cout << ">>> send: " << init_uci;
+    DEBUG_LOG(">>> send: " + init_uci);
     asio::write(pipe_stdin, asio::buffer(init_uci), ec);
     check_for_error("failed to send 'uci' to engine: ", uci_process, ec);
 
@@ -62,7 +67,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
         check_for_error("error while waiting for uciok: ", uci_process, ec);
 
         std::string line = readline_child_stdout(child_stdout_buf);
-        std::cout << "engine: " << line << '\n';
+        DEBUG_LOG("engine: " + line);
 
         if (line == "uciok") {
             break;
@@ -75,56 +80,63 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
         }
     }
 
+    std::cout << "setting uci options...\n";
+
     // set uci no ponder
 
     std::string set_ponder_false = "setoption name Ponder value false\n";
-    std::cout << ">>> send: " << set_ponder_false;
+    DEBUG_LOG(">>> send: " + set_ponder_false);
     asio::write(pipe_stdin, asio::buffer(set_ponder_false), ec);
     check_for_error("error on '" + set_ponder_false + "': ", uci_process, ec);
 
     // set uci transposition hash table size to 850MB
 
     std::string set_hash_size = "setoption name Hash value " + std::to_string(opts.hash_size) + "\n";
-    std::cout << ">>> send: " << set_hash_size;
+    DEBUG_LOG(">>> send: " + set_hash_size);
     asio::write(pipe_stdin, asio::buffer(set_hash_size), ec);
     check_for_error("error on '" + set_hash_size + "': ", uci_process, ec);
 
     // set uci to use ~75% of cpu threads
 
     std::string set_thread_use_cnt = "setoption name Threads value " + std::to_string(opts.threads) + "\n";
-    std::cout << ">>> send: " << set_thread_use_cnt;
+    DEBUG_LOG(">>> send: " + set_thread_use_cnt);
     asio::write(pipe_stdin, asio::buffer(set_thread_use_cnt), ec);
     check_for_error("error '" + set_thread_use_cnt + "': ", uci_process, ec);
 
     // set uci ready
 
     std::string set_isready = "isready\n";
-    std::cout << ">>> send: " << set_isready;
+    DEBUG_LOG(">>> send: " + set_isready);
     asio::write(pipe_stdin, asio::buffer(set_isready), ec);
     check_for_error("unable to send isready: ", uci_process, ec);
 
     n = asio::read_until(pipe_stdout, child_stdout_buf, '\n', ec);
     check_for_error("error on uci 'isready', unable to receive 'readyok': ", uci_process, ec);
-    std::cout << "engine: " << readline_child_stdout(child_stdout_buf) << '\n';
+    auto uci_isready_output = readline_child_stdout(child_stdout_buf);
+    DEBUG_LOG("engine: " + uci_isready_output);
 
     // start a new game
 
     std::string set_new_game = "ucinewgame\n";
-    std::cout << ">>> send: " << set_new_game;
+    DEBUG_LOG(">>> send: " + set_new_game);
     asio::write(pipe_stdin, asio::buffer(set_new_game), ec);
     check_for_error("unable to start a new game: ", uci_process, ec);
 
+    std::cout << "initial setups complete\n";
+
     // start game analysis
 
-    std::string moves;
+    std::string moves, bestmove_keyword = "bestmove ";
     moves.reserve(chess_game.moves.size() * 5 + 30);
     moves.append("position startpos moves\n");
 
-    std::cout << ">>> send: " << moves;
+    DEBUG_LOG(">>> send: " + moves);
     asio::write(pipe_stdin, asio::buffer(moves), ec);
     check_for_error("error sending starting position: ", uci_process, ec);
 
     moves.pop_back(); // we're removing the new line after feeding it to the child process
+
+    std::cout << "analyzing current game...\n";
 
     for (int i = 0; i < chess_game.moves.size(); i++) {
         auto moving_player = static_cast<Piece>(i % 2);
@@ -132,43 +144,91 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
         // get the best move
 
-        std::string line_last_best_move = "", line_2nd_last_best_move = "";
+        std::string move_best;
+        int move_best_cp = 0; // best move's centipawn
+        int move_best_cm = 0; // best move's checkmate after certain 'n' moves.
 
         if (opts.piece == Piece::Both || opts.piece == moving_player) {
             std::string get_best_move = "go depth " + std::to_string(opts.depth) + "\n";
             auto result = get_ucigo_bestmove(uci_process, get_best_move, pipe_stdin, pipe_stdout,
                 child_stdout_buf, opts);
 
-            line_last_best_move = result.first;
-            line_2nd_last_best_move = result.second;
+            auto bm_idx = result.first.find(bestmove_keyword);
+            if (bm_idx != std::string::npos) {
+                move_best = result.first.substr(bm_idx + bestmove_keyword.size(), 4);
+            }
+
+            std::string item;
+            std::istringstream strstream(result.second);
+
+            while (strstream >> item) {
+                if (item == "cp") {
+                    strstream >> item;
+                    move_best_cp = std::atoi(item.c_str());
+                    break;
+                }
+
+                if (item == "mate") {
+                    strstream >> item;
+                    move_best_cm = std::atoi(item.c_str());
+                    break;
+                }
+            }
         }
 
         // analyse the player's move
 
-        std::string line_last_player_move = "", line_2nd_last_player_move = "";
+        std::string move_player;
+        int move_player_cp = 0; // best move's centipawn
+        int move_player_cm = 0; // best move's checkmate after certain 'n' moves.
 
-        if (opts.piece == Piece::Both || opts.piece == moving_player) {
+        if ((opts.piece == Piece::Both || opts.piece == moving_player) && move != move_best) {
             std::string analyse_player_move =
                 "go depth " + std::to_string(opts.depth) + " searchmoves " + move + "\n";
 
             auto result = get_ucigo_bestmove(uci_process, analyse_player_move, pipe_stdin, pipe_stdout,
                 child_stdout_buf, opts);
 
-            line_last_player_move = result.first;
-            line_2nd_last_player_move = result.second;
+            auto bm_idx = result.first.find(bestmove_keyword);
+            if (bm_idx != std::string::npos) {
+                move_player = result.first.substr(bm_idx + bestmove_keyword.size(), 4);
+            }
+
+            std::string item;
+            std::istringstream strstream(result.second);
+
+            while (strstream >> item) {
+                if (item == "cp") {
+                    strstream >> item;
+                    move_player_cp = std::atoi(item.c_str());
+                    break;
+                }
+
+                if (item == "mate") {
+                    strstream >> item;
+                    move_player_cm = std::atoi(item.c_str());
+                    break;
+                }
+            }
+        } else {
+            move_player = move_best;
+            move_player_cp = move_best_cp;
+            move_player_cm = move_best_cm;
         }
 
-        std::cout << "**************** best move ****************\n";
+        DEBUG_LOG("**************** best move ****************");
 
-        std::cout << "+> " << line_2nd_last_best_move << '\n';
-        std::cout << "+> " << line_last_best_move << '\n';
+        DEBUG_LOG("+> best move " + move_best +
+                  ((!move_best_cp && move_best_cm) ? (" checkmate in " + std::to_string(move_best_cm))
+                                                   : (" centipawn " + std::to_string(move_best_cp))));
 
-        std::cout << "*************** player move ***************\n";
+        DEBUG_LOG("*************** player move ***************");
 
-        std::cout << "+> " << line_2nd_last_player_move << '\n';
-        std::cout << "+> " << line_last_player_move << '\n';
+        DEBUG_LOG("+> player move " + move_player +
+                  ((!move_player_cp && move_player_cm) ? (" checkmate in " + std::to_string(move_player_cm))
+                                                       : (" centipawn " + std::to_string(move_player_cp))));
 
-        std::cout << "*******************************************\n";
+        DEBUG_LOG("*******************************************");
 
         // send moves to the engine
 
@@ -176,24 +236,31 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
         moves.append(move);
         moves.push_back('\n');
 
-        std::cout << ">>> send: " << moves;
+        DEBUG_LOG(">>> send: " + moves);
         asio::write(pipe_stdin, asio::buffer(moves), ec);
         check_for_error("error sending moves: ", uci_process, ec);
 
         moves.pop_back();
     }
 
+    std::cout << "analysis done, killing " << chess_engine << " child process now...\n";
+
     // request uci chess engine exit
 
     std::string quit_uci = "quit\n";
-    std::cout << ">>> send: " << quit_uci;
+    DEBUG_LOG(">>> send: " + quit_uci);
     asio::write(pipe_stdin, asio::buffer(quit_uci), ec);
     check_for_error("unable to properly close chess engine with 'quit': ", uci_process, ec);
 
     uci_process.request_exit();
     auto process_return_int = uci_process.wait();
 
-    std::cout << "uci engine return status " << process_return_int << '\n';
+    if (process_return_int) {
+        std::cout << "uci chess engine return status : " << process_return_int << '\n';
+        std::cout << "warning: an error might have occured\n";
+    } else {
+        std::cout << "uci engine return status : " << process_return_int << " <- no errors : success";
+    }
 
     return {};
 }
@@ -210,7 +277,7 @@ std::pair<std::string, std::string> get_ucigo_bestmove(process::process &uci_pro
     std::string line_2nd_last = "";
     std::string line_last = "";
 
-    std::cout << ">>> send: " << go_command;
+    DEBUG_LOG(">>> send: " + go_command);
     asio::write(pipe_stdin, asio::buffer(go_command), ec);
     check_for_error("error starting analysis: ", uci_process, ec);
 
@@ -221,7 +288,7 @@ std::pair<std::string, std::string> get_ucigo_bestmove(process::process &uci_pro
         check_for_error("error reading analysis output: ", uci_process, ec);
 
         std::string line = readline_child_stdout(child_stdout_buf);
-        std::cout << "engine: " << line << '\n';
+        DEBUG_LOG("engine: " + line);
 
         line_2nd_last = line_last;
         line_last = line;

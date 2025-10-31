@@ -20,6 +20,8 @@
 #include "process.hpp"
 
 std::vector<ChessGame> load_games(const std::string &filename) {
+    std::cout << "reading pgn file : " << filename << '\n';
+
     namespace asio = boost::asio;
     namespace process = boost::process;
     namespace fs = std::filesystem;
@@ -36,6 +38,8 @@ std::vector<ChessGame> load_games(const std::string &filename) {
         )
                            .string();
 
+    std::cout << "converting '" + filename + "' file to long-algebraic notation...\n";
+
     auto child_process = process::process(ctx.get_executor(), pgn_extract,
         {"-Wlalg", "--nocomments", "--nonags", "--nomovenumbers", "--nochecks", filename},
         // {"-Wlalg", "--nocomments", "--nomovenumbers", filename},
@@ -46,6 +50,8 @@ std::vector<ChessGame> load_games(const std::string &filename) {
 
     asio::read(pipe_stdout, asio::dynamic_buffer(std_output), ec);
     int exit_code = child_process.wait();
+
+    std::cout << "conversion of '" + filename + "' file to long-algebraic notation done!\n";
 
     if (ec && ec != asio::error::broken_pipe) {
         // broken pipe is normal here since the program ends after
@@ -115,6 +121,8 @@ std::vector<ChessGame> load_games(const std::string &filename) {
             }
         }
     }
+
+    std::cout << filename << " game loaded to program successfully!\n";
 
     return games;
 }

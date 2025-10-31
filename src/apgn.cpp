@@ -69,7 +69,7 @@ int main() {
 
         DEBUG_LOG("Threads to use by the chess engine : " + std::to_string(threads_to_use));
 
-        auto options = UciOptions{9, threads_to_use, 850, Piece::Both};
+        auto options = UciOptions{11, threads_to_use, 850, Piece::Both};
 
         std::cout << analyse_game(game, chess_engine, options) << '\n';
     }

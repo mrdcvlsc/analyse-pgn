@@ -18,7 +18,7 @@ std::string get_timestamp() {
     std::tm local_tm = *std::localtime(&now_c);
 
     std::ostringstream time;
-    time << std::put_time(&local_tm, "%Y-%m-%d %H:%M:%S");
+    time << std::put_time(&local_tm, "%Y-%m-%d+%H:%M:%S");
 
     std::string timestamp = time.str();
 
