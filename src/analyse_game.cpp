@@ -1,10 +1,6 @@
 #include "analyse_game.hpp"
+#include "logger.hpp"
 
-#include <algorithm>
-#include <boost/asio.hpp>
-#include <boost/process.hpp>
-
-#include <chrono>
 #include <cstddef>
 #include <filesystem>
 #include <iostream>
@@ -13,24 +9,21 @@
 #include <string>
 #include <thread>
 
-#include "boost/asio/buffer.hpp"
-#include "boost/asio/error.hpp"
-#include "boost/asio/impl/read.hpp"
-#include "boost/asio/impl/read_until.hpp"
-#include "boost/asio/impl/write.hpp"
-#include "boost/asio/readable_pipe.hpp"
-#include "boost/asio/registered_buffer.hpp"
-#include "boost/asio/streambuf.hpp"
-#include "boost/asio/writable_pipe.hpp"
-#include "boost/process/v2/process.hpp"
-#include "boost/system/detail/error_code.hpp"
-#include "get_exe_dir.hpp"
-#include "logger.hpp"
+#include <boost/asio.hpp>
+#include <boost/asio/buffer.hpp>
+#include <boost/asio/error.hpp>
+#include <boost/asio/impl/read.hpp>
+#include <boost/asio/impl/read_until.hpp>
+#include <boost/asio/impl/write.hpp>
+#include <boost/asio/readable_pipe.hpp>
+#include <boost/asio/registered_buffer.hpp>
+#include <boost/asio/streambuf.hpp>
+#include <boost/asio/writable_pipe.hpp>
+#include <boost/process.hpp>
+#include <boost/process/v2/process.hpp>
+#include <boost/system/detail/error_code.hpp>
 
-namespace asio = boost::asio;
-namespace process = boost::process;
 namespace fs = std::filesystem;
-using error_code = boost::system::error_code;
 
 const int NOT_EXPECTED_LINE_OUTPUT_LIMIT = 1'000;
 
@@ -74,7 +67,7 @@ std::string analyse_game(const ChessGame &chess_game, const std::string &chess_e
 
     n = asio::read_until(pipe_stdout, child_stdout_buf, '\n', ec);
     check_for_error("running chess engine failed: ", child_process, ec);
-    std::cout << "Chess Engine Initial Out : " << readline_child_stdout(child_stdout_buf) << '\n';
+    std::cout << "engine: " << readline_child_stdout(child_stdout_buf) << '\n';
 
     // initialize uci chess engine
 
@@ -107,14 +100,14 @@ std::string analyse_game(const ChessGame &chess_game, const std::string &chess_e
     std::string set_ponder_false = "setoption name Ponder value false\n";
     std::cout << ">>> send: " << set_ponder_false;
     asio::write(pipe_stdin, asio::buffer(set_ponder_false), ec);
-    check_for_error("unable to set option on chess engine: ", child_process, ec);
+    check_for_error("error on '" + set_ponder_false + "': ", child_process, ec);
 
     // set uci transposition hash table size to 850MB
 
     std::string set_hash_size = "setoption name Hash value 850\n";
     std::cout << ">>> send: " << set_hash_size;
     asio::write(pipe_stdin, asio::buffer(set_hash_size), ec);
-    check_for_error("unable to set option on chess engine: ", child_process, ec);
+    check_for_error("error on '" + set_hash_size + "': ", child_process, ec);
 
     // set uci to use ~75% of cpu threads
 
@@ -130,7 +123,7 @@ std::string analyse_game(const ChessGame &chess_game, const std::string &chess_e
     std::string set_thread_use_cnt = "setoption name Threads value " + std::to_string(threads_to_use) + "\n";
     std::cout << ">>> send: " << set_thread_use_cnt;
     asio::write(pipe_stdin, asio::buffer(set_thread_use_cnt), ec);
-    check_for_error("unable to set option on chess engine: ", child_process, ec);
+    check_for_error("error '" + set_thread_use_cnt + "': ", child_process, ec);
 
     // set uci ready
 
@@ -148,7 +141,7 @@ std::string analyse_game(const ChessGame &chess_game, const std::string &chess_e
     std::string quit_uci = "quit\n";
     std::cout << ">>> send: " << quit_uci;
     asio::write(pipe_stdin, asio::buffer(quit_uci), ec);
-    check_for_error("unable to properly close chess engine: ", child_process, ec);
+    check_for_error("unable to properly close chess engine with 'quit': ", child_process, ec);
 
     child_process.request_exit();
     auto process_return_int = child_process.wait();
