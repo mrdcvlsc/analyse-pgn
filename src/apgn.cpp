@@ -71,6 +71,7 @@ int main() {
 
         auto options = UciOptions{11, threads_to_use, 850, Piece::Both};
 
+        std::cout << "================\n\nanalysed game:\n\n";
         std::cout << analyse_game(game, chess_engine, options) << '\n';
     }
 

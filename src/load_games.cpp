@@ -110,14 +110,14 @@ std::vector<ChessGame> load_games(const std::string &filename) {
                     continue;
                 }
 
+                curr_game.moves.push_back(move);
+
                 if (move == "1-0" || move == "0-1" || move == "1/2-1/2" || move == "*") {
                     in_headers = in_moves = false;
                     games.push_back(curr_game);
                     curr_game = ChessGame();
                     break;
                 }
-
-                curr_game.moves.push_back(move);
             }
         }
     }

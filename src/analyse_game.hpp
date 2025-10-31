@@ -45,3 +45,5 @@ std::pair<std::string, std::string> get_ucigo_bestmove(process::process &uci_pro
     asio::readable_pipe &pipe_stdout,
     asio::streambuf &child_stdout_buf,
     const UciOptions &opts);
+
+std::string score_comments(int centipawn_difference, int player_move_centipawn);
