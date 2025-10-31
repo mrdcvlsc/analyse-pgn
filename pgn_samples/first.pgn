@@ -20,25 +20,3 @@ Kxe4 47. Rf1 Be6 48. Kc6 Ke3 49. Kd6 Ke2 50. Rf4 g5 51. Rf6 Ke3 52. Kc6 Ke4 53.
 Kb7 Ke5 54. Rxe6+ Kxe6 55. c8=Q+ Kf6 56. Qc6+ Kg7 57. Qc3+ Kg6 58. Qd3+ Kg7 59.
 Qd4+ f6 60. Qd7+ Kg6 61. Qd3+ Kg7 62. g4 Kf7 63. Qf5 Ke7 64. Kb6 Kf7 65. Kc6 Ke7
 66. Kd5 Kf7 67. Kd6 Kg7 68. Ke6 h5 69. Qxf6+ Kh7 70. Qxg5 1-0
-[Event "sample game 2"]
-[Site "chesstest.com"]
-[Date "2012.12.12"]
-[Round "?"]
-[White "playerX"]
-[Black "playerY"]
-[Result "1-0"]
-[TimeControl "180"]
-[WhiteElo "1342"]
-[BlackElo "1335"]
-[Termination "playerX won on time"]
-1. d4 d5 2. Nf3 Nf6 3. c4 c6 4. Bg5 Bf5 5. Nc3 h6 6. Bxf6 exf6 7. e3 Bb4 8. cxd5
-Qxd5 9. Nh4 Bxc3+ 10. bxc3 Bg6 11. c4 Qa5+ 12. Qd2 Qxd2+ 13. Kxd2 Nd7 14. f3
-O-O-O 15. e4 Nb6 16. Rb1 Rxd4+ 17. Kc3 Rdd8 18. Be2 Rhe8 19. g3 Na4+ 20. Kb4 Nb6
-21. Rhd1 Kc7 22. Ng2 Rxd1 23. Rxd1 Re7 24. Ne3 Nd7 25. a4 Ne5 26. Rd2 b6 27. a5
-c5+ 28. Kb5 bxa5 29. Nd5+ Kd6 30. Nxe7+ Kxe7 31. Kxc5 Nd7+ 32. Kb5 a4 33. Kxa4
-Nc5+ 34. Kb5 Nb3 35. Rb2 Nd4+ 36. Ka6 Nxe2 37. Rxe2 Kd6 38. Kxa7 Kc5 39. Rc2 Kd4
-40. Kb6 Kd3 41. Rc1 Kd2 42. Ra1 Kd3 43. c5 f5 44. c6 fxe4 45. c7 Bf5 46. fxe4
-Kxe4 47. Rf1 Be6 48. Kc6 Ke3 49. Kd6 Ke2 50. Rf4 g5 51. Rf6 Ke3 52. Kc6 Ke4 53.
-Kb7 Ke5 54. Rxe6+ Kxe6 55. c8=Q+ Kf6 56. Qc6+ Kg7 57. Qc3+ Kg6 58. Qd3+ Kg7 59.
-Qd4+ f6 60. Qd7+ Kg6 61. Qd3+ Kg7 62. g4 Kf7 63. Qf5 Ke7 64. Kb6 Kf7 65. Kc6 Ke7
-66. Kd5 Kf7 67. Kd6 Kg7 68. Ke6 h5 69. Qxf6+ Kh7 70. Qxg5 1-0

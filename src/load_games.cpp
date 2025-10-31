@@ -37,8 +37,9 @@ std::vector<ChessGame> load_games(const std::string &filename) {
                            .string();
 
     auto child_process = process::process(ctx.get_executor(), pgn_extract,
-        // {"-Wlalg", "--nocomments", "--nonags", "--nomovenumbers", "--nochecks", filename},
-        {"-Wlalg", "--nocomments", "--nomovenumbers", filename}, process::process_stdio{{}, pipe_stdout, {}});
+        {"-Wlalg", "--nocomments", "--nonags", "--nomovenumbers", "--nochecks", filename},
+        // {"-Wlalg", "--nocomments", "--nomovenumbers", filename},
+        process::process_stdio{{}, pipe_stdout, {}});
 
     std::string std_output;
     boost::system::error_code ec;

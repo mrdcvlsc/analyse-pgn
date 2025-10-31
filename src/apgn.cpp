@@ -57,7 +57,7 @@ int main() {
         )
                             .string();
 
-    for (const auto &game : games) {
+    for (auto &game : games) {
         std::cout << "==============================\n";
 
         auto thread_cnt = std::thread::hardware_concurrency();
