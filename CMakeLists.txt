@@ -20,9 +20,10 @@ file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/pgn-extract)
 add_subdirectory(${CMAKE_SOURCE_DIR}/dependencies/pgn-extract)
 
 add_executable(${PROJECT_NAME}
+    ${CMAKE_SOURCE_DIR}/src/analyse_game.cpp
     ${CMAKE_SOURCE_DIR}/src/apgn.cpp
-    ${CMAKE_SOURCE_DIR}/src/chess_games.cpp
     ${CMAKE_SOURCE_DIR}/src/get_exe_dir.cpp
+    ${CMAKE_SOURCE_DIR}/src/load_games.cpp
     ${CMAKE_SOURCE_DIR}/src/logger.cpp
 )
 

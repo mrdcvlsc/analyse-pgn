@@ -1,5 +1,4 @@
-#ifndef SW_LOGGER_HPP
-#define SW_LOGGER_HPP
+#pragma once
 
 #include <ctime>
 #include <string>
@@ -20,6 +19,4 @@ std::string get_timestamp();
     #define DEBUG_ERR(x) // noop
     #define DEBUG_LOG_HEX(x) // noop
     #define DEBUG_ERR_HEX(x) // noop
-#endif
-
 #endif

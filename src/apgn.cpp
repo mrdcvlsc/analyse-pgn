@@ -1,4 +1,10 @@
-#include "chess_games.hpp"
+#if defined(_WIN32) || defined(_WIN64)
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#include "analyse_game.hpp"
+#include "get_exe_dir.hpp"
+#include "load_games.hpp"
 
 #include <cstdlib>
 #include <filesystem>
@@ -10,7 +16,6 @@
 
 // always put this at the end
 #if defined(_WIN32) || defined(_WIN64)
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 
@@ -39,6 +44,23 @@ int main() {
         }
 
         std::cout << '\n';
+    }
+
+    std::cout << '\n';
+    std::cout << '\n';
+
+    auto chess_engine = (fs::path(get_exe_dir()) / "bin" / "engines" /
+#if defined(_WIN32)
+                         "stockfish.exe"
+#else
+                         "stockfish"
+#endif
+        )
+                            .string();
+
+    for (const auto &game : games) {
+        std::cout << "==============================\n";
+        std::cout << analyse_game(game, chess_engine) << '\n';
     }
 
     return 0;

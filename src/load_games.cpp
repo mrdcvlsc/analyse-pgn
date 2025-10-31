@@ -34,15 +34,16 @@ std::vector<ChessGame> load_games(const std::string &filename) {
                            .string();
 
     auto child_process = process::process(ctx.get_executor(), pgn_extract,
-        {"-Wlalg", "--nocomments", "--nonags", "--nomovenumbers", "--nochecks", filename},
+        // {"-Wlalg", "--nocomments", "--nonags", "--nomovenumbers", "--nochecks", filename},
+        {"-Wlalg", "--nocomments", "--nomovenumbers", filename},
         process::process_stdio{{}, pipe_stdout, {}});
 
     std::string std_output;
-    boost::system::error_code err;
+    boost::system::error_code ec;
 
-    asio::read(pipe_stdout, asio::dynamic_buffer(std_output), err);
-    if (!err || (err != asio::error::eof)) {
-        std::cerr << "asio::dynamic_buffer result : " << err.value() << " : " << err.message()
+    asio::read(pipe_stdout, asio::dynamic_buffer(std_output), ec);
+    if (!ec || (ec != asio::error::eof)) {
+        std::cerr << "asio::dynamic_buffer result : " << ec.value() << " : " << ec.message()
                   << '\n';
     }
 
