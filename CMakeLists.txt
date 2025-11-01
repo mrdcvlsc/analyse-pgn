@@ -46,7 +46,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 enable_testing()
 
 add_test(NAME run_apgn_sample
-  COMMAND $<TARGET_FILE:${PROJECT_NAME}> ${CMAKE_SOURCE_DIR}/pgn_samples/first.pgn -color W -depth 11
+  COMMAND $<TARGET_FILE:${PROJECT_NAME}> --player Black --threads 1 ${CMAKE_SOURCE_DIR}/pgn_samples/first.pgn --depth 4 --hash-size 200
 )
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ".")

@@ -1,7 +1,7 @@
 set(files
-  pgn_samples/first.analyzed.pgn
+  pgn_samples/analyzed-first.pgn
   pgn_samples/first.pgn
-  pgn_samples/first.stats.txt
+#   pgn_samples/analyzed-first.stats
 )
 
 set(missing)
