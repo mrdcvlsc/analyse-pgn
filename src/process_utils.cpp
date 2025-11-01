@@ -1,11 +1,12 @@
-#include "process.hpp"
-#include "boost/asio/error.hpp"
+#include "process_utils.hpp"
+
+#include <boost/asio/error.hpp>
+
 #include <iostream>
 
 void check_for_error(const std::string &msg, process::process &child_process, const error_code &ec) {
     if (ec && ec != asio::error::eof) {
         child_process.request_exit();
-        child_process.wait();
         throw std::runtime_error(std::string("running chess engine failed: ") + ec.message());
     }
 }

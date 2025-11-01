@@ -1,3 +1,6 @@
+#include "get_exe_dir.hpp"
+#include "logger.hpp"
+
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
@@ -14,9 +17,6 @@
 #include <stdlib.h>
 #include <windows.h>
 #endif
-
-#include "get_exe_dir.hpp"
-#include "logger.hpp"
 
 std::string get_exe_dir() {
 #if defined(__linux__)

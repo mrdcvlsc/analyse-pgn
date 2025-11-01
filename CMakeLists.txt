@@ -25,7 +25,8 @@ add_executable(${PROJECT_NAME}
     ${CMAKE_SOURCE_DIR}/src/get_exe_dir.cpp
     ${CMAKE_SOURCE_DIR}/src/load_games.cpp
     ${CMAKE_SOURCE_DIR}/src/logger.cpp
-    ${CMAKE_SOURCE_DIR}/src/process.cpp
+    ${CMAKE_SOURCE_DIR}/src/process_utils.cpp
+    ${CMAKE_SOURCE_DIR}/src/save_games.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)

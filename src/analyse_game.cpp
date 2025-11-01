@@ -1,16 +1,6 @@
 #include "analyse_game.hpp"
 #include "logger.hpp"
-#include "process.hpp"
-
-#include <cstddef>
-#include <cstdlib>
-#include <filesystem>
-#include <iostream>
-#include <iterator>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <thread>
+#include "process_utils.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/asio/buffer.hpp>
@@ -25,6 +15,16 @@
 #include <boost/process.hpp>
 #include <boost/process/v2/process.hpp>
 #include <boost/system/detail/error_code.hpp>
+
+#include <cstddef>
+#include <cstdlib>
+#include <filesystem>
+#include <iostream>
+#include <iterator>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <thread>
 #include <utility>
 
 namespace fs = std::filesystem;
@@ -313,6 +313,8 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
             analyzed_game.push_back(' ');
         }
     }
+
+    analyzed_game.push_back('\n');
 
     return analyzed_game;
 }

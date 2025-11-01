@@ -1,3 +1,4 @@
+#include "save_games.hpp"
 #if defined(_WIN32) || defined(_WIN64)
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -57,6 +58,8 @@ int main() {
         )
                             .string();
 
+    std::string analyzed_games = "";
+
     for (auto &game : games) {
         std::cout << "==============================\n";
 
@@ -72,8 +75,14 @@ int main() {
         auto options = UciOptions{11, threads_to_use, 850, Piece::Both};
 
         std::cout << "================\n\nanalysed game:\n\n";
-        std::cout << analyse_game(game, chess_engine, options) << '\n';
+
+        std::string analyzed_game = analyse_game(game, chess_engine, options);
+        std::cout << analyzed_game << '\n';
+
+        analyzed_games += analyzed_game + '\n';
     }
+
+    save_games("analyzed-game.pgn", analyzed_games);
 
     return 0;
 }

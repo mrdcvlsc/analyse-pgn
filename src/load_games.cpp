@@ -1,3 +1,9 @@
+#include "load_games.hpp"
+#include "chess_games.hpp"
+#include "get_exe_dir.hpp"
+#include "logger.hpp"
+#include "process_utils.hpp"
+
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/error.hpp>
 #include <boost/asio/io_context.hpp>
@@ -12,12 +18,9 @@
 #include <filesystem>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
+#include <string>
 #include <utility>
-
-#include "chess_games.hpp"
-#include "get_exe_dir.hpp"
-#include "logger.hpp"
-#include "process.hpp"
 
 std::vector<ChessGame> load_games(const std::string &filename) {
     std::cout << "reading pgn file : " << filename << '\n';
@@ -49,7 +52,13 @@ std::vector<ChessGame> load_games(const std::string &filename) {
     boost::system::error_code ec;
 
     asio::read(pipe_stdout, asio::dynamic_buffer(std_output), ec);
+
     int exit_code = child_process.wait();
+    if (exit_code) {
+        throw std::runtime_error(
+            "pgn-extract returned exit code " + std::to_string(exit_code) +
+            " in 'load_games' function, possible error occured, apgn program discontinued");
+    }
 
     std::cout << "conversion of '" + filename + "' file to long-algebraic notation done!\n";
 
