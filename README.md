@@ -2,42 +2,47 @@
 
 ![ci](https://github.com/mrdcvlsc/analyse-pgn/actions/workflows/ci.yml/badge.svg)
 
-a simple chess game PGN file analyser on command line terminal
+A simple chess game PGN file analyser for the command-line terminal.
 
-this program will generate an `analyzed-<original-pgn-filename>.pgn` file, and a `analyzed-<original-pgn-filename>.stat` from a pgn file.
+This program will generate an `analyzed-<original-pgn-filename>.pgn` file, and an `analyzed-<original-pgn-filename>.stat` from a pgn file.
 
 The `analyzed-<original-pgn-filename>.pgn` will contain the following:
 
 - per-move comment showing the best move.
 
-- per-move comment on how good or bad the move was compared to the best move.
+- per-move comment on how good or bad the move was compared to the best move (list sorted by best to worst).
   1. **```brilliant !!!```** - indicates that the move is the best move.
-  2. **```excellent !!```** - indicates that the move is a top move.
+  2. **```excellent !!```** - indicates that the move is one of the top moves.
   3. **```good !```** - indicates that the move is still accurate or average.
-  4. **```accurate !!```** - move was the best move but the player is still in a losing position.
-  5. **```accurate !```** - move was one of the top moves but but the player is still in a losing position.
+  4. **```accurate !!```** - the move was one of the top move but the player is still in a losing position.
+  5. **```accurate !```** - the move was one of the good moves but the player is still in a losing position.
   6. **```questionable ?```** - the move is not accurate at all in an already losing position.
   7. **```inaccurate ?```** - indicates that the move resulted in a slight disadvantage.
-  8. **```mistake ??```** - the move is slightly losing
-  9. **```blunder ??? / missed ???```**
-        - `blunder` is a losing move that could highly-likely cause the player to lose at the end.
-        - `missed` is when a move by player gives up a large advantage (missed win).
+  8. **```mistake ??```** - the move is slightly losing.
+  9. **```missed ??? | blunder ???```**
+        1. `missed` is when a player failed to find the best move that gives a very large advantage (missed win).
+        2. `blunder` is a losing move that is highly likely to cause the player to lose at the end.
   
-- per-move comment on what is the current status of the player.
-  -  **```ADVANTAGE```** - slightly better than opponent.
-  -  **```DISADVANTAGE```** - slightly worst than opponent.
-  -  **```WINNING```** - means that the ***advantage*** is so great, the changes of ***winning*** is astronomical, as long as you don't blunder big, or played many inaccurate moves.
-  -  **```WINNING```** - means that the ***advantage*** is so great, the changes of ***winning*** is astronomical, as long as you don't blunder big, or played many inaccurate moves.
-  -  **```LOSING```** - means that the ***disadvantage*** is so great, the chances of ***lossing*** is astronomical, as long as the other side does not blunder big, or played many inaccurate moves.
-  -  **```UNCERTAIN```** - means that the position is still equal, anything could happen.
+- per-move comment on what is the current status of the player (list sorted by best to worst).
+  1.  **```WINNING```** - means that the ***advantage*** is so great the chance of ***winning*** is very high, as long as you don't blunder badly or play many inaccurate moves.
+  2.  **```ADVANTAGE```** - slightly better than the opponent.
+  3.  **```UNCERTAIN```** - means that the position is still equal; anything could happen.
+  4.  **```DISADVANTAGE```** - slightly worse than the opponent.
+  5.  **```LOSING```** - means that the ***disadvantage*** is so great the chances of ***losing*** are very high, as long as the other side does not blunder badly or play many inaccurate moves.
 
 - per-move comment showing the `CP:<value>` (centipawn value) or the `MATE:<in-moves>` (checkmate in a certain number of moves).
   
-The `analyzed-<original-pgn-filename>.stat` file will contain
-- the total counts of brilliant, excellent, good, average, mistake, blunder, and missed moves in the pgn game.
-- it will also provide a percentage representing the accuracy of moves a color played through out the whole game.
+Example Comment:
 
-## The resulting Analyzed pgn is recomended to be loaded on chess gui's for better visualization like the following mentioned below:
+- `brilliant !!! WINNING CP:276` - the `brilliant !!!` part indicates you found the best move, `WINNING` indicates the position after the move is winning with a 2.76 pawn (CP:276) advantage.
+- `mistake ?? WINNING CP:162` - the `mistake ??` part indicates your move is not one of the good moves; you lose some advantage, but your position is still `WINNING` with a 1.62 pawn (CP:162) advantage.
+- `missed ??? ADVANTAGE CP:147` - the `missed ???` part indicates that there was a winning move you didn't find and missed a larger advantage; the `ADVANTAGE` part indicates that you still have a slight advantage despite the missed opportunity.
+
+The `analyzed-<original-pgn-filename>.stat` file will contain:
+- the total counts of brilliant, excellent, good, average, mistake, blunder, and missed moves in the pgn game.
+- it will also provide a percentage representing the accuracy of moves a color played throughout the whole game.
+
+## The resulting Analyzed pgn is recommended to be loaded on chess GUIs for better visualization like the following mentioned below:
 
 - [Chess Arena](http://www.playwitharena.de/)
 - [ingram-braun.net - online-pgn-viewer](https://ingram-braun.net/erga/online-pgn-viewer/)
@@ -76,28 +81,39 @@ sudo make uninstall
 
 ### The ```--help``` menu
 
-  **Modifier Flags:**
+**Flags:**
 
-    -engine [PATH]  - the directory location with the
-                      filename of your pgn file
+```bash
+--engine [PATH] - the directory location with the
+                   filename of your pgn file.
+        default: ./bin/engine/stockfish[.exe] (stockfish 11)
 
-    -color [A,W,B]  - select one letter from A, W or B, where
-                      W = white, B = black, and A = both
+--player [Both|White|Black] - select one of the options.
+        default: Both
 
-    -oskip [+I>=0]  - this is the number of moves in the opening
-                      that the engine will not analyse
-                      this value should be >= 0 and < the total moves
+--analyse-start-on-move [N] - the move number where the engine will start the
+                              analysis, the engine will skip moves before it.
+        default: 0
 
-    -depth [+I>0]   - this is how deep the chess engine will analyse
-                      the given pgn file, the larger the number the
-                      the better the analysis, but will also take
-                      more time to finish, this value should be >= 1
+--analyse-until-move [N] - the move number where the engine stops the analysis.
+        default: 1,000 (will analyse all pgn game moves below 1,000 moves)
 
-    -threads [+I>0] - this is the number of the worker threads you want
-                      your engine to use, the more threads the faster
-                      the analysis, given that you did not exceed your CPUs
-                      maximum thread, but if you did a bigger thread will
-                      also slow down the analysis
+--depth [N] - this is how deep the chess engine will analyse
+              the given pgn file, the larger the number the
+              the better the analysis, but will also take
+              more time to finish.
+        default: 11
+
+--threads [N] - this is the number of the worker threads you want
+                your engine to use, the more threads the faster
+                the analysis, given that you did not exceed your CPUs
+                number of threads, but if you did a bigger thread could
+                also slow down the analysis
+        default: ~75% of cpu threads
+
+--hash-size [N] - size of memory used by the chess engine's hashtables, in Megabytes (MB)
+        default: 850
+```
 
 <br>
 

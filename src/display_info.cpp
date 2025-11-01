@@ -16,7 +16,8 @@ void print_help() {
                  "Flags:\n"
 
                  "--engine [PATH] - the directory location with the\n"
-                 "                   filename of your pgn file.\n\n"
+                 "                   filename of your pgn file.\n"
+                 "\tdefault: ./bin/engine/stockfish[.exe] (stockfish 11)\n\n"
 
                  "--player [Both|White|Black] - select one of the options.\n"
                  "\tdefault: Both\n\n"
