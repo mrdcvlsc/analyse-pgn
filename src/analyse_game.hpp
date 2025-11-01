@@ -17,9 +17,9 @@
 #include <string>
 #include <utility>
 
-using error_code = boost::system::error_code;
+using error_code  = boost::system::error_code;
 namespace process = boost::process;
-namespace asio = boost::asio;
+namespace asio    = boost::asio;
 
 const int NOT_EXPECTED_LINE_OUTPUT_LIMIT = 100'000;
 
@@ -33,6 +33,8 @@ struct UciOptions {
     int depth;
     int threads;
     int hash_size;
+    int start_on_move; // start analysis on move N
+    int until_move;    // analyse only until move N
     Piece piece;
 };
 

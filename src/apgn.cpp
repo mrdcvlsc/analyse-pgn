@@ -1,3 +1,5 @@
+#include "display_info.hpp"
+#include "extract_args.hpp"
 #include "save_games.hpp"
 #if defined(_WIN32) || defined(_WIN64)
 #define WIN32_LEAN_AND_MEAN
@@ -22,67 +24,41 @@
 #include <windows.h>
 #endif
 
-int main() {
-    namespace fs = std::filesystem;
+namespace fs = std::filesystem;
 
-    auto games = load_games((fs::current_path() / "pgn_samples" / "first.pgn").string());
-    std::cout << "number of games : " << games.size() << '\n';
+int main(int argc, char *argv[]) {
 
-    for (const auto &game : games) {
-        std::cout << "===========LD===================\n";
-
-        for (const auto &tag : game.tags) {
-            auto key = tag.first;
-            auto val = tag.second;
-            std::cout << key << ":" << val << '\n';
+    if (argc == 1) {
+        print_info();
+        return 0;
+    } else if (argc == 2) {
+        if (strcmp(argv[1], "--help") == 0) {
+            print_help();
+        } else if (strcmp(argv[1], "--version") == 0) {
+            print_version();
         }
-
-        std::cout << '\n';
-
-        for (const auto &move : game.moves) {
-            std::cout << move << ' ';
-        }
-
-        std::cout << '\n';
+        return 0;
     }
 
-    std::cout << '\n';
-    std::cout << '\n';
+    auto args             = extract_args(argc, argv);
+    auto chess_engine_exe = args.first.chess_engine_exe;
+    auto chess_pgn_files  = args.first.chess_pgn_files;
+    auto options          = args.second;
 
-    auto chess_engine = (fs::path(get_exe_dir()) / "bin" / "engines" /
-#if defined(_WIN32)
-                         "stockfish.exe"
-#else
-                         "stockfish"
-#endif
-        )
-                            .string();
+    std::cout << "analyse pgn (apgn) program starting...\n";
 
-    std::string analyzed_games = "";
+    for (const auto &pgn_file : chess_pgn_files) {
+        std::cout << "loading chess games in " << pgn_file.string() << " file...\n";
+        auto chess_games = load_games(pgn_file.string());
 
-    for (auto &game : games) {
-        std::cout << "==============================\n";
-
-        auto thread_cnt = std::thread::hardware_concurrency();
-        auto threads_to_use = static_cast<int>(static_cast<float>(thread_cnt) * 0.75f);
-
-        if (threads_to_use <= 0 || threads_to_use > 512) {
-            threads_to_use = 1;
+        std::string analyzed_games = "";
+        for (auto &chess_game : chess_games) {
+            analyzed_games += analyse_game(chess_game, chess_engine_exe, options) + '\n';
         }
 
-        DEBUG_LOG("Threads to use by the chess engine : " + std::to_string(threads_to_use));
-
-        auto options = UciOptions{11, threads_to_use, 850, Piece::Both};
-
-        std::cout << "================\n\nanalysed game:\n\n";
-
-        std::string analyzed_game = analyse_game(game, chess_engine, options);
-        std::cout << analyzed_game << '\n';
-
-        analyzed_games += analyzed_game + '\n';
+        auto analyzed_pgn_file = (pgn_file.parent_path() / ("analyzed-" + pgn_file.filename().string())).string();
+        save_games(analyzed_pgn_file, analyzed_games);
     }
-
-    save_games("analyzed-game.pgn", analyzed_games);
 
     return 0;
 }

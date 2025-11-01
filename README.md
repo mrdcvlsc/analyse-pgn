@@ -4,33 +4,52 @@
 
 a simple chess game PGN file analyser on command line terminal
 
-this program will generate an **.analyzed.pgn** file, and a **.stats.txt** from a pgn file.
+this program will generate an `analyzed-<original-pgn-filename>.pgn` file, and a `analyzed-<original-pgn-filename>.stat` from a pgn file.
 
-The **.analyzed.pgn** will contain the following:
+The `analyzed-<original-pgn-filename>.pgn` will contain the following:
 
-- per-move comments showing the best move
-- per-move comments on how good or bad the move was compared to the best move.
-  1. **```brilliant!!!```** - indicates that the move is the best move
-  2. **```excellent!!```** - indicates that the move is a top move
-  3. **```good!```** - indicates that the move is still accurate or average
-  4. **```inaccurate?```** - indicates that the move provide a slight disadvantage
-  5. **```mistake??```** - the move is slightly losing
-  6. **```blunder/missed```** - blunder is a completely losing move, missed is when you give up a large advantage
-  -  **```W```** - means that the ***advantage*** is so great, the changes of ***winning*** is astronomical, as long as you don't blunder big, or played many inaccurate moves
-  -  **```L```** - means that the ***disadvantage*** is so great, the chances of ***lossing*** is astronomical, as long as the other side does not blunder big, or played many inaccurate moves
-  -  
-The **.stats.txt** file will contain
+- per-move comment showing the best move.
+
+- per-move comment on how good or bad the move was compared to the best move.
+  1. **```brilliant !!!```** - indicates that the move is the best move.
+  2. **```excellent !!```** - indicates that the move is a top move.
+  3. **```good !```** - indicates that the move is still accurate or average.
+  4. **```accurate !!```** - move was the best move but the player is still in a losing position.
+  5. **```accurate !```** - move was one of the top moves but but the player is still in a losing position.
+  6. **```questionable ?```** - the move is not accurate at all in an already losing position.
+  7. **```inaccurate ?```** - indicates that the move resulted in a slight disadvantage.
+  8. **```mistake ??```** - the move is slightly losing
+  9. **```blunder ??? / missed ???```**
+        - `blunder` is a losing move that could highly-likely cause the player to lose at the end.
+        - `missed` is when a move by player gives up a large advantage (missed win).
+  
+- per-move comment on what is the current status of the player.
+  -  **```ADVANTAGE```** - slightly better than opponent.
+  -  **```DISADVANTAGE```** - slightly worst than opponent.
+  -  **```WINNING```** - means that the ***advantage*** is so great, the changes of ***winning*** is astronomical, as long as you don't blunder big, or played many inaccurate moves.
+  -  **```WINNING```** - means that the ***advantage*** is so great, the changes of ***winning*** is astronomical, as long as you don't blunder big, or played many inaccurate moves.
+  -  **```LOSING```** - means that the ***disadvantage*** is so great, the chances of ***lossing*** is astronomical, as long as the other side does not blunder big, or played many inaccurate moves.
+  -  **```UNCERTAIN```** - means that the position is still equal, anything could happen.
+
+- per-move comment showing the `CP:<value>` (centipawn value) or the `MATE:<in-moves>` (checkmate in a certain number of moves).
+  
+The `analyzed-<original-pgn-filename>.stat` file will contain
 - the total counts of brilliant, excellent, good, average, mistake, blunder, and missed moves in the pgn game.
 - it will also provide a percentage representing the accuracy of moves a color played through out the whole game.
 
-### the resulting Analyzed pgn is recomended to be loaded on chess gui's like [Chess Arena](http://www.playwitharena.de/) for better visualization.
+## The resulting Analyzed pgn is recomended to be loaded on chess gui's for better visualization like the following mentioned below:
+
+- [Chess Arena](http://www.playwitharena.de/)
+- [ingram-braun.net - online-pgn-viewer](https://ingram-braun.net/erga/online-pgn-viewer/)
+- [chess.com](https://www.chess.com/analysis)
+- [chesstempo.com](https://chesstempo.com/pgn-viewer/)
 
 ---------------------------
 
 ## Build Support
   - c++ standard: `>= C++17`.
-  - Windows: `MinGW Makefile` + `gcc/g++` & `cmake v3.30+`.
-  - Linux `gcc/g++` + `Makefile` (available by default in ubuntu flavors)
+  - Windows: `MinGW Makefile` + `gcc/g++` & `cmake v3.28+`.
+  - Linux `gcc/g++ or clang/clang++` + `Makefile` (available by default in ubuntu flavors)
 
 **Build apgn**
 

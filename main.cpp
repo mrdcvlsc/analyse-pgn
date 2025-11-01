@@ -27,7 +27,7 @@ if(INDEX+1>=ARG_COUNT) \
     exit(1); \
 }
 
-#define APGN_VERSION "version 1.2"
+#define APGN_VERSION "version 2.0"
 #define SIZE_T_32BIT 4
 
 #define FLAG_VERSION "--version"

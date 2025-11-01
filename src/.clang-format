@@ -1,8 +1,9 @@
 BasedOnStyle: LLVM
 IndentWidth: 4
-ColumnLimit: 110
+ColumnLimit: 115
 BreakBeforeBraces: Attach
 AllowShortFunctionsOnASingleLine: Inline
+AlignConsecutiveAssignments: Consecutive
 
 # Function call argument formatting
 BinPackArguments: true

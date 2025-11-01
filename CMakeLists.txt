@@ -22,6 +22,8 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/dependencies/pgn-extract)
 add_executable(${PROJECT_NAME}
     ${CMAKE_SOURCE_DIR}/src/analyse_game.cpp
     ${CMAKE_SOURCE_DIR}/src/apgn.cpp
+    ${CMAKE_SOURCE_DIR}/src/display_info.cpp
+    ${CMAKE_SOURCE_DIR}/src/extract_args.cpp
     ${CMAKE_SOURCE_DIR}/src/get_exe_dir.cpp
     ${CMAKE_SOURCE_DIR}/src/load_games.cpp
     ${CMAKE_SOURCE_DIR}/src/logger.cpp
@@ -32,6 +34,10 @@ add_executable(${PROJECT_NAME}
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 target_include_directories(${PROJECT_NAME} PUBLIC "${Boost_SOURCE_DIR}")
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::system Boost::filesystem Boost::process)
+
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer)
+endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}
