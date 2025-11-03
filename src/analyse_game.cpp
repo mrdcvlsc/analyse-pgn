@@ -150,18 +150,32 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
         if (i >= opts.start_on_move * 2) {
             // get the best move
 
-            std::string move_best;
+            std::string move_best, bestmove_continuation = "";
             int move_best_cp = 0; // best move's centipawn
             int move_best_cm = 0; // best move's checkmate after certain 'n' moves.
 
             if (opts.piece == Piece::Both || opts.piece == moving_player) {
                 std::string get_best_move = "go depth " + std::to_string(opts.depth) + "\n";
-                auto result               = get_ucigo_bestmove(uci_process, get_best_move, pipe_stdin, pipe_stdout,
-                                  child_stdout_buf, opts);
+
+                auto result = get_ucigo_bestmove(uci_process, get_best_move, pipe_stdin, pipe_stdout,
+                    child_stdout_buf, opts);
 
                 auto bm_idx = result.first.find(bestmove_keyword);
                 if (bm_idx != std::string::npos) {
                     move_best = result.first.substr(bm_idx + bestmove_keyword.size(), 4);
+                }
+
+                auto pv_keyword = std::string("pv "); // principal variation uci chess engine go result keyword
+                auto bmc_pv_idx = result.second.find(pv_keyword);
+                if (bmc_pv_idx != std::string::npos) {
+                    auto bestmove_idx = result.second.find(move_best);
+                    if (bestmove_idx != std::string::npos) {
+                        bestmove_continuation = result.second.substr(bestmove_idx + move_best.size());
+                    }
+
+                    if (bestmove_continuation[0] == ' ') {
+                        bestmove_continuation = bestmove_continuation.substr(1);
+                    }
                 }
 
                 std::string item;
@@ -238,7 +252,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                         " (" + move_best + " { was the best move" +
                         ((!move_best_cp && move_best_cm) ? (" MATE_IN:" + std::to_string(move_best_cm))
                                                          : (" CP:" + std::to_string(move_best_cp))) +
-                        " }) ";
+                        (", followed by } " + bestmove_continuation + " ) ");
                 }
             }
 
@@ -374,13 +388,13 @@ std::string score_comments(int centipawn_difference, int player_move_centipawn) 
         if (player_move_centipawn > 0) {
             comment = " brilliant !!!";
         } else {
-            comment = " accurate !!";
+            comment = " accurate !!!";
         }
     } else if (centipawn_difference > -10) {
         if (player_move_centipawn > 0) {
             comment = " excellent !!";
         } else {
-            comment = " accurate !";
+            comment = " accurate !!";
         }
     } else if (centipawn_difference > -30) {
         if (player_move_centipawn > 0) {

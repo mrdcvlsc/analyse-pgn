@@ -14,8 +14,8 @@ The `analyzed-<original-pgn-filename>.pgn` will contain the following:
   1. **```brilliant !!!```** - indicates that the move is the best move.
   2. **```excellent !!```** - indicates that the move is one of the top moves.
   3. **```good !```** - indicates that the move is still accurate or average.
-  4. **```accurate !!```** - the move was one of the top move but the player is still in a losing position.
-  5. **```accurate !```** - the move was one of the good moves but the player is still in a losing position.
+  4. **```accurate !!!```** - the move was one of the top move but the player is still in a losing position.
+  5. **```accurate !!```** - the move was one of the good moves but the player is still in a losing position.
   6. **```questionable ?```** - the move is not accurate at all in an already losing position.
   7. **```inaccurate ?```** - indicates that the move resulted in a slight disadvantage.
   8. **```mistake ??```** - the move is slightly losing.
