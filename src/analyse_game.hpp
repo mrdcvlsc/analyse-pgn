@@ -48,4 +48,11 @@ std::pair<std::string, std::string> get_ucigo_bestmove(process::process &uci_pro
     asio::streambuf &child_stdout_buf,
     const UciOptions &opts);
 
-std::string score_comments(int centipawn_difference, int player_move_centipawn);
+/**
+    @arg cp_pmvbmv_dif - player move centipawn - best move centipawn.
+    @arg cp_pm - player move centipawn value.
+    @arg cp_bm - best move centipawn value.
+    @arg cm_pm - player move checkmate in N moves.
+    @arg cm_bm - best move checkmate in N moves
+*/
+std::string score_comments(int cp_pmvbmv_dif, int cp_pmv, int cp_bmv, int cm_pmv, int cm_bmv);

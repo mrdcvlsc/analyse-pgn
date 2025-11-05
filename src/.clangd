@@ -8,6 +8,7 @@ CompileFlags:
   Add: [
     -std=c++17,
     -Werror=shadow,
+    -Werror=unused,
     -IC:\Program Files\OpenSSL\include,
     -I../build/_deps/boost-src/libs/process/include/,
     -I../build/_deps/screen_capture_lite/src/screen_capture_lite/include,
