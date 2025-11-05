@@ -24,6 +24,7 @@ add_executable(${PROJECT_NAME}
     ${CMAKE_SOURCE_DIR}/src/apgn.cpp
     ${CMAKE_SOURCE_DIR}/src/display_info.cpp
     ${CMAKE_SOURCE_DIR}/src/extract_args.cpp
+    ${CMAKE_SOURCE_DIR}/src/generate_stats.cpp
     ${CMAKE_SOURCE_DIR}/src/get_exe_dir.cpp
     ${CMAKE_SOURCE_DIR}/src/load_games.cpp
     ${CMAKE_SOURCE_DIR}/src/logger.cpp
