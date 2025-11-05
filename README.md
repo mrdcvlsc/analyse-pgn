@@ -19,6 +19,7 @@ The `analyzed-<original-pgn-filename>.pgn` will contain the following:
   6. **```questionable ?```** - the move is not accurate at all in an already losing position.
   7. **```inaccurate ?```** - indicates that the move resulted in a slight disadvantage.
   8. **```mistake ??```** - the move is slightly losing.
+  8. **```mistake ???```** - the move is very much losing.
   9. **```missed ??? | blunder ???```**
         1. `missed` is when a player failed to find the best move that gives a very large advantage (missed win).
         2. `blunder` is a losing move that is highly likely to cause the player to lose at the end.
