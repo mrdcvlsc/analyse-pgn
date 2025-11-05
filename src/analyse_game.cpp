@@ -2,6 +2,7 @@
 #include "logger.hpp"
 #include "process_utils.hpp"
 
+#include <array>
 #include <boost/asio.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/error.hpp>
@@ -16,9 +17,13 @@
 #include <boost/process/v2/process.hpp>
 #include <boost/system/detail/error_code.hpp>
 
+#include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <cstdlib>
 #include <filesystem>
+#include <iomanip>
+#include <ios>
 #include <iostream>
 #include <iterator>
 #include <sstream>
@@ -43,11 +48,10 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
     error_code ec;
 
     asio::streambuf child_stdout_buf;
-    std::size_t n = 0;
 
     // initial uci chess engine output
 
-    n = asio::read_until(pipe_stdout, child_stdout_buf, '\n', ec);
+    asio::read_until(pipe_stdout, child_stdout_buf, '\n', ec);
     check_for_error("running chess engine failed: ", uci_process, ec);
     auto uci_output = readline_child_stdout(child_stdout_buf);
     DEBUG_LOG("engine: " + uci_output);
@@ -63,7 +67,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
     int uci_tries = 0;
     while (true) {
-        n = asio::read_until(pipe_stdout, child_stdout_buf, '\n', ec);
+        asio::read_until(pipe_stdout, child_stdout_buf, '\n', ec);
         check_for_error("error while waiting for uciok: ", uci_process, ec);
 
         std::string line = readline_child_stdout(child_stdout_buf);
@@ -110,7 +114,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
     asio::write(pipe_stdin, asio::buffer(set_isready), ec);
     check_for_error("unable to send isready: ", uci_process, ec);
 
-    n = asio::read_until(pipe_stdout, child_stdout_buf, '\n', ec);
+    asio::read_until(pipe_stdout, child_stdout_buf, '\n', ec);
     check_for_error("error on uci 'isready', unable to receive 'readyok': ", uci_process, ec);
     auto uci_isready_output = readline_child_stdout(child_stdout_buf);
     DEBUG_LOG("engine: " + uci_isready_output);
@@ -136,45 +140,52 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
     moves.pop_back(); // we're removing the new line after feeding it to the child process
 
-    std::cout << "analyzing current game...\n";
+    std::cout << "analyzing current game...\n\n";
+    auto start = std::chrono::high_resolution_clock::now();
+
+    std::array<int, 2> prev_cm_in_nmoves{0, 0};
 
     for (int i = 0; i < (chess_game.moves.size() - 1) && i < opts.until_move; i++) {
+        std::cout << "\r" << static_cast<float>(i) / static_cast<float>(chess_game.moves.size() - 1) * 100.f
+                  << "%...";
+
         DEBUG_LOG("turn : " + std::to_string(i + 1) + "\n");
         DEBUG_LOG("moves: " + std::to_string(chess_game.moves.size()) + "\n");
 
-        auto moving_player = static_cast<Piece>(i % 2);
-        auto move          = chess_game.moves[i];
+        const auto moving_player = static_cast<Piece>(i % 2);
+        const auto curr_player   = i % 2;
+        const auto move          = chess_game.moves[i];
 
         DEBUG_LOG("move: " + move + "\n");
 
         if (i >= opts.start_on_move * 2) {
             // get the best move
 
-            std::string move_best, bestmove_continuation = "";
-            int move_best_cp = 0; // best move's centipawn
-            int move_best_cm = 0; // best move's checkmate after certain 'n' moves.
+            std::string mv_best, best_mv_cont = "";
+            int mv_best_cp = 0; // best move's centipawn
+            int mv_best_cm = 0; // best move's checkmate after certain 'n' moves.
 
             if (opts.piece == Piece::Both || opts.piece == moving_player) {
-                std::string get_best_move = "go depth " + std::to_string(opts.depth) + "\n";
+                std::string get_best_mv = "go depth " + std::to_string(opts.depth) + "\n";
 
-                auto result = get_ucigo_bestmove(uci_process, get_best_move, pipe_stdin, pipe_stdout,
-                    child_stdout_buf, opts);
+                auto result =
+                    get_ucigo_bestmove(uci_process, get_best_mv, pipe_stdin, pipe_stdout, child_stdout_buf, opts);
 
                 auto bm_idx = result.first.find(bestmove_keyword);
                 if (bm_idx != std::string::npos) {
-                    move_best = result.first.substr(bm_idx + bestmove_keyword.size(), 4);
+                    mv_best = result.first.substr(bm_idx + bestmove_keyword.size(), 4);
                 }
 
                 auto pv_keyword = std::string("pv "); // principal variation uci chess engine go result keyword
                 auto bmc_pv_idx = result.second.find(pv_keyword);
                 if (bmc_pv_idx != std::string::npos) {
-                    auto bestmove_idx = result.second.find(move_best);
+                    auto bestmove_idx = result.second.find(mv_best);
                     if (bestmove_idx != std::string::npos) {
-                        bestmove_continuation = result.second.substr(bestmove_idx + move_best.size());
+                        best_mv_cont = result.second.substr(bestmove_idx + mv_best.size());
                     }
 
-                    if (bestmove_continuation[0] == ' ') {
-                        bestmove_continuation = bestmove_continuation.substr(1);
+                    if (best_mv_cont[0] == ' ') {
+                        best_mv_cont = best_mv_cont.substr(1);
                     }
                 }
 
@@ -184,13 +195,13 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                 while (strstream >> item) {
                     if (item == "cp") {
                         strstream >> item;
-                        move_best_cp = std::atoi(item.c_str());
+                        mv_best_cp = std::atoi(item.c_str());
                         break;
                     }
 
                     if (item == "mate") {
                         strstream >> item;
-                        move_best_cm = std::atoi(item.c_str());
+                        mv_best_cm = std::atoi(item.c_str());
                         break;
                     }
                 }
@@ -198,26 +209,25 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
             // analyse the player's move
 
-            std::string move_player;
-            int move_player_cp = 0; // best move's centipawn
-            int move_player_cm = 0; // best move's checkmate after certain 'n' moves.
+            std::string mv_player, comment = "", comment_type = "", tmp_item;
+            int mv_player_cp = 0; // best move's centipawn
+            int mv_player_cm = 0; // best move's checkmate after certain 'n' moves.
 
             if (opts.piece == Piece::Both || opts.piece == moving_player) {
-                if (move == move_best) {
-                    move_player            = move_best;
-                    move_player_cp         = move_best_cp;
-                    move_player_cm         = move_best_cm;
-                    chess_game.comments[i] = " {" + score_comments(0, move_best_cp);
+                if (move == mv_best) {
+                    mv_player    = mv_best;
+                    mv_player_cp = mv_best_cp;
+                    mv_player_cm = mv_best_cm;
                 } else {
-                    std::string analyse_player_move =
+                    std::string analyse_player_mv =
                         "go depth " + std::to_string(opts.depth) + " searchmoves " + move + "\n";
 
-                    auto result = get_ucigo_bestmove(uci_process, analyse_player_move, pipe_stdin, pipe_stdout,
+                    auto result = get_ucigo_bestmove(uci_process, analyse_player_mv, pipe_stdin, pipe_stdout,
                         child_stdout_buf, opts);
 
                     auto bm_idx = result.first.find(bestmove_keyword);
                     if (bm_idx != std::string::npos) {
-                        move_player = result.first.substr(bm_idx + bestmove_keyword.size(), 4);
+                        mv_player = result.first.substr(bm_idx + bestmove_keyword.size(), 4);
                     }
 
                     std::string item;
@@ -226,49 +236,68 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                     while (strstream >> item) {
                         if (item == "cp") {
                             strstream >> item;
-                            move_player_cp = std::atoi(item.c_str());
+                            mv_player_cp = std::atoi(item.c_str());
                             break;
                         }
 
                         if (item == "mate") {
                             strstream >> item;
-                            move_player_cm = std::atoi(item.c_str());
+                            mv_player_cm = std::atoi(item.c_str());
                             break;
                         }
                     }
-
-                    int to_best_move_diff = move_player_cp - move_best_cp;
-                    chess_game.comments[i] += " {" + score_comments(to_best_move_diff, move_player_cp);
                 }
 
-                chess_game.comments[i] += (!move_player_cp && move_player_cm)
-                                              ? (" MATE_IN:" + std::to_string(move_player_cm))
-                                              : (" CP:" + std::to_string(move_player_cp));
+                int cp_pmv_bmv_diff = mv_player_cp - mv_best_cp;
+                comment = score_comments(cp_pmv_bmv_diff, mv_player_cp, mv_best_cp, mv_player_cm, mv_best_cm);
+                chess_game.comments[i] = " {" + comment;
+
+                std::istringstream interpret_stream(comment);
+                interpret_stream >> tmp_item;
+                comment_type.append(tmp_item);
+                interpret_stream >> tmp_item;
+                comment_type.append(tmp_item);
+
+                if (chess_game.interpret_stats.at(curr_player).find(comment_type) ==
+                    chess_game.interpret_stats.at(curr_player).end()) {
+                    chess_game.interpret_stats.at(curr_player)[comment_type] = 0.0;
+                }
+
+                chess_game.interpret_stats.at(curr_player)[comment_type]++;
+
+                chess_game.comments[i] += (!mv_player_cp && mv_player_cm)
+                                              ? (" MATE_IN:" + std::to_string(mv_player_cm))
+                                              : (" CP:" + std::to_string(mv_player_cp));
 
                 chess_game.comments[i] += " } ";
 
-                if (move != move_best) {
+                chess_game.player_move_centipawn[i] = mv_player_cp;
+                chess_game.best_move_centipawn[i]   = mv_best_cp;
+
+                if (move != mv_best) {
                     chess_game.comments[i] +=
-                        " (" + move_best + " { was the best move" +
-                        ((!move_best_cp && move_best_cm) ? (" MATE_IN:" + std::to_string(move_best_cm))
-                                                         : (" CP:" + std::to_string(move_best_cp))) +
-                        (", followed by } " + bestmove_continuation + " ) ");
+                        " (" + mv_best + " { was the best move" +
+                        ((!mv_best_cp && mv_best_cm) ? (" MATE_IN:" + std::to_string(mv_best_cm))
+                                                     : (" CP:" + std::to_string(mv_best_cp))) +
+                        (", followed by } " + best_mv_cont + " ) ");
                 }
             }
 
             DEBUG_LOG("**************** best move ****************");
 
-            DEBUG_LOG("+> best move " + move_best +
-                      ((!move_best_cp && move_best_cm) ? (" checkmate in " + std::to_string(move_best_cm))
-                                                       : (" centipawn " + std::to_string(move_best_cp))));
+            DEBUG_LOG("+> best move " + mv_best +
+                      ((!mv_best_cp && mv_best_cm) ? (" checkmate in " + std::to_string(mv_best_cm))
+                                                   : (" centipawn " + std::to_string(mv_best_cp))));
 
             DEBUG_LOG("*************** player move ***************");
 
-            DEBUG_LOG("+> player move " + move_player +
-                      ((!move_player_cp && move_player_cm) ? (" checkmate in " + std::to_string(move_player_cm))
-                                                           : (" centipawn " + std::to_string(move_player_cp))));
+            DEBUG_LOG("+> player move " + mv_player +
+                      ((!mv_player_cp && mv_player_cm) ? (" checkmate in " + std::to_string(mv_player_cm))
+                                                       : (" centipawn " + std::to_string(mv_player_cp))));
 
             DEBUG_LOG("*******************************************");
+
+            prev_cm_in_nmoves.at(curr_player) = mv_player_cm;
         }
 
         // send moves to the engine
@@ -284,7 +313,10 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
         moves.pop_back();
     }
 
-    std::cout << "analysis done, killing " << chess_engine << " child process now...\n";
+    auto end = std::chrono::high_resolution_clock::now();
+    std::cout << "\nanalysis done, killing " << chess_engine << " child process now...\n";
+    std::cout << "analysis took " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
+              << " sec(s)\n";
 
     // request uci chess engine exit
 
@@ -300,7 +332,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
         std::cout << "uci chess engine return status : " << process_return_int << '\n';
         std::cout << "warning: an error might have occured\n";
     } else {
-        std::cout << "uci engine return status : " << process_return_int << " <- no errors : success";
+        std::cout << "uci engine return status : " << process_return_int << " <- no errors : success\n";
     }
 
     std::cout << "adding comments...\n";
@@ -326,7 +358,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
         analyzed_game.append(chess_game.moves[i]);
 
-        if (opts.piece == Piece::Both || opts.piece == moving_player) {
+        if ((opts.piece == Piece::Both || opts.piece == moving_player) && i < chess_game.moves.size() - 2) {
             if (chess_game.comments.find(i) != chess_game.comments.end()) {
                 analyzed_game.append(chess_game.comments[i]);
             }
@@ -382,45 +414,78 @@ std::pair<std::string, std::string> get_ucigo_bestmove(process::process &uci_pro
     return std::make_pair(line_last, line_2nd_last);
 }
 
-std::string score_comments(int centipawn_difference, int player_move_centipawn) {
+std::string score_comments(int cp_pmvbmv_dif, int cp_pmv, int cp_bmv, int cm_pmv, int cm_bmv) {
+
     std::string comment = "";
-    if (centipawn_difference == 0) {
-        if (player_move_centipawn > 0) {
-            comment = " brilliant !!!";
-        } else {
-            comment = " accurate !!!";
-        }
-    } else if (centipawn_difference > -10) {
-        if (player_move_centipawn > 0) {
-            comment = " excellent !!";
-        } else {
-            comment = " accurate !!";
-        }
-    } else if (centipawn_difference > -30) {
-        if (player_move_centipawn > 0) {
-            comment = " good !";
-        } else {
-            comment = " questionable ?";
-        }
-    } else if (centipawn_difference > -60) {
-        comment = " inaccurate ?";
-    } else if (centipawn_difference > -140) {
-        comment = " mistake ??";
-    } else {
-        if (player_move_centipawn < 0) {
+
+    if (cm_pmv != 0) { // about to have checkmate
+        if (cm_bmv >= 0 && cm_pmv < 0) {
+            // player move is bad and is now allowed to be checkmated
             comment = " blunder ???";
+        } else if (cm_pmv < 0) { // losing
+            if (cm_bmv == cm_pmv) {
+                comment = " accurate !!";
+            } else if (std::abs(cm_bmv) > std::abs(cm_pmv)) {
+                comment = " mistake ???";
+            } else {
+                comment = " wtf ?!!";
+            }
+        } else if (cm_pmv > 0) { // winning
+            if (cm_pmv == cm_bmv) {
+                comment = " excellent !!";
+            } else if (cm_pmv > cm_bmv) {
+                comment = " missed ???";
+            } else {
+                comment = " god-move !!!!";
+            }
+        }
+    } else {
+        if (cm_bmv > 0 && cm_pmv == 0 && cp_pmv >= 0) {
+            // player is about to checkmate the opponent but failed to, yet player is still winning
+            comment = " missed ??";
+        } else if (cm_bmv > 0 && (cp_pmv < 0 || cm_pmv < 0)) {
+            // player is about to checkmate the opponent but failed to, then player is about to get checkmated
+            comment = " blunder ???";
+        } else if (cp_pmvbmv_dif == 0) {
+            if (cp_pmv > 0) {
+                comment = " brilliant !!!"; // found the best move and is winning
+            } else {
+                comment = " accurate !!!"; // found the best move but is losing
+            }
+        } else if (cp_pmvbmv_dif > -10) {
+            if (cp_pmv > 0) {
+                comment = " excellent !!"; // found a top move and is winning
+            } else {
+                comment = " accurate !!"; // found a top move but is losing
+            }
+        } else if (cp_pmvbmv_dif > -35) {
+            if (cp_pmv > 0) {
+                comment = " good !"; // found a good move and is winning
+            } else {
+                comment = " questionable ?"; // found a good move but is losing
+            }
+        } else if (cp_pmvbmv_dif > -70) {
+            comment = " inaccurate ?"; // found a move that is not bad but is also not good
+        } else if (cp_pmvbmv_dif > -140) {
+            comment = " mistake ??"; // found a bad move
+        } else if (cp_pmvbmv_dif > -222) {
+            comment = " mistake ???"; // found a really bad move
         } else {
-            comment = " missed ???";
+            if (cp_pmv < 0) {
+                comment = " blunder ???"; // found a losing move
+            } else {
+                comment = " missed ???"; // unable to find the winning move
+            }
         }
     }
 
-    if (player_move_centipawn > 150) {
+    if (cm_pmv > 0 || cp_pmv > 150) {
         comment += " WINNING";
-    } else if (player_move_centipawn < -150) {
+    } else if (cm_pmv < 0 || cp_pmv < -150) {
         comment += " LOSING";
-    } else if (player_move_centipawn > 115) {
+    } else if (cp_pmv > 115) {
         comment += " ADVANTAGE";
-    } else if (player_move_centipawn < -115) {
+    } else if (cp_pmv < -115) {
         comment += " DISDVANTAGE";
     } else {
         comment += " UNCERTAIN";

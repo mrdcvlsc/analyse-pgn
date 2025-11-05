@@ -1,14 +1,15 @@
-#include "display_info.hpp"
-#include "extract_args.hpp"
-#include "save_games.hpp"
 #if defined(_WIN32) || defined(_WIN64)
 #define WIN32_LEAN_AND_MEAN
 #endif
 
 #include "analyse_game.hpp"
+#include "display_info.hpp"
+#include "extract_args.hpp"
+#include "generate_stats.hpp"
 #include "get_exe_dir.hpp"
 #include "load_games.hpp"
 #include "logger.hpp"
+#include "save_games.hpp"
 
 #include <cstdlib>
 #include <filesystem>
@@ -45,6 +46,7 @@ int main(int argc, char *argv[]) {
     auto chess_pgn_files  = args.first.chess_pgn_files;
     auto options          = args.second;
 
+    std::cout << std::fixed << std::setprecision(2);
     std::cout << "analyse pgn (apgn) program starting...\n";
 
     for (const auto &pgn_file : chess_pgn_files) {
@@ -58,6 +60,11 @@ int main(int argc, char *argv[]) {
 
         auto analyzed_pgn_file = (pgn_file.parent_path() / ("analyzed-" + pgn_file.filename().string())).string();
         save_games(analyzed_pgn_file, analyzed_games);
+
+        auto stats_file =
+            (pgn_file.parent_path() / ("analyzed-" + pgn_file.filename().replace_extension(".stat").string()))
+                .string();
+        generate_stats(chess_games, stats_file);
     }
 
     return 0;
