@@ -258,6 +258,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                 std::istringstream interpret_stream(comment);
                 interpret_stream >> tmp_item;
                 comment_type.append(tmp_item);
+                comment_type.push_back(' ');
                 interpret_stream >> tmp_item;
                 comment_type.append(tmp_item);
 

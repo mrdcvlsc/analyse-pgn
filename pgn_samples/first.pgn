@@ -61,3 +61,21 @@ Qd4+ f6 60. Qd7+ Kg6 61. Qd3+ Kg7 62. g4 Kf7 63. Qf5 Ke7 64. Kb6 Kf7 65. Kc6 Ke7
 9. Bxa7 h6 10. Bd4 h5 11. Qf5 Ne5 12. Qf3 Qa5+ 13. Ke2 Nxf3 14. Kxf3 g4+ 15. Kf4
 Bh6+ 16. Kg3 Qg5 17. h4 Qf4+ 18. Kg2 f5 19. f3 Rh7 20. Ne2 Qxf3+ 21. Kg1 Be3+
 22. Kh2 Qf2+ 23. Bg2 f4 24. Rf1 Qxh4+ 25. Bh3 Qxh3# 0-1
+
+[Event "Sample Game 5"]
+[Site "Chess.com"]
+[Date "2025.11.06"]
+[Round "?"]
+[White "Guest5149836357"]
+[Black "Guest0262668940"]
+[Result "1-0"]
+[TimeControl "600"]
+[WhiteElo "400"]
+[BlackElo "400"]
+[Termination "Guest5149836357 won by resignation"]
+[Link "https://www.chess.com/game/145173981098"]
+
+1. e4 d5 2. exd5 Qxd5 3. Nc3 Qe6+ 4. Qe2 Qf5 5. Nf3 Qxc2 6. d4 Qxc1+ 7. Rxc1 Bf5
+8. Qe5 e6 9. Bb5+ Kd8 10. Ng5 Nc6 11. Bxc6 bxc6 12. Nxf7+ Ke8 13. Nxh8 Rd8 14.
+O-O Bd6 15. Qxg7 Rd7 16. Qxg8+ Ke7 17. Rfe1 Bf4 18. Rcd1 Rxd4 19. Rxd4 Kf6 20.
+Rxf4 e5 21. Qf7+ 1-0

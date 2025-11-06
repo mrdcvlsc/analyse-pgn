@@ -1,5 +1,6 @@
 #include "generate_stats.hpp"
 
+#include "../analyse_game/score_comments.hpp"
 #include "../utils/logger.hpp"
 
 #include <array>
@@ -11,7 +12,7 @@ void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat
         std::string stat_report = "";
 
         std::array<double, 2> total_player_score{0.0, 0.0};
-        std::array<double, 2> total_player_moves{0, 0};
+        std::array<double, 2> total_player_moves{0.0, 0.0};
         std::array<double, 2> accuracies{0.0, 0.0};
 
         if (chess_game.player_move_centipawn.size() != chess_game.best_move_centipawn.size()) {
@@ -20,31 +21,31 @@ void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat
         }
 
         for (int i = 0; i < 2; i++) {
-            for (const auto [j, centipawn] : chess_game.player_move_centipawn) {
-                if (j % 2 != i) {
-                    continue;
-                }
+            for (const auto &[comment, cnt] : chess_game.interpret_stats.at(i)) { 
+                total_player_moves.at(i) += cnt;
 
-                auto cp_best = chess_game.best_move_centipawn.at(j);
-                auto cp_play = chess_game.player_move_centipawn.at(j);
-                auto cp_diff = cp_play - cp_best;
-
-                total_player_moves.at(i)++;
-
-                auto base_score = 1.0;
-
-                if (cp_play < 0) {
-                    base_score = 0.9;
-                }
-
-                if (cp_diff > 0) {
-                    total_player_score.at(i) += (base_score * 1.00);
-                } else if (cp_diff > -30) {
-                    total_player_score.at(i) += (base_score * 0.90);
-                } else if (cp_diff > -40) {
-                    total_player_score.at(i) += (base_score * 0.80);
-                } else if (cp_diff > -50) {
-                    total_player_score.at(i) += (base_score * 0.75);
+                if (comment.find(comments::winning::BRILLIANT) != std::string::npos) {
+                    total_player_score.at(i) += (cnt * 1.0);
+                } else if (comment.find(comments::winning::EXCELLENT) != std::string::npos) {
+                    total_player_score.at(i) += (cnt * 0.98);
+                } else if (comment.find(comments::winning::GOOD) != std::string::npos) {
+                    total_player_score.at(i) += (cnt * 0.97);
+                } else if (comment.find(comments::losing::ACCURATE_3) != std::string::npos) {
+                    total_player_score.at(i) += (cnt * 0.80);
+                } else if (comment.find(comments::losing::ACCURATE_2) != std::string::npos) {
+                    total_player_score.at(i) += (cnt * 0.77);
+                } else if (comment.find(comments::losing::QUESTIONABLE) != std::string::npos) {
+                    total_player_score.at(i) += (cnt * 0.75);
+                } else if (comment.find(comments::losing::INACCURATE) != std::string::npos) {
+                    total_player_score.at(i) += (cnt * 0.15);
+                } else if (comment.find(comments::losing::MISTAKE_2) != std::string::npos) {
+                    total_player_score.at(i) += (cnt * 0.1);
+                } else if (comment.find(comments::losing::MISTAKE_3) != std::string::npos) {
+                    total_player_score.at(i) += (cnt * 0.05);
+                } else if (comment.find(comments::winning::MISSED) != std::string::npos) {
+                    total_player_score.at(i) += (cnt * 0.75);
+                } else if (comment.find(comments::losing::BLUNDER) != std::string::npos) {
+                    total_player_score.at(i) += (cnt * 0.0);
                 }
             }
         }
@@ -61,14 +62,9 @@ void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat
             DEBUG_LOG(std::string("Color ") + (i == 0 ? "White" : "Black") +
                       " player total score : " + std::to_string(total_player_score.at(i)) + "\n");
 
-            DEBUG_LOG(std::string("Color ") + (i == 0 ? "White" : "Black") +
-                      " player moves : " + std::to_string(total_player_moves.at(i)) + "\n");
-
-            DEBUG_LOG(std::string("Color ") + (i == 0 ? "White" : "Black") +
-                      " game move size : " + std::to_string(chess_game.player_move_centipawn.size()) + "\n");
-
-            DEBUG_LOG(std::string("Color ") + (i == 0 ? "White" : "Black") +
-                      " game best move size : " + std::to_string(chess_game.best_move_centipawn.size()) + "\n");
+            for (const auto &[key, val] : chess_game.interpret_stats.at(i)) {
+                std::cout << "[" << key << "]" << val << '\n';
+            }
         }
     }
 }

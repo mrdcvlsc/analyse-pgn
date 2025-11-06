@@ -11,25 +11,28 @@ The `analyzed-<original-pgn-filename>.pgn` will contain the following:
 - per-move comment showing the best move.
 
 - per-move comment on how good or bad the move was compared to the best move (list sorted by best to worst).
-  1. **```brilliant !!!```** - indicates that the move is the best move.
-  2. **```excellent !!```** - indicates that the move is one of the top moves.
-  3. **```good !```** - indicates that the move is still accurate or average.
-  4. **```accurate !!!```** - the move was one of the top move but the player is still in a losing position.
-  5. **```accurate !!```** - the move was one of the good moves but the player is still in a losing position.
-  6. **```questionable ?```** - the move is not accurate at all in an already losing position.
-  7. **```inaccurate ?```** - indicates that the move resulted in a slight disadvantage.
-  8. **```mistake ??```** - the move is slightly losing.
-  8. **```mistake ???```** - the move is very much losing.
-  9. **```missed ??? | blunder ???```**
+  1. **`brilliant !!!` or `accurate !!!`**
+        - `brilliant !!!` - indicates that the move is the best move.
+        - `accurate !!!` - the move was one of the top move but the player is still in a losing position.
+  2. **`excellent !!` or `accurate !!`**
+        - `excellent !!` -  indicates that the move is one of the top moves.
+        - `accurate !!` - the move was one of the good moves but the player is still in a losing position.
+  3. **`good !` or `questionable ?`**
+        - `good !` - indicates that the move is decent or average, not a bad move.
+        - `questionable ?` - the move is not accurate at all in an already losing position.
+  7. **`inaccurate ?`** - indicates that the move resulted in a slight disadvantage.
+  8. **`mistake ??`** - the move is slightly losing.
+  8. **`mistake ???`** - the move is very much losing.
+  9. **`missed !?? | blunder !??`**
         1. `missed` is when a player failed to find the best move that gives a very large advantage (missed win).
         2. `blunder` is a losing move that is highly likely to cause the player to lose at the end.
   
 - per-move comment on what is the current status of the player (list sorted by best to worst).
-  1.  **```WINNING```** - means that the ***advantage*** is so great the chance of ***winning*** is very high, as long as you don't blunder badly or play many inaccurate moves.
-  2.  **```ADVANTAGE```** - slightly better than the opponent.
-  3.  **```UNCERTAIN```** - means that the position is still equal; anything could happen.
-  4.  **```DISADVANTAGE```** - slightly worse than the opponent.
-  5.  **```LOSING```** - means that the ***disadvantage*** is so great the chances of ***losing*** are very high, as long as the other side does not blunder badly or play many inaccurate moves.
+  1.  **`WINNING`** - means that the ***advantage*** is so great the chance of ***winning*** is very high, as long as you don't blunder badly or play many inaccurate moves.
+  2.  **`ADVANTAGE`** - slightly better than the opponent.
+  3.  **`UNCERTAIN`** - means that the position is still equal; anything could happen.
+  4.  **`DISADVANTAGE`** - slightly worse than the opponent.
+  5.  **`LOSING`** - means that the ***disadvantage*** is so great the chances of ***losing*** are very high, as long as the other side does not blunder badly or play many inaccurate moves.
 
 - per-move comment showing the `CP:<value>` (centipawn value) or the `MATE:<in-moves>` (checkmate in a certain number of moves).
   
