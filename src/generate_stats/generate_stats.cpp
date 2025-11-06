@@ -3,17 +3,19 @@
 #include "../analyse_game/score_comments.hpp"
 #include "../utils/logger.hpp"
 
+#include <glaze/glaze.hpp>
+
 #include <array>
+#include <glaze/json/prettify.hpp>
 #include <limits>
 #include <string>
-
-struct PlayerStats {};
-
-struct GameStats {};
+#include <utility>
+#include <vector>
 
 void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat_file) {
+    JsonStats json_stats;
+
     for (auto &chess_game : chess_games) {
-        std::string stat_report = "";
 
         std::array<double, 2> total_player_score{0.0, 0.0};
         std::array<double, 2> total_player_moves{0.0, 0.0};
@@ -24,7 +26,27 @@ void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat
             return;
         }
 
+        GameStats game_stats;
+
+        for (const auto &[tag, value] : chess_game.tags) {
+            game_stats.tags.push_back(std::make_pair(tag, value));
+        }
+
+        std::vector<PlayerStats> player_stats;
+
         for (int i = 0; i < 2; i++) {
+            PlayerStats player_stat;
+
+            if (i == 0) {
+                player_stat.player_color = "white";
+            } else {
+                player_stat.player_color = "black";
+            }
+
+            for (const auto [_, centipawn] : chess_game.player_move_centipawn) {
+                player_stat.centipawns.push_back(static_cast<int>(centipawn));
+            }
+
             for (const auto &[ranked_comment, cnt] : chess_game.interpret_stats.at(i)) {
                 total_player_moves.at(i) += cnt;
 
@@ -53,8 +75,16 @@ void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat
                 } else if (comment.find(comments::losing::BLUNDER.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 0.01);
                 }
+
+                player_stat.move_stats.push_back(std::make_pair(comment, cnt));
             }
+
+            player_stat.accuracy = total_player_score.at(i) / total_player_moves.at(i);
+            player_stats.push_back(player_stat);
         }
+
+        game_stats.player_stats = player_stats;
+        json_stats.games.push_back(game_stats);
 
         // calculate average
 
@@ -75,9 +105,16 @@ void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat
         }
     }
 
-    // auto  ec = glz::write_file_json(obj, "./obj.json", std::string{});
+    std::string final_json = "";
+    glz::prettify_json(glz::write_json(json_stats).value_or("error"), final_json);
 
-    //     if (ec) {
-    //   // handle error
-    // }
+    std::ofstream output_file(stat_file);
+
+    if (output_file.is_open()) {
+        output_file << final_json;
+        output_file.close();
+        std::cout << "stats written to '" << stat_file << "' successfully." << '\n';
+    } else {
+        std::cerr << "Error: Unable to open or create file '" << stat_file << "'\n";
+    }
 }

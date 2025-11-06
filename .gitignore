@@ -44,3 +44,5 @@ bin/pgn-extract
 build
 build-release
 .cache
+./pgn_samples/analyzed-first.pgn
+./pgn_samples/analyzed-stats-first.json
