@@ -31,7 +31,7 @@ void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat
                 auto [rank, comment] = ranked_comment;
 
                 if (comment.find(comments::winning::BRILLIANT.second) != std::string::npos) {
-                    total_player_score.at(i) += (cnt * 1.0);
+                    total_player_score.at(i) += (cnt * 1.00);
                 } else if (comment.find(comments::winning::EXCELLENT.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 0.98);
                 } else if (comment.find(comments::winning::GOOD.second) != std::string::npos) {
@@ -45,13 +45,13 @@ void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat
                 } else if (comment.find(comments::losing::INACCURATE.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 0.15);
                 } else if (comment.find(comments::losing::MISTAKE_2.second) != std::string::npos) {
-                    total_player_score.at(i) += (cnt * 0.1);
+                    total_player_score.at(i) += (cnt * 0.10);
                 } else if (comment.find(comments::losing::MISTAKE_3.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 0.05);
                 } else if (comment.find(comments::winning::MISSED.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 0.75);
                 } else if (comment.find(comments::losing::BLUNDER.second) != std::string::npos) {
-                    total_player_score.at(i) += (cnt * 0.0);
+                    total_player_score.at(i) += (cnt * 0.01);
                 }
             }
         }
