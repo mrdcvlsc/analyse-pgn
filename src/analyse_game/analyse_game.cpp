@@ -143,7 +143,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
     moves.pop_back(); // we're removing the new line after feeding it to the child process
 
-    std::cout << "analyzing current game...\n\n";
+    std::cout << "analyzing current game...\n";
     auto start = std::chrono::high_resolution_clock::now();
 
     std::array<int, 2> prev_cm_in_nmoves{0, 0};
@@ -372,6 +372,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
     }
 
     analyzed_game.push_back('\n');
+    std::cout << "analysis of current game done!\n\n";
 
     return analyzed_game;
 }

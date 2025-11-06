@@ -27,10 +27,6 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
         arguments.push_back(argv[i]);
     }
 
-    for (const auto &e : arguments) {
-        std::cout << "argument pushed back : " << e << '\n';
-    }
-
     auto piece = "Both";
 
     for (int i = 0; i < arguments.size(); i++) {

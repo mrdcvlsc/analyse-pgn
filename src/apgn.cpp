@@ -47,23 +47,30 @@ int main(int argc, char *argv[]) {
     auto options          = args.second;
 
     std::cout << std::fixed << std::setprecision(2);
-    std::cout << "analyse pgn (apgn) program starting...\n";
+    std::cout << "analyse pgn (apgn) program starting...\n\n";
 
     for (const auto &pgn_file : chess_pgn_files) {
         std::cout << "loading chess games in " << pgn_file.string() << " file...\n";
         auto chess_games = load_games(pgn_file.string());
+
+        std::cout << '\n';
 
         std::string analyzed_games = "";
         for (auto &chess_game : chess_games) {
             analyzed_games += analyse_game(chess_game, chess_engine_exe, options) + '\n';
         }
 
+        std::cout << '\n';
+
         auto analyzed_pgn_file = (pgn_file.parent_path() / ("analyzed-" + pgn_file.filename().string())).string();
         save_games(analyzed_pgn_file, analyzed_games);
 
-        auto stats_file =
-            (pgn_file.parent_path() / ("analyzed-stats-" + pgn_file.filename().replace_extension(".json").string()))
-                .string();
+        std::cout << '\n';
+
+        auto stats_file = (pgn_file.parent_path() /
+                           ("analyzed-stats-" + pgn_file.filename().replace_extension(".json").string()))
+                              .string();
+
         generate_stats(chess_games, stats_file);
     }
 

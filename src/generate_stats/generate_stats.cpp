@@ -97,11 +97,6 @@ void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat
 
             DEBUG_LOG(std::string("Color ") + (i == 0 ? "White" : "Black") +
                       " player total score : " + std::to_string(total_player_score.at(i)) + "\n");
-
-            for (const auto &[ranked_comment, val] : chess_game.interpret_stats.at(i)) {
-                auto [rank, comment] = ranked_comment;
-                std::cout << "[" << comment << "]" << val << '\n';
-            }
         }
     }
 
