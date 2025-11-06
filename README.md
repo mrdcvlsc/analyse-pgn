@@ -4,7 +4,7 @@
 
 A simple chess game PGN file analyser for the command-line terminal.
 
-This program will generate an `analyzed-<original-pgn-filename>.pgn` file, and an `analyzed-<original-pgn-filename>.stat` from a pgn file.
+This program will generate an `analyzed-<original-pgn-filename>.pgn` file, and an `analyzed-stats-<original-pgn-filename>.json` from a pgn file.
 
 The `analyzed-<original-pgn-filename>.pgn` will contain the following:
 
@@ -42,7 +42,7 @@ Example Comment:
 - `mistake ?? WINNING CP:162` - the `mistake ??` part indicates your move is not one of the good moves; you lose some advantage, but your position is still `WINNING` with a 1.62 pawn (CP:162) advantage.
 - `missed ??? ADVANTAGE CP:147` - the `missed ???` part indicates that there was a winning move you didn't find and missed a larger advantage; the `ADVANTAGE` part indicates that you still have a slight advantage despite the missed opportunity.
 
-The `analyzed-<original-pgn-filename>.stat` file will contain:
+The `analyzed-stats-<original-pgn-filename>.json` file will contain:
 - the total counts of brilliant, excellent, good, average, mistake, blunder, and missed moves in the pgn game.
 - it will also provide a percentage representing the accuracy of moves a color played throughout the whole game.
 
