@@ -1,7 +1,6 @@
 set(files
   pgn_samples/analyzed-first.pgn
-  pgn_samples/first.pgn
-#   pgn_samples/analyzed-first.stats
+  pgn_samples/analyzed-stats-first.json
 )
 
 set(missing)

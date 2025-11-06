@@ -40,9 +40,8 @@ bin/pgn-extract
 *.stats.txt
 *.analyzed.pgn
 
-./pgn_samples/first
+*/analyzed-first.pgn
+*/analyzed-stats-first.json
 build
 build-release
 .cache
-./pgn_samples/analyzed-first.pgn
-./pgn_samples/analyzed-stats-first.json

@@ -14,7 +14,7 @@ all:
 	  GENARGS=""; \
 	fi; \
 	cmake -S . -B ${CMAKE_BUILD_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_CONFIG} -DCMAKE_C_COMPILER=$${CMAKE_CC} -DCMAKE_CXX_COMPILER=$${CMAKE_CXX} $${GENARGS}; \
-	cmake --build ${CMAKE_BUILD_DIR} --config ${CMAKE_CONFIG} -- -j4; \
+	cmake --build ${CMAKE_BUILD_DIR} --config ${CMAKE_CONFIG}; \
 	}
 
 test:
@@ -33,7 +33,7 @@ win_config_rel:
 	cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release -G "MinGW Makefiles"
 
 win_build_rel:
-	cmake --build build-release --config Release
+	cmake --build build-release --config Release -- -j4
 
 
 clean:

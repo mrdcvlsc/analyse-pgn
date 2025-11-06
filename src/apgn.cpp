@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
         save_games(analyzed_pgn_file, analyzed_games);
 
         auto stats_file =
-            (pgn_file.parent_path() / ("analyzed-stats" + pgn_file.filename().replace_extension(".stat").string()))
+            (pgn_file.parent_path() / ("analyzed-stats-" + pgn_file.filename().replace_extension(".json").string()))
                 .string();
         generate_stats(chess_games, stats_file);
     }
