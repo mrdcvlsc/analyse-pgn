@@ -18,6 +18,7 @@ jobs:
 
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         include:
           - os: ubuntu-latest
@@ -136,97 +137,83 @@ jobs:
         cmake -P cmake/check_outputs.cmake -DPROJECT_SOURCE_DIR=${{ github.workspace }}
       shell: pwsh
 
-    - name: Create package (CPack) - Linux
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        cmake --build build --config Debug --target package
-      shell: bash
-
-    - name: Create package (CPack) - Windows
-      if: matrix.os == 'windows-latest'
-      run: |
-        cmake --build build --config Debug --target package
-      shell: pwsh
-
     - name: Upload package artifact
       uses: actions/upload-artifact@v4
       with:
         name: apgn-package-${{ matrix.os }}-${{ matrix.compiler }}-Debug
         path: |
-          build/*.zip
+          *.zip
 
   release:
-    name: build-and-upload-release-${{ matrix.os }}-${{ matrix.compiler }}
-    runs-on: ${{ matrix.os }}
+    name: build-and-upload-release-${{ matrix.platform.os }}-${{ matrix.platform.cxx_compiler }}
+    runs-on: ${{ matrix.platform.os }}
     if: github.event_name == 'release' && github.event.action == 'created'
 
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
-        include:
-          - os: ubuntu-latest
-            compiler: gcc
-          - os: ubuntu-latest
-            compiler: clang
-          - os: windows-latest
-            compiler: gcc
-
+        platform:
+        - { name: Windows GCC,  os: windows-latest , cxx_compiler: g++ ,     packaged: apgn-windows-release-g++.zip }
+        - { name: Ubuntu GCC,   os: ubuntu-latest,   cxx_compiler: g++ ,     packaged: apgn-linux-release-g++.zip }
+        - { name: Ubuntu Clang, os: ubuntu-latest,   cxx_compiler: clang++ , packaged: apgn-linux-release-clang++.zip }
+      
     steps:
     - name: checkout
       uses: actions/checkout@v5
 
     - name: Set up Clang
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.platform.os == 'ubuntu-latest'
       uses: egor-tensin/setup-clang@v1
       with:
         version: 21
         platform: x64
 
     - name: Configure (CMake) - Ubuntu + gcc (release)
-      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
+      if: matrix.platform.os == 'ubuntu-latest' && matrix.platform.cxx_compiler == 'g++'
       run: |
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
       shell: bash
 
     - name: Configure (CMake) - Ubuntu + clang (release)
-      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
+      if: matrix.platform.os == 'ubuntu-latest' && matrix.platform.cxx_compiler == 'clang++'
       run: |
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
       shell: bash
 
     - name: Configure (CMake) - Windows (gcc) (release)
-      if: matrix.os == 'windows-latest'
+      if: matrix.platform.os == 'windows-latest'
       run: |
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G "MinGW Makefiles"
       shell: pwsh
 
     - name: Build (CMake) - Linux (release)
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.platform.os == 'ubuntu-latest'
       run: |
         cmake --build build --config Release
       shell: bash
 
     - name: Linux Allow Executable To Execute
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.platform.os == 'ubuntu-latest'
       run: |
         chmod +x bin/engines/stockfish
       shell: bash
 
     - name: Build (CMake) - Windows (release)
-      if: matrix.os == 'windows-latest'
+      if: matrix.platform.os == 'windows-latest'
       run: |
         cmake --build build --config Release
       shell: pwsh
 
     - name: Run tests (release) - Linux
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.platform.os == 'ubuntu-latest'
       run: |
         cmake --build build --config Release --target test
         CTEST_OUTPUT_ON_FAILURE=1 ctest --test-dir build -C Release
       shell: bash
 
     - name: Show test program output (release) - Linux
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.platform.os == 'ubuntu-latest'
       run: |
         echo "=== Program Test Output ==="
         cat Testing/Temporary/LastTest.log
@@ -234,37 +221,29 @@ jobs:
       working-directory: build
 
     - name: Run tests (release) - Windows
-      if: matrix.os == 'windows-latest'
+      if: matrix.platform.os == 'windows-latest'
       run: |
         cmake --build build --config Release --target test
         $env:CTEST_OUTPUT_ON_FAILURE=1; ctest --test-dir build -C Release
       shell: pwsh
 
     - name: Show test program output (release) - Windows
-      if: matrix.os == 'windows-latest'
+      if: matrix.platform.os == 'windows-latest'
       run: |
         Write-Host "=== Program Test Output ==="
         Get-Content Testing/Temporary/LastTest.log
       shell: pwsh
       working-directory: build
 
-    - name: Create package (CPack) - Linux
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        cmake --build build --config Release --target package
-      shell: bash
-
-    - name: Create package (CPack) - Windows
-      if: matrix.os == 'windows-latest'
-      run: |
-        cmake --build build --config Release --target package
-      shell: pwsh
+    - name: Package for (release)
+      run: cmake --build build --target package_for_release
 
     - name: upload zip to release assets
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ${{ runner.os == 'Windows' && 'apgn-windows.zip' || 'apgn-linux.zip' }}
-        asset_name: ${{ runner.os == 'Windows' && 'apgn-windows.zip' || 'apgn-linux.zip' }}
+        asset_path: ./${{ matrix.platform.packaged }}
+        asset_name: ${{ matrix.platform.packaged }}
         asset_content_type: application/zip
-      # GITHUB_TOKEN is automatically provided in the runner, no need to pass explicitly
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
