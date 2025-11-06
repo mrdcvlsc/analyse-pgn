@@ -1,4 +1,5 @@
 #include "generate_stats.hpp"
+
 #include "../utils/logger.hpp"
 
 #include <array>

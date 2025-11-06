@@ -1,4 +1,7 @@
 #include "extract_args.hpp"
+#include "checks.hpp"
+#include "get_defaults.hpp"
+
 #include "../utils/get_exe_dir.hpp"
 
 #include <cstddef>
@@ -9,49 +12,6 @@
 #include <thread>
 #include <utility>
 #include <vector>
-
-namespace fs = std::filesystem;
-
-bool is_number(const std::string &input) {
-    std::string::const_iterator i = input.begin();
-    while (i != input.end() && std::isdigit(*i)) {
-        ++i;
-    }
-
-    return !input.empty() && i == input.end();
-}
-
-std::pair<std::string, UciOptions> get_defaults() {
-
-    auto chess_engine = (fs::path(get_exe_dir()) / "bin" / "engines" /
-#if defined(_WIN32)
-                         "stockfish.exe"
-#else
-                         "stockfish"
-#endif
-        )
-                            .string();
-
-    auto thread_cnt     = std::thread::hardware_concurrency();
-    auto threads_to_use = static_cast<int>(static_cast<float>(thread_cnt) * 0.75f);
-
-    if (threads_to_use <= 0 || threads_to_use > 512) {
-        threads_to_use = 1;
-    }
-
-    DEBUG_LOG("Threads to use by the chess engine : " + std::to_string(threads_to_use));
-
-    auto options = UciOptions{};
-
-    options.depth         = 11;
-    options.threads       = threads_to_use;
-    options.hash_size     = 850;
-    options.start_on_move = 0;
-    options.until_move    = 1'000;
-    options.piece         = Piece::Both;
-
-    return std::make_pair(chess_engine, options);
-}
 
 std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
 
@@ -145,10 +105,8 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
     std::cout << "\n================= flag values ================\n";
 
     std::cout << "\nengine                 : " << chess_engine_exe
-              << "\nthreads                : " << options.threads
-              << "\ndepth                  : " << options.depth
-              << "\nhash size              : " << options.hash_size
-              << "\nplayer to analyse      : " << piece
+              << "\nthreads                : " << options.threads << "\ndepth                  : " << options.depth
+              << "\nhash size              : " << options.hash_size << "\nplayer to analyse      : " << piece
               << "\nstart analysis on move : " << options.start_on_move
               << "\nanalyse until move     : " << options.until_move << "\n\n";
 
@@ -171,22 +129,4 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
     std::cout << "\n==============================================\n";
 
     return std::make_pair(arg_paths, options);
-}
-
-void assert_missing_flagvalue(int index, std::size_t arg_cnt, const std::string &argument) {
-    if (index + 1 >= arg_cnt) {
-        std::cerr << "INVALID ARGUMENT:\n\n\tThe given flag" << argument << "' does not have a value\n\n";
-        exit(1);
-    }
-}
-
-void assert_invalid(const std::string &what, const std::string &param_flag, const std::string &value) {
-    std::cerr << "Argument Error: " << param_flag << " " << value
-              << "\n\n"
-                 "\tDetected invalid "
-              << what
-              << " given\n"
-                 "\tin the parameter flag "
-              << param_flag << "\n";
-    exit(1);
 }

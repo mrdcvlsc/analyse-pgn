@@ -1,3 +1,8 @@
+#include "../save_games/save_games.hpp"
+#include "../utils/get_exe_dir.hpp"
+#include "../utils/logger.hpp"
+#include "../utils/process_utils.hpp"
+
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/error.hpp>
 #include <boost/asio/io_context.hpp>
@@ -17,17 +22,12 @@
 #include <thread>
 #include <utility>
 
-#include "../utils/get_exe_dir.hpp"
-#include "../utils/logger.hpp"
-#include "../utils/process_utils.hpp"
-#include "../save_games/save_games.hpp"
-
 void save_games(const std::string &output_filename, const std::string &long_algebraic_notation_games) {
     std::cout << "saving analyzed pgn file : " << output_filename << '\n';
 
-    namespace asio = boost::asio;
+    namespace asio    = boost::asio;
     namespace process = boost::process;
-    namespace fs = std::filesystem;
+    namespace fs      = std::filesystem;
 
     asio::io_context ctx;
     asio::readable_pipe pipe_stdout{ctx};

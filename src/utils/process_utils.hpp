@@ -11,8 +11,9 @@
 #include <string>
 
 namespace process = boost::process;
-namespace asio = boost::asio;
-using error_code = boost::system::error_code;
+namespace asio    = boost::asio;
+using error_code  = boost::system::error_code;
 
 void check_for_error(const std::string &msg, process::process &child_process, const error_code &ec);
+
 std::string readline_child_stdout(asio::streambuf &child_stdout_buf);

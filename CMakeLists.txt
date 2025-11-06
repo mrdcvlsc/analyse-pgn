@@ -27,8 +27,12 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/dependencies/pgn-extract)
 add_executable(${PROJECT_NAME}
     ${CMAKE_SOURCE_DIR}/src/apgn.cpp
     ${CMAKE_SOURCE_DIR}/src/info/display_info.cpp
+    ${CMAKE_SOURCE_DIR}/src/extract_args/checks.cpp
     ${CMAKE_SOURCE_DIR}/src/extract_args/extract_args.cpp
+    ${CMAKE_SOURCE_DIR}/src/extract_args/get_defaults.cpp
     ${CMAKE_SOURCE_DIR}/src/analyse_game/analyse_game.cpp
+    ${CMAKE_SOURCE_DIR}/src/analyse_game/get_ucigo_bestmove.cpp
+    ${CMAKE_SOURCE_DIR}/src/analyse_game/score_comments.cpp
     ${CMAKE_SOURCE_DIR}/src/load_games/load_games.cpp
     ${CMAKE_SOURCE_DIR}/src/save_games/save_games.cpp
     ${CMAKE_SOURCE_DIR}/src/generate_stats/generate_stats.cpp

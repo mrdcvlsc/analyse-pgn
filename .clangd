@@ -1,0 +1,14 @@
+InlayHints:
+  Designators: No
+  Enabled: Yes
+  ParameterNames: No
+  DeducedTypes: No
+
+Diagnostics:
+  ClangTidy:
+    Add: [ cppcoreguidelines*, performance*, bugprone*, clang-analyzer*, darwin*, abseil* ]
+    Remove: [
+      modernize-use-trailing-return-type,
+      cppcoreguidelines-avoid-magic-numbers,
+      cppcoreguidelines-special-member-functions,
+    ]

@@ -24,9 +24,9 @@
 std::vector<ChessGame> load_games(const std::string &filename) {
     std::cout << "reading pgn file : " << filename << '\n';
 
-    namespace asio = boost::asio;
+    namespace asio    = boost::asio;
     namespace process = boost::process;
-    namespace fs = std::filesystem;
+    namespace fs      = std::filesystem;
 
     asio::io_context ctx;
     asio::readable_pipe pipe_stdout{ctx};
@@ -54,9 +54,8 @@ std::vector<ChessGame> load_games(const std::string &filename) {
 
     int exit_code = child_process.wait();
     if (exit_code) {
-        throw std::runtime_error(
-            "pgn-extract returned exit code " + std::to_string(exit_code) +
-            " in 'load_games' function, possible error occured, apgn program discontinued");
+        throw std::runtime_error("pgn-extract returned exit code " + std::to_string(exit_code) +
+                                 " in 'load_games' function, possible error occured, apgn program discontinued");
     }
 
     std::cout << "conversion of '" + filename + "' file to long-algebraic notation done!\n";
@@ -86,14 +85,14 @@ std::vector<ChessGame> load_games(const std::string &filename) {
         }
 
         if (line.front() == '[' && !in_headers && !in_moves) {
-            curr_game = ChessGame();
+            curr_game  = ChessGame();
             in_headers = true;
         }
 
         if (in_headers && line.front() == '[') {
-            auto tag_end = line.find(' ');
+            auto tag_end   = line.find(' ');
             auto val_start = line.find('"');
-            auto val_end = line.rfind('"');
+            auto val_end   = line.rfind('"');
 
             if (tag_end != npos && val_start != npos && val_end != npos && val_end > val_start) {
                 std::string tag = line.substr(1, tag_end - 1);
@@ -106,7 +105,7 @@ std::vector<ChessGame> load_games(const std::string &filename) {
 
         if (in_headers && !in_moves && line.front() != '[') {
             in_headers = false;
-            in_moves = true;
+            in_moves   = true;
         }
 
         if (in_moves) {
