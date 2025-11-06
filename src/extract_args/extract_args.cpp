@@ -1,6 +1,5 @@
 #include "extract_args.hpp"
-#include "analyse_game.hpp"
-#include "get_exe_dir.hpp"
+#include "../utils/get_exe_dir.hpp"
 
 #include <cstddef>
 #include <cstdlib>
@@ -68,7 +67,7 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
         arguments.push_back(argv[i]);
     }
 
-    for (const auto &e: arguments) {
+    for (const auto &e : arguments) {
         std::cout << "argument pushed back : " << e << '\n';
     }
 
@@ -105,7 +104,7 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
             }
         } else if (arguments[i] == "--player") {
             i++;
-            
+
             if (arguments[i] == "Both") {
                 options.piece = Piece::Both;
                 piece         = "Both";
@@ -164,7 +163,7 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
         std::cout << "\n============ pgn files to analyse ============\n";
 
         int number = 1;
-        for (const auto& pgn_files: arg_paths.chess_pgn_files) {
+        for (const auto &pgn_files : arg_paths.chess_pgn_files) {
             std::cout << number << ".) " << pgn_files.string() << '\n';
         }
     }

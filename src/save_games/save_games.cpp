@@ -17,10 +17,10 @@
 #include <thread>
 #include <utility>
 
-#include "get_exe_dir.hpp"
-#include "logger.hpp"
-#include "process_utils.hpp"
-#include "save_games.hpp"
+#include "../utils/get_exe_dir.hpp"
+#include "../utils/logger.hpp"
+#include "../utils/process_utils.hpp"
+#include "../save_games/save_games.hpp"
 
 void save_games(const std::string &output_filename, const std::string &long_algebraic_notation_games) {
     std::cout << "saving analyzed pgn file : " << output_filename << '\n';

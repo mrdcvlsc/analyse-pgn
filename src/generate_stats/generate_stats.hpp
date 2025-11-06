@@ -1,6 +1,6 @@
 #pragma once
 
-#include "chess_games.hpp"
+#include "../chess_games.hpp"
 
 #include <vector>
 

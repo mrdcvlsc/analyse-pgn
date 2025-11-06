@@ -1,6 +1,6 @@
 #include "analyse_game.hpp"
-#include "logger.hpp"
-#include "process_utils.hpp"
+#include "../utils/logger.hpp"
+#include "../utils/process_utils.hpp"
 
 #include <array>
 #include <boost/asio.hpp>

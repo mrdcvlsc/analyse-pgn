@@ -2,14 +2,14 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include "analyse_game.hpp"
-#include "display_info.hpp"
-#include "extract_args.hpp"
-#include "generate_stats.hpp"
-#include "get_exe_dir.hpp"
-#include "load_games.hpp"
-#include "logger.hpp"
-#include "save_games.hpp"
+#include "analyse_game/analyse_game.hpp"
+#include "extract_args/extract_args.hpp"
+#include "generate_stats/generate_stats.hpp"
+#include "info/display_info.hpp"
+#include "load_games/load_games.hpp"
+#include "save_games/save_games.hpp"
+#include "utils/get_exe_dir.hpp"
+#include "utils/logger.hpp"
 
 #include <cstdlib>
 #include <filesystem>

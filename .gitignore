@@ -43,3 +43,4 @@ bin/pgn-extract
 ./pgn_samples/first
 build
 build-release
+.cache

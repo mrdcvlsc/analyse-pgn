@@ -1,7 +1,7 @@
 #pragma once
 
-#include "analyse_game.hpp"
-#include "logger.hpp"
+#include "../analyse_game/analyse_game.hpp"
+#include "../utils/logger.hpp"
 
 #include <filesystem>
 #include <utility>

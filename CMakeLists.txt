@@ -1,12 +1,17 @@
 cmake_minimum_required(VERSION 3.28)
 project(apgn LANGUAGES C CXX)
 
+set(VERBOSE 1)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(BOOST_INCLUDE_LIBRARIES system filesystem process asio)
 set(BOOST_ENABLE_CMAKE ON)
 
+include(cmake/warnings_as_errors.cmake)
 include(FetchContent)
 
 FetchContent_Declare(
@@ -20,21 +25,22 @@ file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/pgn-extract)
 add_subdirectory(${CMAKE_SOURCE_DIR}/dependencies/pgn-extract)
 
 add_executable(${PROJECT_NAME}
-    ${CMAKE_SOURCE_DIR}/src/analyse_game.cpp
     ${CMAKE_SOURCE_DIR}/src/apgn.cpp
-    ${CMAKE_SOURCE_DIR}/src/display_info.cpp
-    ${CMAKE_SOURCE_DIR}/src/extract_args.cpp
-    ${CMAKE_SOURCE_DIR}/src/generate_stats.cpp
-    ${CMAKE_SOURCE_DIR}/src/get_exe_dir.cpp
-    ${CMAKE_SOURCE_DIR}/src/load_games.cpp
-    ${CMAKE_SOURCE_DIR}/src/logger.cpp
-    ${CMAKE_SOURCE_DIR}/src/process_utils.cpp
-    ${CMAKE_SOURCE_DIR}/src/save_games.cpp
+    ${CMAKE_SOURCE_DIR}/src/info/display_info.cpp
+    ${CMAKE_SOURCE_DIR}/src/extract_args/extract_args.cpp
+    ${CMAKE_SOURCE_DIR}/src/analyse_game/analyse_game.cpp
+    ${CMAKE_SOURCE_DIR}/src/load_games/load_games.cpp
+    ${CMAKE_SOURCE_DIR}/src/save_games/save_games.cpp
+    ${CMAKE_SOURCE_DIR}/src/generate_stats/generate_stats.cpp
+    ${CMAKE_SOURCE_DIR}/src/utils/process_utils.cpp
+    ${CMAKE_SOURCE_DIR}/src/utils/get_exe_dir.cpp
+    ${CMAKE_SOURCE_DIR}/src/utils/logger.cpp
 )
 
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_include_directories(${PROJECT_NAME} PUBLIC "${Boost_SOURCE_DIR}")
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::system Boost::filesystem Boost::process)
+# set_warnings_as_errors_for_own_sources(${PROJECT_NAME})
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer)
@@ -63,6 +69,22 @@ endif()
 set(CPACK_PACKAGE_FILE_NAME "apgn-${CMAKE_SYSTEM_NAME}-${CMAKE_BUILD_TYPE}")
 set(CPACK_STRIP_FILES FALSE)
 include(CPack)
+
+if(CMAKE_EXPORT_COMPILE_COMMANDS)
+  # Add a tiny target that copies compile_commands.json from build -> source dir
+  add_custom_target(copy_compile_commands ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      ${CMAKE_BINARY_DIR}/compile_commands.json
+      ${CMAKE_SOURCE_DIR}/compile_commands.json
+    COMMENT "Copying compile_commands.json to source dir"
+    VERBATIM
+  )
+  # avoid making every build depend on this on multi-config generators
+  set_target_properties(copy_compile_commands PROPERTIES
+    EXCLUDE_FROM_ALL TRUE
+  )
+endif()
+
 
 # ===================================
 # old cmake

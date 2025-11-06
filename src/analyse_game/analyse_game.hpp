@@ -4,8 +4,8 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include "chess_games.hpp"
-#include "process_utils.hpp"
+#include "../chess_games.hpp"
+#include "../utils/process_utils.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/asio/readable_pipe.hpp>

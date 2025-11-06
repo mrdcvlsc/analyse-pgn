@@ -1,8 +1,7 @@
-#include "load_games.hpp"
-#include "chess_games.hpp"
-#include "get_exe_dir.hpp"
-#include "logger.hpp"
-#include "process_utils.hpp"
+#include "../load_games/load_games.hpp"
+#include "../utils/get_exe_dir.hpp"
+#include "../utils/logger.hpp"
+#include "../utils/process_utils.hpp"
 
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/error.hpp>
