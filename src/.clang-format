@@ -1,0 +1,21 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 115
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Inline
+AlignConsecutiveAssignments: Consecutive
+
+# Function call argument formatting
+BinPackArguments: true
+BinPackParameters: false
+AlignAfterOpenBracket: DontAlign
+ContinuationIndentWidth: 4
+AllowAllArgumentsOnNextLine: false
+PenaltyBreakBeforeFirstCallParameter: 1000000
+
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: false
+
+IfMacros: [IF]
