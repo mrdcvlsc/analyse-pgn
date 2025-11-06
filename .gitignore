@@ -45,3 +45,4 @@ bin/pgn-extract
 build
 build-release
 .cache
+*.zip
