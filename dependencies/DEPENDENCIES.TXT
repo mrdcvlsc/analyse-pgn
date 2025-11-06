@@ -6,4 +6,3 @@ stockfish11  - https://stockfishchess.org/download/
 
 You can get the full source of pgn-extract and uci-analyse in this link
 pgn-extract (Version 21-02) - https://www.cs.kent.ac.uk/people/staff/djb/pgn-extract/
-uci-analyser - https://www.cs.kent.ac.uk/people/staff/djb/uci-analyser/
