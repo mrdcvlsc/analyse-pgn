@@ -60,7 +60,13 @@ The `analyzed-stats-<original-pgn-filename>.json` file will contain:
   - Windows: `MinGW Makefile` + `gcc/g++` & `cmake v3.28+`.
   - Linux `gcc/g++ or clang/clang++` + `Makefile` (available by default in ubuntu flavors) and `cmake v3.28+`.
 
-### For Developers
+## Possible Weird Errors That Could Happen
+
+- when a third-party executable is not allowed/trusted in your system, for example the `pgn-extract.exe` or `stockfish.exe` (`pgn-extract` or `stockfish` for ubuntu/linux), the the program might fail to run because of permission issues.
+
+    use the `chmod` command in ubuntu to allow programs to read, write and execute process.
+
+## For Developers
 
 For developers who want to work on this project, install `clangd` in your system too, and **config** and **build** with cmake to generate the `compile_commands.json` file in the `build` folder to enable clangd (lsp) auto-complete in vscode.
 

@@ -55,6 +55,12 @@ jobs:
         cmake --build build --config Debug -- -j2
       shell: bash
 
+    - name: Linux Allow Executable To Execute
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        chmod +x bin/engines/stockfish
+      shell: bash
+
     - name: Build (CMake) - Windows
       if: matrix.os == 'windows-latest'
       run: |
@@ -195,7 +201,7 @@ jobs:
     - name: Run tests (release) - Linux
       if: matrix.os == 'ubuntu-latest'
       run: |
-        cmake --build build --config Release --target test || true
+        cmake --build build --config Release --target test
         CTEST_OUTPUT_ON_FAILURE=1 ctest --test-dir build -C Release
       shell: bash
 
@@ -210,7 +216,7 @@ jobs:
     - name: Run tests (release) - Windows
       if: matrix.os == 'windows-latest'
       run: |
-        cmake --build build --config Release --target test || true
+        cmake --build build --config Release --target test
         $env:CTEST_OUTPUT_ON_FAILURE=1; ctest --test-dir build -C Release
       shell: pwsh
 
