@@ -7,6 +7,10 @@
 #include <limits>
 #include <string>
 
+struct PlayerStats {};
+
+struct GameStats {};
+
 void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat_file) {
     for (auto &chess_game : chess_games) {
         std::string stat_report = "";
@@ -21,30 +25,32 @@ void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat
         }
 
         for (int i = 0; i < 2; i++) {
-            for (const auto &[comment, cnt] : chess_game.interpret_stats.at(i)) { 
+            for (const auto &[ranked_comment, cnt] : chess_game.interpret_stats.at(i)) {
                 total_player_moves.at(i) += cnt;
 
-                if (comment.find(comments::winning::BRILLIANT) != std::string::npos) {
+                auto [rank, comment] = ranked_comment;
+
+                if (comment.find(comments::winning::BRILLIANT.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 1.0);
-                } else if (comment.find(comments::winning::EXCELLENT) != std::string::npos) {
+                } else if (comment.find(comments::winning::EXCELLENT.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 0.98);
-                } else if (comment.find(comments::winning::GOOD) != std::string::npos) {
+                } else if (comment.find(comments::winning::GOOD.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 0.97);
-                } else if (comment.find(comments::losing::ACCURATE_3) != std::string::npos) {
+                } else if (comment.find(comments::losing::ACCURATE_3.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 0.80);
-                } else if (comment.find(comments::losing::ACCURATE_2) != std::string::npos) {
+                } else if (comment.find(comments::losing::ACCURATE_2.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 0.77);
-                } else if (comment.find(comments::losing::QUESTIONABLE) != std::string::npos) {
+                } else if (comment.find(comments::losing::QUESTIONABLE.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 0.75);
-                } else if (comment.find(comments::losing::INACCURATE) != std::string::npos) {
+                } else if (comment.find(comments::losing::INACCURATE.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 0.15);
-                } else if (comment.find(comments::losing::MISTAKE_2) != std::string::npos) {
+                } else if (comment.find(comments::losing::MISTAKE_2.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 0.1);
-                } else if (comment.find(comments::losing::MISTAKE_3) != std::string::npos) {
+                } else if (comment.find(comments::losing::MISTAKE_3.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 0.05);
-                } else if (comment.find(comments::winning::MISSED) != std::string::npos) {
+                } else if (comment.find(comments::winning::MISSED.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 0.75);
-                } else if (comment.find(comments::losing::BLUNDER) != std::string::npos) {
+                } else if (comment.find(comments::losing::BLUNDER.second) != std::string::npos) {
                     total_player_score.at(i) += (cnt * 0.0);
                 }
             }
@@ -62,9 +68,16 @@ void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat
             DEBUG_LOG(std::string("Color ") + (i == 0 ? "White" : "Black") +
                       " player total score : " + std::to_string(total_player_score.at(i)) + "\n");
 
-            for (const auto &[key, val] : chess_game.interpret_stats.at(i)) {
-                std::cout << "[" << key << "]" << val << '\n';
+            for (const auto &[ranked_comment, val] : chess_game.interpret_stats.at(i)) {
+                auto [rank, comment] = ranked_comment;
+                std::cout << "[" << comment << "]" << val << '\n';
             }
         }
     }
+
+    // auto  ec = glz::write_file_json(obj, "./obj.json", std::string{});
+
+    //     if (ec) {
+    //   // handle error
+    // }
 }

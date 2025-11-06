@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 #include <map>
 #include <string>
 #include <utility>
@@ -17,5 +18,5 @@ struct ChessGame {
     std::map<int, std::string> comments;         // map = key : move index, value: comment.
     std::map<int, double> player_move_centipawn; // both player's moves centipawn values.
     std::map<int, double> best_move_centipawn;   // both player's missed best moves centipawn values.
-    std::array<std::map<std::string, double>, 2> interpret_stats;
+    std::array<std::map<std::pair<std::uint8_t, std::string>, double>, 2> interpret_stats;
 };

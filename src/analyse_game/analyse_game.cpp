@@ -262,12 +262,12 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                 interpret_stream >> tmp_item;
                 comment_type.append(tmp_item);
 
-                if (chess_game.interpret_stats.at(curr_player).find(comment_type) ==
+                if (chess_game.interpret_stats.at(curr_player).find(comments::rank(comment_type)) ==
                     chess_game.interpret_stats.at(curr_player).end()) {
-                    chess_game.interpret_stats.at(curr_player)[comment_type] = 0.0;
+                    chess_game.interpret_stats.at(curr_player)[comments::rank(comment_type)] = 0.0;
                 }
 
-                chess_game.interpret_stats.at(curr_player)[comment_type]++;
+                chess_game.interpret_stats.at(curr_player)[comments::rank(comment_type)]++;
 
                 chess_game.comments[i] += (!mv_player_cp && mv_player_cm)
                                               ? (" MATE_IN:" + std::to_string(mv_player_cm))
