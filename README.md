@@ -68,7 +68,7 @@ The `analyzed-stats-<original-pgn-filename>.json` file will contain:
 
 ## For Developers
 
-For developers who want to work on this project, install `clangd` in your system too, and **config** and **build** with cmake to generate the `compile_commands.json` file in the `build` folder to enable clangd (lsp) auto-complete in vscode.
+For developers who want to work on this project, install `clangd` in your system and vscode too, **config** with `-DCMAKE_BUILD_TYPE=Debug` and **build** with `--config Debug` using cmake to generate the `compile_commands.json` file in the `build` folder to enable clangd (lsp) auto-complete in vscode (for developers on windows, don't forget to use the `-G "MinGW Makefiles"`).
 
 ### **Windows Release Build**
 

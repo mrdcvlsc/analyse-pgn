@@ -108,20 +108,20 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       continue-on-error: true
       run: |
-        echo "=== Contents of first.analyzed.pgn ==="
-        cat ./pgn_samples/first.analyzed.pgn
-        echo "=== Contents of first.stats.txt ==="
-        cat ./pgn_samples/first.stats.txt
+        echo "=== Contents of analyzed-first.pgn ==="
+        cat ./pgn_samples/analyzed-first.pgn
+        echo "=== Contents of analyzed-stats-first.json ==="
+        cat ./pgn_samples/analyzed-stats-first.json
       shell: bash
 
     - name: Check output files content - Windows
       if: matrix.os == 'windows-latest'
       continue-on-error: true
       run: |
-        Write-Host "=== Contents of first.analyzed.pgn ==="
-        Get-Content ./pgn_samples/first.analyzed.pgn
-        Write-Host "=== Contents of first.stats.txt ==="
-        Get-Content ./pgn_samples/first.stats.txt
+        Write-Host "=== Contents of analyzed-first.pgn ==="
+        Get-Content ./pgn_samples/analyzed-first.pgn
+        Write-Host "=== Contents of analyzed-stats-first.json ==="
+        Get-Content ./pgn_samples/analyzed-stats-first.json
       shell: pwsh
 
     - name: Verify expected output files (CMake script) - Linux
