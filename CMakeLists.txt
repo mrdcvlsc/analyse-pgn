@@ -3,7 +3,7 @@ project(apgn LANGUAGES C CXX)
 
 set(VERBOSE 1)
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -20,6 +20,15 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(Boost)
+
+FetchContent_Declare(
+  glaze
+  GIT_REPOSITORY https://github.com/stephenberry/glaze.git
+  GIT_TAG v6.0.1
+  GIT_SHALLOW TRUE
+)
+
+FetchContent_MakeAvailable(glaze)
 
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/pgn-extract)
 add_subdirectory(${CMAKE_SOURCE_DIR}/dependencies/pgn-extract)
@@ -41,9 +50,9 @@ add_executable(${PROJECT_NAME}
     ${CMAKE_SOURCE_DIR}/src/utils/logger.cpp
 )
 
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 target_include_directories(${PROJECT_NAME} PUBLIC "${Boost_SOURCE_DIR}")
-target_link_libraries(${PROJECT_NAME} PRIVATE Boost::system Boost::filesystem Boost::process)
+target_link_libraries(${PROJECT_NAME} PRIVATE Boost::system Boost::filesystem Boost::process glaze::glaze)
 # set_warnings_as_errors_for_own_sources(${PROJECT_NAME})
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
@@ -98,7 +107,7 @@ endif()
 # project(apgn LANGUAGES C CXX)
 
 # set(CMAKE_C_STANDARD 99)
-# set(CMAKE_CXX_STANDARD 17)
+# set(CMAKE_CXX_STANDARD 23)
 
 # include(FetchContent)
 
@@ -124,7 +133,7 @@ endif()
 #     ${CMAKE_SOURCE_DIR}/apgnFileSys.cpp
 #     ${CMAKE_SOURCE_DIR}/convert.cpp
 # )
-# target_compile_features(apgn PRIVATE cxx_std_17)
+# target_compile_features(apgn PRIVATE cxx_std_23)
 # target_include_directories(apgn PRIVATE ${Boost_SOURCE_DIR})
 
 # add_executable(apgn
@@ -132,7 +141,7 @@ endif()
 #     ${CMAKE_SOURCE_DIR}/apgnFileSys.cpp
 #     ${CMAKE_SOURCE_DIR}/convert.cpp
 # )
-# target_compile_features(apgn PRIVATE cxx_std_17)
+# target_compile_features(apgn PRIVATE cxx_std_23)
 # target_include_directories(apgn PRIVATE ${Boost_SOURCE_DIR})
 
 
