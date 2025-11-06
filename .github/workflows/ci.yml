@@ -31,6 +31,13 @@ jobs:
     - name: checkout
       uses: actions/checkout@v5
 
+    - name: Set up Clang
+      if: matrix.os == 'ubuntu-latest'
+      uses: egor-tensin/setup-clang@v1
+      with:
+        version: 21
+        platform: x64
+
     - name: Configure (CMake) - Ubuntu + gcc
       if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
       run: |
@@ -52,7 +59,7 @@ jobs:
     - name: Build (CMake) - Linux
       if: matrix.os == 'ubuntu-latest'
       run: |
-        cmake --build build --config Debug -- -j2
+        cmake --build build --config Debug
       shell: bash
 
     - name: Linux Allow Executable To Execute
@@ -64,7 +71,7 @@ jobs:
     - name: Build (CMake) - Windows
       if: matrix.os == 'windows-latest'
       run: |
-        cmake --build build --config Debug -- -j2
+        cmake --build build --config Debug
       shell: pwsh
 
     - name: Run tests (CTest) - Linux
@@ -168,6 +175,13 @@ jobs:
     - name: checkout
       uses: actions/checkout@v5
 
+    - name: Set up Clang
+      if: matrix.os == 'ubuntu-latest'
+      uses: egor-tensin/setup-clang@v1
+      with:
+        version: 21
+        platform: x64
+
     - name: Configure (CMake) - Ubuntu + gcc (release)
       if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
       run: |
@@ -189,13 +203,19 @@ jobs:
     - name: Build (CMake) - Linux (release)
       if: matrix.os == 'ubuntu-latest'
       run: |
-        cmake --build build --config Release -- -j2
+        cmake --build build --config Release
+      shell: bash
+
+    - name: Linux Allow Executable To Execute
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        chmod +x bin/engines/stockfish
       shell: bash
 
     - name: Build (CMake) - Windows (release)
       if: matrix.os == 'windows-latest'
       run: |
-        cmake --build build --config Release -- -j2
+        cmake --build build --config Release
       shell: pwsh
 
     - name: Run tests (release) - Linux
