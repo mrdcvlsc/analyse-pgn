@@ -63,7 +63,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE -mtune=generic)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Boost::system Boost::filesystem Boost::process
     glaze::glaze
-    -static-libstdc++ -static-libgcc
+    -static -static-libgcc -static-libstdc++
 )
 # set_warnings_as_errors_for_own_sources(${PROJECT_NAME})
 
