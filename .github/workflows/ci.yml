@@ -235,6 +235,9 @@ jobs:
       shell: pwsh
       working-directory: build
 
+    - name: Delete output file from test
+      run: cmake -P cmake/delete_outputs.cmake -DPROJECT_SOURCE_DIR=${{ github.workspace }}
+
     - name: Package for (release)
       run: cmake --build build --target package_for_release
 
