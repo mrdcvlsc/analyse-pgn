@@ -82,7 +82,7 @@ add_test(NAME run_apgn_sample
 )
 
 get_filename_component(CXX_COMPILER_NAME ${CMAKE_CXX_COMPILER} NAME_WE)
-string(TOLOWER "apgn-${CMAKE_SYSTEM_NAME}-${CMAKE_BUILD_TYPE}-${CXX_COMPILER_NAME}.zip" ZIP_OUTPUT_FILE)
+string(TOLOWER "apgn-${CMAKE_SYSTEM_NAME}-${CXX_COMPILER_NAME}.zip" ZIP_OUTPUT_FILE)
 
 message("==============================")
 message("To be zipped:")
