@@ -1,3 +1,5 @@
 uci-analyser and pgn-extract have some modifications, all of theme are stated below
 
 1.) pgn-extract  ->  removed the 'test' folder
+
+2.) added a CMakeLists.txt file

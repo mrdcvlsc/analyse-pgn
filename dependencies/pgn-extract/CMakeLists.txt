@@ -19,6 +19,17 @@ set_target_properties(pgn-extract PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/pgn-extract
 )
 
+# copy license to output binary directory
+add_custom_command(
+    TARGET pgn-extract
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/COPYING" "$<TARGET_FILE_DIR:pgn-extract>/COPYING"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/copyright" "$<TARGET_FILE_DIR:pgn-extract>/copyright"
+    COMMAND ${CMAKE_COMMAND} -E echo "https://www.cs.kent.ac.uk/people/staff/djb/pgn-extract/" > "$<TARGET_FILE_DIR:pgn-extract>/source_code.txt"
+    COMMAND ${CMAKE_COMMAND} -E echo "https://github.com/kentdjb/pgn-extract/" >> "$<TARGET_FILE_DIR:pgn-extract>/source_code.txt"
+    COMMENT "Copying license to pgn-extract bin directory"
+)
+
 # link math library on platforms that need it
 find_library(M_LIB m)
 if(M_LIB)
