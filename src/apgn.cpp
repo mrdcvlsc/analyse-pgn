@@ -29,15 +29,14 @@ namespace fs = std::filesystem;
 
 int main(int argc, char *argv[]) {
 
-    if (argc == 1) {
+    if (argc <= 1) {
         print_info();
         return 0;
-    } else if (argc == 2) {
-        if (strcmp(argv[1], "--help") == 0) {
-            print_help();
-        } else if (strcmp(argv[1], "--version") == 0) {
-            print_version();
-        }
+    } else if (argc == 2 && strcmp(argv[1], "--help") == 0) {
+        print_help();
+        return 0;
+    } else if (argc == 2 && strcmp(argv[1], "--version") == 0) {
+        print_version();
         return 0;
     }
 
