@@ -27,13 +27,13 @@ win_config:
 	cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles"
 
 win_build:
-	cmake --build build --config Debug
+	cmake --build build --config Debug -- -j8
 
 win_config_rel:
 	cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release -G "MinGW Makefiles"
 
 win_build_rel:
-	cmake --build build-release --config Release -- -j4
+	cmake --build build-release --config Release -- -j8
 
 
 clean:

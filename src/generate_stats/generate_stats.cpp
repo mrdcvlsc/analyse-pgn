@@ -34,52 +34,54 @@ void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat
 
         std::vector<PlayerStats> player_stats;
 
-        for (int i = 0; i < 2; i++) {
+        for (int curr_player = 0; curr_player < 2; curr_player++) {
             PlayerStats player_stat;
 
-            if (i == 0) {
+            if (curr_player == 0) {
                 player_stat.player_color = "white";
             } else {
                 player_stat.player_color = "black";
             }
 
-            for (const auto [_, centipawn] : chess_game.player_move_centipawn) {
-                player_stat.centipawns.push_back(static_cast<int>(centipawn));
+            for (const auto [turn, centipawn] : chess_game.player_move_centipawn) {
+                if (turn % 2 == curr_player) {
+                    player_stat.centipawns.push_back(static_cast<int>(centipawn));
+                }
             }
 
-            for (const auto &[ranked_comment, cnt] : chess_game.interpret_stats.at(i)) {
-                total_player_moves.at(i) += cnt;
+            for (const auto &[ranked_comment, cnt] : chess_game.interpret_stats.at(curr_player)) {
+                total_player_moves.at(curr_player) += cnt;
 
                 auto [rank, comment] = ranked_comment;
 
                 if (comment.find(comments::winning::BRILLIANT.second) != std::string::npos) {
-                    total_player_score.at(i) += (cnt * 1.00);
+                    total_player_score.at(curr_player) += (cnt * 1.00);
                 } else if (comment.find(comments::winning::EXCELLENT.second) != std::string::npos) {
-                    total_player_score.at(i) += (cnt * 0.98);
+                    total_player_score.at(curr_player) += (cnt * 0.98);
                 } else if (comment.find(comments::winning::GOOD.second) != std::string::npos) {
-                    total_player_score.at(i) += (cnt * 0.97);
+                    total_player_score.at(curr_player) += (cnt * 0.97);
                 } else if (comment.find(comments::losing::ACCURATE_3.second) != std::string::npos) {
-                    total_player_score.at(i) += (cnt * 0.80);
+                    total_player_score.at(curr_player) += (cnt * 0.80);
                 } else if (comment.find(comments::losing::ACCURATE_2.second) != std::string::npos) {
-                    total_player_score.at(i) += (cnt * 0.77);
+                    total_player_score.at(curr_player) += (cnt * 0.77);
                 } else if (comment.find(comments::losing::QUESTIONABLE.second) != std::string::npos) {
-                    total_player_score.at(i) += (cnt * 0.75);
+                    total_player_score.at(curr_player) += (cnt * 0.75);
                 } else if (comment.find(comments::losing::INACCURATE.second) != std::string::npos) {
-                    total_player_score.at(i) += (cnt * 0.15);
+                    total_player_score.at(curr_player) += (cnt * 0.15);
                 } else if (comment.find(comments::losing::MISTAKE_2.second) != std::string::npos) {
-                    total_player_score.at(i) += (cnt * 0.10);
+                    total_player_score.at(curr_player) += (cnt * 0.10);
                 } else if (comment.find(comments::losing::MISTAKE_3.second) != std::string::npos) {
-                    total_player_score.at(i) += (cnt * 0.05);
+                    total_player_score.at(curr_player) += (cnt * 0.05);
                 } else if (comment.find(comments::winning::MISSED.second) != std::string::npos) {
-                    total_player_score.at(i) += (cnt * 0.75);
+                    total_player_score.at(curr_player) += (cnt * 0.75);
                 } else if (comment.find(comments::losing::BLUNDER.second) != std::string::npos) {
-                    total_player_score.at(i) += (cnt * 0.01);
+                    total_player_score.at(curr_player) += (cnt * 0.01);
                 }
 
                 player_stat.move_stats.push_back(std::make_pair(comment, cnt));
             }
 
-            player_stat.accuracy = total_player_score.at(i) / total_player_moves.at(i);
+            player_stat.accuracy = total_player_score.at(curr_player) / total_player_moves.at(curr_player);
             player_stats.push_back(player_stat);
         }
 
