@@ -13,140 +13,107 @@ on:
 
 jobs:
   build:
-    name: build-and-test-${{ matrix.os }}-${{ matrix.compiler }}
-    runs-on: ${{ matrix.os }}
+    name: build-and-test-${{ matrix.platform.os }}-${{ matrix.platform.compiler }}
+    runs-on: ${{ matrix.platform.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.platform.terminal }}
+
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
 
     strategy:
       fail-fast: false
       max-parallel: 2
       matrix:
-        include:
-          - os: ubuntu-latest
-            compiler: gcc
-          - os: ubuntu-latest
-            compiler: clang
-          - os: windows-latest
-            compiler: gcc
+        platform:
+        - { name: Windows GCC,  os: windows-latest , cc: gcc,   cxx: g++,     terminal: pwsh, gen: -G "MinGW Makefiles" }
+        - { name: Ubuntu GCC,   os: ubuntu-latest,   cc: gcc,   cxx: g++,     terminal: bash }
+        - { name: Ubuntu Clang, os: ubuntu-latest,   cc: clang, cxx: clang++, terminal: bash }
+        build:
+        - { type: Debug }
 
     steps:
     - name: checkout
       uses: actions/checkout@v5
 
     - name: Set up Clang
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.platform.os == 'ubuntu-latest'
       uses: egor-tensin/setup-clang@v1
       with:
         version: 21
         platform: x64
 
-    - name: Configure (CMake) - Ubuntu + gcc
-      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
-      run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
-      shell: bash
-
-    - name: Configure (CMake) - Ubuntu + clang
-      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
-      run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
-      shell: bash
-
-    - name: Configure (CMake) - Windows (gcc)
-      if: matrix.os == 'windows-latest'
-      run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G "MinGW Makefiles"
-      shell: pwsh
-
-    - name: Build (CMake) - Linux
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        cmake --build build --config Debug
-      shell: bash
-
     - name: Linux Allow Executable To Execute
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        chmod +x bin/engines/stockfish
-      shell: bash
+      if: matrix.platform.os == 'ubuntu-latest'
+      run: chmod +x bin/engines/stockfish
 
-    - name: Build (CMake) - Windows
-      if: matrix.os == 'windows-latest'
-      run: |
-        cmake --build build --config Debug
-      shell: pwsh
+    - name: Configure (CMake) - ${{ matrix.platform.name }} (${{ matrix.build.type }})
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build.type }} -DCMAKE_C_COMPILER=${{ matrix.platform.cc }} -DCMAKE_CXX_COMPILER=${{ matrix.platform.cxx }} ${{ matrix.platform.gen }}
 
-    - name: Run tests (CTest) - Linux
-      if: matrix.os == 'ubuntu-latest'
+    - name: Build (CMake) - ${{ matrix.platform.name }} (${{ matrix.build.type }})
+      run: cmake --build build --config ${{ matrix.build.type }}
+
+    - name: Run tests (CTest) - (${{ matrix.build.type }}) - ${{ matrix.platform.name }}
+      if: matrix.platform.os == 'ubuntu-latest'
       run: |
         cmake --build build --config Debug --target test
         CTEST_OUTPUT_ON_FAILURE=1 ctest --test-dir build -C Debug
-      shell: bash
 
-    - name: Show test program output - Linux
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        echo "=== Program Test Output ==="
-        cat Testing/Temporary/LastTest.log
-      shell: bash
-      working-directory: build
-
-    - name: Run tests (CTest) - Windows
-      if: matrix.os == 'windows-latest'
+    - name: Run tests (CTest) - (${{ matrix.build.type }}) - ${{ matrix.platform.name }}
+      if: matrix.platform.os == 'windows-latest'
       run: |
         cmake --build build --config Debug --target test
         $env:CTEST_OUTPUT_ON_FAILURE=1; ctest --test-dir build -C Debug
-      shell: pwsh
+
+    - name: Show test program output - Linux
+      if: matrix.platform.os == 'ubuntu-latest'
+      run: |
+        echo "=== Program Test Output ==="
+        cat Testing/Temporary/LastTest.log
+      working-directory: build
 
     - name: Show test program output - Windows
-      if: matrix.os == 'windows-latest'
+      if: matrix.platform.os == 'windows-latest'
       run: |
         Write-Host "=== Program Test Output ==="
         Get-Content Testing/Temporary/LastTest.log
-      shell: pwsh
       working-directory: build
 
     - name: Check output files content - Linux
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.platform.os == 'ubuntu-latest'
       continue-on-error: true
       run: |
         echo "=== Contents of analyzed-first.pgn ==="
         cat ./pgn_samples/analyzed-first.pgn
         echo "=== Contents of analyzed-stats-first.json ==="
         cat ./pgn_samples/analyzed-stats-first.json
-      shell: bash
 
     - name: Check output files content - Windows
-      if: matrix.os == 'windows-latest'
+      if: matrix.platform.os == 'windows-latest'
       continue-on-error: true
       run: |
         Write-Host "=== Contents of analyzed-first.pgn ==="
         Get-Content ./pgn_samples/analyzed-first.pgn
         Write-Host "=== Contents of analyzed-stats-first.json ==="
         Get-Content ./pgn_samples/analyzed-stats-first.json
-      shell: pwsh
 
     - name: Verify expected output files (CMake script) - Linux
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.platform.os == 'ubuntu-latest'
       run: |
         cmake -P cmake/check_outputs.cmake -DPROJECT_SOURCE_DIR=${{ github.workspace }}
-      shell: bash
 
     - name: Verify expected output files (CMake script) - Windows
-      if: matrix.os == 'windows-latest'
+      if: matrix.platform.os == 'windows-latest'
       run: |
         cmake -P cmake/check_outputs.cmake -DPROJECT_SOURCE_DIR=${{ github.workspace }}
-      shell: pwsh
-
-    - name: Upload package artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: apgn-package-${{ matrix.os }}-${{ matrix.compiler }}-Debug
-        path: |
-          *.zip
 
   release:
-    name: build-and-upload-release-${{ matrix.platform.os }}-${{ matrix.platform.cxx_compiler }}
+    name: build-and-upload-release-${{ matrix.platform.os }}-${{ matrix.platform.cxx }}
     runs-on: ${{ matrix.platform.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.platform.terminal }}
+
     if: github.event_name == 'release' && github.event.action == 'created'
 
     strategy:
@@ -154,10 +121,12 @@ jobs:
       max-parallel: 2
       matrix:
         platform:
-        - { name: Windows GCC,  os: windows-latest , cxx_compiler: g++ ,     packaged: apgn-windows-release-g++.zip }
-        - { name: Ubuntu GCC,   os: ubuntu-latest,   cxx_compiler: g++ ,     packaged: apgn-linux-release-g++.zip }
-        - { name: Ubuntu Clang, os: ubuntu-latest,   cxx_compiler: clang++ , packaged: apgn-linux-release-clang++.zip }
-      
+        - { name: Windows GCC,  os: windows-latest , cc: gcc,   cxx: g++ ,     packed: apgn-windows-g++.zip,   terminal: pwsh, gen: -G "MinGW Makefiles" }
+        - { name: Ubuntu GCC,   os: ubuntu-latest,   cc: gcc,   cxx: g++ ,     packed: apgn-linux-g++.zip,     terminal: bash }
+        - { name: Ubuntu Clang, os: ubuntu-latest,   cc: clang, cxx: clang++ , packed: apgn-linux-clang++.zip, terminal: bash }
+        build:
+        - { name: debug,   type: Debug }
+        - { name: release, type: Release }
     steps:
     - name: checkout
       uses: actions/checkout@v5
@@ -169,84 +138,54 @@ jobs:
         version: 21
         platform: x64
 
-    - name: Configure (CMake) - Ubuntu + gcc (release)
-      if: matrix.platform.os == 'ubuntu-latest' && matrix.platform.cxx_compiler == 'g++'
-      run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
-      shell: bash
-
-    - name: Configure (CMake) - Ubuntu + clang (release)
-      if: matrix.platform.os == 'ubuntu-latest' && matrix.platform.cxx_compiler == 'clang++'
-      run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
-      shell: bash
-
-    - name: Configure (CMake) - Windows (gcc) (release)
-      if: matrix.platform.os == 'windows-latest'
-      run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G "MinGW Makefiles"
-      shell: pwsh
-
-    - name: Build (CMake) - Linux (release)
-      if: matrix.platform.os == 'ubuntu-latest'
-      run: |
-        cmake --build build --config Release
-      shell: bash
-
     - name: Linux Allow Executable To Execute
       if: matrix.platform.os == 'ubuntu-latest'
-      run: |
-        chmod +x bin/engines/stockfish
-      shell: bash
+      run: chmod +x bin/engines/stockfish
 
-    - name: Build (CMake) - Windows (release)
-      if: matrix.platform.os == 'windows-latest'
-      run: |
-        cmake --build build --config Release
-      shell: pwsh
+    - name: Configure (CMake) - ${{ matrix.platform.name }} (${{ matrix.build.type }})
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build.type }} -DCMAKE_C_COMPILER=${{ matrix.platform.cc }} -DCMAKE_CXX_COMPILER=${{ matrix.platform.cxx }} ${{ matrix.platform.gen }}
 
-    - name: Run tests (release) - Linux
+    - name: Build (CMake) - ${{ matrix.platform.name }} (${{ matrix.build.type }})
+      run: cmake --build build --config ${{ matrix.build.type }}
+
+    - name: Run tests  (CTest) - (${{ matrix.build.type }}) - ${{ matrix.platform.name }}
       if: matrix.platform.os == 'ubuntu-latest'
       run: |
-        cmake --build build --config Release --target test
-        CTEST_OUTPUT_ON_FAILURE=1 ctest --test-dir build -C Release
-      shell: bash
+        cmake --build build --config ${{ matrix.build.type }} --target test
+        CTEST_OUTPUT_ON_FAILURE=1 ctest --test-dir build -C ${{ matrix.build.type }}
 
-    - name: Show test program output (release) - Linux
+    - name: Run tests  (CTest) - (${{ matrix.build.type }}) - ${{ matrix.platform.name }}
+      if: matrix.platform.os == 'windows-latest'
+      run: |
+        cmake --build build --config ${{ matrix.build.type }} --target test
+        $env:CTEST_OUTPUT_ON_FAILURE=1; ctest --test-dir build -C ${{ matrix.build.type }}
+
+    - name: Show test program output (${{ matrix.build.type }}) - ${{ matrix.platform.name }}
       if: matrix.platform.os == 'ubuntu-latest'
       run: |
         echo "=== Program Test Output ==="
         cat Testing/Temporary/LastTest.log
-      shell: bash
       working-directory: build
 
-    - name: Run tests (release) - Windows
-      if: matrix.platform.os == 'windows-latest'
-      run: |
-        cmake --build build --config Release --target test
-        $env:CTEST_OUTPUT_ON_FAILURE=1; ctest --test-dir build -C Release
-      shell: pwsh
-
-    - name: Show test program output (release) - Windows
+    - name: Show test program output (${{ matrix.build.type }}) - ${{ matrix.platform.name }}
       if: matrix.platform.os == 'windows-latest'
       run: |
         Write-Host "=== Program Test Output ==="
         Get-Content Testing/Temporary/LastTest.log
-      shell: pwsh
       working-directory: build
 
     - name: Delete output file from test
       run: cmake -P cmake/delete_outputs.cmake -DPROJECT_SOURCE_DIR=${{ github.workspace }}
 
-    - name: Package for (release)
+    - name: Package for (${{ matrix.build.type }})
       run: cmake --build build --target package_for_release
 
     - name: upload zip to release assets
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./${{ matrix.platform.packaged }}
-        asset_name: ${{ matrix.platform.packaged }}
+        asset_path: ./${{ matrix.platform.packed }}
+        asset_name: ${{ matrix.build.name }}-${{ matrix.platform.packed }}
         asset_content_type: application/zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
