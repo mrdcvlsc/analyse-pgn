@@ -6,6 +6,7 @@
 #include "../utils/process_utils.hpp"
 
 #include <array>
+#include <cctype>
 #include <boost/asio.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/error.hpp>
@@ -36,6 +37,30 @@
 #include <utility>
 
 namespace fs = std::filesystem;
+
+// returns the move after "bestmove" in a uci `bestmove <move> [ponder <move>]` line.
+// moves are 4 characters long, or 5 for promotions (e.g. "e7e8q"), so they must not be cut to a fixed length.
+static std::string parse_bestmove(const std::string &bestmove_line) {
+    std::istringstream words(bestmove_line);
+    std::string word;
+
+    while (words >> word) {
+        if (word == "bestmove" && words >> word) {
+            return word;
+        }
+    }
+
+    return "";
+}
+
+// pgn-extract writes promotions as "b7a8Q", uci engines use (and answer with) a lowercase piece: "b7a8q".
+static std::string to_uci_move(std::string move) {
+    if (move.size() == 5) {
+        move[4] = static_cast<char>(std::tolower(static_cast<unsigned char>(move[4])));
+    }
+
+    return move;
+}
 
 std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine, const UciOptions &opts) {
 
@@ -133,7 +158,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
     // start game analysis
 
-    std::string moves, bestmove_keyword = "bestmove ";
+    std::string moves;
     moves.reserve(chess_game.moves.size() * 5 + 30);
     moves.append("position startpos moves\n");
 
@@ -157,7 +182,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
         const auto moving_player = static_cast<Piece>(i % 2);
         const auto curr_player   = i % 2;
-        const auto move          = chess_game.moves[i];
+        const auto move          = to_uci_move(chess_game.moves[i]);
 
         DEBUG_LOG("move: " + move + "\n");
 
@@ -174,10 +199,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                 auto result =
                     get_ucigo_bestmove(uci_process, get_best_mv, pipe_stdin, pipe_stdout, child_stdout_buf, opts);
 
-                auto bm_idx = result.first.find(bestmove_keyword);
-                if (bm_idx != std::string::npos) {
-                    mv_best = result.first.substr(bm_idx + bestmove_keyword.size(), 4);
-                }
+                mv_best = parse_bestmove(result.first);
 
                 auto pv_keyword = std::string("pv "); // principal variation uci chess engine go result keyword
                 auto bmc_pv_idx = result.second.find(pv_keyword);
@@ -228,10 +250,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                     auto result = get_ucigo_bestmove(uci_process, analyse_player_mv, pipe_stdin, pipe_stdout,
                         child_stdout_buf, opts);
 
-                    auto bm_idx = result.first.find(bestmove_keyword);
-                    if (bm_idx != std::string::npos) {
-                        mv_player = result.first.substr(bm_idx + bestmove_keyword.size(), 4);
-                    }
+                    mv_player = parse_bestmove(result.first);
 
                     std::string item;
                     std::istringstream strstream(result.second);
