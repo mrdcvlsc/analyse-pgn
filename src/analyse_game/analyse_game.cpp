@@ -133,9 +133,23 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
     // start game analysis
 
+    // a game can start from a custom position (SetUp/FEN tags), possibly with black to move first
+
+    std::string start_position = "startpos";
+    for (const auto &[tag, value] : chess_game.tags) {
+        if (tag == "FEN") {
+            start_position = "fen " + value;
+
+            std::istringstream fen_fields(value);
+            std::string piece_placement, side_to_move;
+            fen_fields >> piece_placement >> side_to_move;
+            chess_game.first_player = (side_to_move == "b") ? 1 : 0;
+        }
+    }
+
     std::string moves, bestmove_keyword = "bestmove ";
-    moves.reserve(chess_game.moves.size() * 5 + 30);
-    moves.append("position startpos moves\n");
+    moves.reserve(chess_game.moves.size() * 5 + start_position.size() + 30);
+    moves.append("position " + start_position + " moves\n");
 
     DEBUG_LOG(">>> send: " + moves);
     asio::write(pipe_stdin, asio::buffer(moves), ec);
@@ -155,8 +169,8 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
         DEBUG_LOG("turn : " + std::to_string(i + 1) + "\n");
         DEBUG_LOG("moves: " + std::to_string(chess_game.moves.size()) + "\n");
 
-        const auto moving_player = static_cast<Piece>(i % 2);
-        const auto curr_player   = i % 2;
+        const auto moving_player = static_cast<Piece>((i + chess_game.first_player) % 2);
+        const auto curr_player   = (i + chess_game.first_player) % 2;
         const auto move          = chess_game.moves[i];
 
         DEBUG_LOG("move: " + move + "\n");
@@ -358,7 +372,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
     analyzed_game.push_back('\n');
 
     for (int i = 0; i < chess_game.moves.size(); i++) {
-        auto moving_player = static_cast<Piece>(i % 2);
+        auto moving_player = static_cast<Piece>((i + chess_game.first_player) % 2);
 
         analyzed_game.append(chess_game.moves[i]);
 

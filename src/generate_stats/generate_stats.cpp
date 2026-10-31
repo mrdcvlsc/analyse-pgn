@@ -44,7 +44,7 @@ void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat
             }
 
             for (const auto [turn, centipawn] : chess_game.player_move_centipawn) {
-                if (turn % 2 == curr_player) {
+                if ((turn + chess_game.first_player) % 2 == curr_player) {
                     player_stat.centipawns.push_back(static_cast<int>(centipawn));
                 }
             }
