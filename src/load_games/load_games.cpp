@@ -60,10 +60,10 @@ std::vector<ChessGame> load_games(const std::string &filename) {
 
     std::cout << "conversion of '" + filename + "' file to long-algebraic notation done!\n";
 
-    if (ec && ec != asio::error::broken_pipe) {
-        // broken pipe is normal here since the program ends after
+    if (ec && ec != asio::error::eof && ec != asio::error::broken_pipe) {
+        // end-of-file and broken pipe are normal here since the program ends after
         // reading every standard output from the child process.
-        check_for_error("unable to run pgn-extract: " + ec.message(), child_process, ec);
+        check_for_error("unable to run pgn-extract: ", child_process, ec);
     }
 
     DEBUG_LOG("PGN FILE:\n");
