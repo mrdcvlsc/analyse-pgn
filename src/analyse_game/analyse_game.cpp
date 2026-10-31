@@ -5,6 +5,7 @@
 #include "../utils/logger.hpp"
 #include "../utils/process_utils.hpp"
 
+#include <algorithm>
 #include <array>
 #include <boost/asio.hpp>
 #include <boost/asio/buffer.hpp>
@@ -175,7 +176,8 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
         DEBUG_LOG("move: " + move + "\n");
 
-        if (i >= opts.start_on_move * 2) {
+        // start_on_move is a 1-based move number (0 and 1 both mean "from the first move")
+        if (i >= std::max(0, opts.start_on_move - 1) * 2) {
             // get the best move
 
             std::string mv_best, best_mv_cont = "";
