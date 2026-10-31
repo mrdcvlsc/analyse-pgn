@@ -4,6 +4,8 @@
 
 #include "../utils/get_exe_dir.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <cstddef>
 #include <cstdlib>
 #include <filesystem>
@@ -12,6 +14,15 @@
 #include <thread>
 #include <utility>
 #include <vector>
+
+// a pgn file is recognised by its extension (".pgn", any letter case), not by "pgn" appearing anywhere in the path
+static bool is_pgn_file(const std::string &argument) {
+    auto extension = std::filesystem::path(argument).extension().string();
+    std::transform(extension.begin(), extension.end(), extension.begin(),
+        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+    return extension == ".pgn";
+}
 
 std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
 
@@ -87,7 +98,7 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
             } else {
                 assert_invalid("analyse-until-move value", arguments[i - 1], arguments[i]);
             }
-        } else if (std::string(arguments[i]).find("pgn") != std::string::npos) {
+        } else if (is_pgn_file(arguments[i])) {
             auto pgn_file_arg = std::filesystem::path(arguments[i]);
             std::cout << "pgn file detected : " << pgn_file_arg << '\n';
             arg_paths.chess_pgn_files.push_back(pgn_file_arg);
