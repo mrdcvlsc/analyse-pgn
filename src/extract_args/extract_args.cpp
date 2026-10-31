@@ -59,6 +59,7 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
                 assert_invalid("hash-size value", arguments[i - 1], arguments[i]);
             }
         } else if (arguments[i] == "--player") {
+            assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             i++;
 
             if (arguments[i] == "Both") {
