@@ -21,7 +21,7 @@ test:
 	@cmake --build ${CMAKE_BUILD_DIR} --config ${CMAKE_CONFIG} --target test
 
 package:
-	@cmake --build ${CMAKE_BUILD_DIR} --config ${CMAKE_CONFIG} --target package
+	@cmake --build ${CMAKE_BUILD_DIR} --config ${CMAKE_CONFIG} --target package_for_release
 
 win_config:
 	cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles"
