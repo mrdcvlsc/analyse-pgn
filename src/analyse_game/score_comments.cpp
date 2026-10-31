@@ -104,7 +104,7 @@ std::string score_comments(int cp_pmvbmv_dif, int cp_pmv, int cp_bmv, int cm_pmv
     } else if (cp_pmv > 115) {
         comment += " ADVANTAGE";
     } else if (cp_pmv < -115) {
-        comment += " DISDVANTAGE";
+        comment += " DISADVANTAGE";
     } else {
         comment += " UNCERTAIN";
     }
