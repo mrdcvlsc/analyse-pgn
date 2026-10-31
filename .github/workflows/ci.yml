@@ -5,7 +5,7 @@ permissions:
 
 on:
   push:
-    branches: [ "main", "cmake-support", "boost_v1.89-process-support-removed-uci-analyser", "static-linking" ]
+    branches: [ "main", "cmake-support", "boost_v1.89-process-support-removed-uci-analyser", "static-linking", "fix/**" ]
   pull_request:
     branches: [ "main" ]
   release:
@@ -56,14 +56,12 @@ jobs:
     - name: Run tests (CTest) - (${{ matrix.build.type }}) - ${{ matrix.platform.name }}
       if: matrix.platform.os == 'ubuntu-latest'
       run: |
-        cmake --build build --config Debug --target test
-        CTEST_OUTPUT_ON_FAILURE=1 ctest --test-dir build -C Debug
+        CTEST_OUTPUT_ON_FAILURE=1 ctest --test-dir build -C Debug -LE regression
 
     - name: Run tests (CTest) - (${{ matrix.build.type }}) - ${{ matrix.platform.name }}
       if: matrix.platform.os == 'windows-latest'
       run: |
-        cmake --build build --config Debug --target test
-        $env:CTEST_OUTPUT_ON_FAILURE=1; ctest --test-dir build -C Debug
+        $env:CTEST_OUTPUT_ON_FAILURE=1; ctest --test-dir build -C Debug -LE regression
 
     - name: Show test program output - Linux
       if: matrix.platform.os == 'ubuntu-latest'
@@ -106,6 +104,10 @@ jobs:
       if: matrix.platform.os == 'windows-latest'
       run: |
         cmake -P cmake/check_outputs.cmake -DPROJECT_SOURCE_DIR=${{ github.workspace }}
+
+    # Bug regression tests: tests/regression/test_*.cmake (see CMakeLists.txt).
+    - name: Regression tests (CTest) - (${{ matrix.build.type }}) - ${{ matrix.platform.name }}
+      run: ctest --test-dir build -C ${{ matrix.build.type }} -L regression --output-on-failure
 
   release:
     name: build-and-upload-release-${{ matrix.platform.os }}-${{ matrix.platform.cxx }}
