@@ -42,10 +42,16 @@ assert_matches("${analysed}" "Kd2[ \n]+Ke6[ \n]*{" "first game: black's 2... Ke6
 assert_matches("${analysed}" "Kd7[ \n]*{" "second game: black's first move 1... Kd7 must be analysed")
 
 read_file(stats "${WORK_DIR}/analyzed-stats-fen.json")
-# second game: black moved twice (Kd7, Ke6), white's moves were not analysed (--player Black)
-string(JSON black_color GET "${stats}" games 1 player_stats 1 player_color)
-string(JSON black_moves LENGTH "${stats}" games 1 player_stats 1 centipawns)
-string(JSON white_moves LENGTH "${stats}" games 1 player_stats 0 centipawns)
-assert_equal("${black_color}" "black" "player_stats[1] is black")
+# second game: black moved twice (Kd7, Ke6), white's moves were not analysed (--player Black).
+# Look players up by colour: a player without analysed moves may be left out of player_stats.
+set(black_moves 0)
+set(white_moves 0)
+string(JSON player_count LENGTH "${stats}" games 1 player_stats)
+math(EXPR last_player "${player_count} - 1")
+foreach(index RANGE ${last_player})
+    string(JSON color GET "${stats}" games 1 player_stats ${index} player_color)
+    string(JSON count LENGTH "${stats}" games 1 player_stats ${index} centipawns)
+    set(${color}_moves ${count})
+endforeach()
 assert_equal("${black_moves}" "2" "second game: analysed black moves")
 assert_equal("${white_moves}" "0" "second game: analysed white moves with --player Black")
