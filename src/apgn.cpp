@@ -59,6 +59,12 @@ static int run_apgn(int argc, char *argv[]) {
         std::cout << "loading chess games in " << pgn_file.string() << " file...\n";
         auto chess_games = load_games(pgn_file.string());
 
+        if (chess_games.empty()) {
+            std::cerr << "warning: no games found in " << pgn_file.string()
+                      << " (a game needs its moves and a result such as 1-0), skipping it\n";
+            continue;
+        }
+
         std::cout << '\n';
 
         std::string analyzed_games = "";
