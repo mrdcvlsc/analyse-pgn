@@ -35,25 +35,25 @@ std::string score_comments(int cp_pmvbmv_dif, int cp_pmv, int cp_bmv, int cm_pmv
 
     std::string comment = "";
 
-    if (cm_pmv != 0) { // about to have checkmate
-        if (cm_bmv >= 0 && cm_pmv < 0) {
-            // player move is bad and is now allowed to be checkmated
-            comment = " " + comments::losing::BLUNDER.second;
-        } else if (cm_pmv < 0) { // losing
-            if (cm_bmv == cm_pmv) {
-                comment = " " + comments::losing::ACCURATE_2.second;
-            } else if (std::abs(cm_bmv) > std::abs(cm_pmv)) {
+    if (cm_pmv != 0) { // the player's move leads to a forced checkmate, for or against the player
+        if (cm_pmv < 0) { // the player is getting checkmated
+            if (cm_bmv >= 0) {
+                // player move is bad and is now allowed to be checkmated
+                comment = " " + comments::losing::BLUNDER.second;
+            } else if (std::abs(cm_pmv) >= std::abs(cm_bmv)) {
+                // delays the checkmate at least as long as the engine's best move: the best defence
+                comment = " " + comments::losing::ACCURATE_3.second;
+            } else {
+                // gets checkmated sooner than with the engine's best move
                 comment = " " + comments::losing::MISTAKE_3.second;
-            } else {
-                comment = " wtf ?!!";
             }
-        } else if (cm_pmv > 0) { // winning
-            if (cm_pmv == cm_bmv) {
-                comment = " " + comments::winning::EXCELLENT.second;
-            } else if (cm_pmv > cm_bmv) {
-                comment = " " + comments::winning::MISSED.second;
+        } else { // the player forces checkmate
+            if (cm_bmv <= 0 || cm_pmv <= cm_bmv) {
+                // mates at least as fast as the engine's best move (or the engine's move did not force mate)
+                comment = " " + comments::winning::BRILLIANT.second;
             } else {
-                comment = " god-move !!!!";
+                // still mates, but slower than the engine's best move
+                comment = " " + comments::winning::MISSED.second;
             }
         }
     } else {
