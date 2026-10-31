@@ -119,10 +119,6 @@ function(count_matches var text regex)
     set(${var} ${count} PARENT_SCOPE)
 endfunction()
 
-# The move-quality comment apgn attaches to an analysed move, e.g.
-# "{ brilliant !!! WINNING CP:276 }" - used to count analysed moves.
-set(APGN_ANALYSIS_COMMENT_REGEX "[A-Z]+ (CP|MATE_IN):-?[0-9]+ }")
-
 # A short game ending in mate (7 plies + result token).
 set(SCHOLARS_MATE_PGN [=[[Event "Scholar's mate"]
 [Site "?"]

@@ -20,9 +20,6 @@ FAKE_ENGINE_MODE
     info_string_after_pv   after the scored `info` line, print an
                            `info string` line before `bestmove`, as
                            real engines do (e.g. Stockfish NNUE notes).
-
-FAKE_ENGINE_LOG
-    Optional path; every command received is appended to it.
 """
 
 import os
@@ -61,16 +58,12 @@ def main():
         return 0
 
     plan = load_plan(os.environ.get("FAKE_ENGINE_PLAN"))
-    log_path = os.environ.get("FAKE_ENGINE_LOG")
     ply = 0
 
     send("Fake UCI engine for apgn tests")
 
     for raw in sys.stdin:
         command = raw.strip()
-        if log_path:
-            with open(log_path, "a", encoding="utf-8") as log:
-                log.write(command + "\n")
 
         if command == "uci":
             send("id name FakeEngine")
