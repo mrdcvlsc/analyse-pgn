@@ -163,7 +163,8 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
     std::array<int, 2> prev_cm_in_nmoves{0, 0};
 
-    for (int i = 0; i < (chess_game.moves.size() - 1) && i < opts.until_move; i++) {
+    // until_move is a move number; each move is two plies (white + black)
+    for (int i = 0; i < (chess_game.moves.size() - 1) && i < opts.until_move * 2; i++) {
         std::cout << "\r" << static_cast<float>(i) / static_cast<float>(chess_game.moves.size() - 1) * 100.f
                   << "%...";
 
