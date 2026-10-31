@@ -362,10 +362,10 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
         analyzed_game.append(chess_game.moves[i]);
 
-        if ((opts.piece == Piece::Both || opts.piece == moving_player) && i < chess_game.moves.size() - 2) {
-            if (chess_game.comments.find(i) != chess_game.comments.end()) {
-                analyzed_game.append(chess_game.comments[i]);
-            }
+        // moves without a comment (e.g. skipped by --analyse-start-on-move) still need a separator
+        if ((opts.piece == Piece::Both || opts.piece == moving_player) && i < chess_game.moves.size() - 2 &&
+            chess_game.comments.find(i) != chess_game.comments.end()) {
+            analyzed_game.append(chess_game.comments[i]);
         } else {
             analyzed_game.push_back(' ');
         }
