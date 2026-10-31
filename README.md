@@ -101,9 +101,9 @@ cmake --build build --config Release
 **Flags:**
 
 ```bash
---engine [PATH] - the directory location with the
-                   filename of your pgn file.
-        default: ./bin/engine/stockfish[.exe] (stockfish 11)
+--engine [PATH] - path to the UCI chess engine executable
+                  used for the analysis.
+        default: <apgn folder>/bin/engines/stockfish[.exe] (stockfish 11)
 
 --player [Both|White|Black] - select one of the options.
         default: Both
