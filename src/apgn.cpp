@@ -13,6 +13,7 @@
 
 #include <csignal>
 #include <cstdlib>
+#include <exception>
 #include <filesystem>
 #include <iostream>
 #include <map>
@@ -28,7 +29,7 @@
 
 namespace fs = std::filesystem;
 
-int main(int argc, char *argv[]) {
+static int run_apgn(int argc, char *argv[]) {
 
 #ifdef SIGPIPE
     // writing to a chess engine that has exited must fail with an error we can report, not kill apgn
@@ -80,4 +81,14 @@ int main(int argc, char *argv[]) {
     }
 
     return 0;
+}
+
+int main(int argc, char *argv[]) {
+    try {
+        return run_apgn(argc, argv);
+    } catch (const std::exception &error) {
+        // report failures (bad arguments, missing files, engine errors) instead of aborting
+        std::cerr << "\nerror: " << error.what() << '\n';
+        return 1;
+    }
 }
