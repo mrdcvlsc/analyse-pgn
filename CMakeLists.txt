@@ -23,7 +23,9 @@ set(FETCHCONTENT_SILENT OFF)
 
 FetchContent_Declare(
   Boost
-  URL https://github.com/boostorg/boost/releases/download/boost-1.89.0/boost-1.89.0-cmake.7z
+  # .tar.xz rather than .7z: libarchive cannot convert the UTF-16 names stored in .7z
+  # archives under a C/POSIX locale, which made configuring fail on such systems
+  URL https://github.com/boostorg/boost/releases/download/boost-1.89.0/boost-1.89.0-cmake.tar.xz
 )
 
 FetchContent_MakeAvailable(Boost)
