@@ -365,8 +365,27 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
     asio::write(pipe_stdin, asio::buffer(quit_uci), ec);
     check_for_error("unable to properly close chess engine with 'quit': ", uci_process, ec);
 
-    uci_process.request_exit();
-    auto process_return_int = uci_process.wait();
+    // let the engine exit by itself after "quit" (closing its stdin too), killing it right away made it
+    // report exit status 15 (SIGTERM). it is only stopped forcefully if it is still running after a few seconds.
+    pipe_stdin.close();
+
+    bool engine_exited     = false;
+    int process_return_int = 0;
+
+    uci_process.async_wait([&](error_code wait_ec, int exit_code) {
+        engine_exited      = true;
+        process_return_int = wait_ec ? -1 : exit_code;
+    });
+
+    ctx.restart();
+    ctx.run_for(std::chrono::seconds(5));
+
+    if (!engine_exited) {
+        std::cout << "warning: " << chess_engine << " did not exit after 'quit', stopping it\n";
+        error_code terminate_ec;
+        uci_process.terminate(terminate_ec);
+        ctx.run(); // completes the pending wait
+    }
 
     if (process_return_int) {
         std::cout << "uci chess engine return status : " << process_return_int << '\n';
