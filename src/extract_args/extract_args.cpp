@@ -129,7 +129,7 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
 
         int number = 1;
         for (const auto &pgn_files : arg_paths.chess_pgn_files) {
-            std::cout << number << ".) " << pgn_files.string() << '\n';
+            std::cout << number++ << ".) " << pgn_files.string() << '\n';
         }
     }
 
