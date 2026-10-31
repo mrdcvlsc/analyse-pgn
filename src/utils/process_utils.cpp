@@ -3,11 +3,18 @@
 #include <boost/asio/error.hpp>
 
 #include <iostream>
+#include <stdexcept>
 
 void check_for_error(const std::string &msg, process::process &child_process, const error_code &ec) {
-    if (ec && ec != asio::error::eof) {
+    if (ec) {
+        // end-of-file means the child process closed its output (it exited or crashed), that is an error too
+        std::string what = msg + ec.message();
+        if (ec == asio::error::eof) {
+            what += " (the program stopped responding, is it a UCI chess engine?)";
+        }
+
         child_process.request_exit();
-        throw std::runtime_error(std::string("running chess engine failed: ") + ec.message());
+        throw std::runtime_error(what);
     }
 }
 

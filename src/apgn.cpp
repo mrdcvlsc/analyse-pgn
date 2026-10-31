@@ -11,6 +11,7 @@
 #include "utils/get_exe_dir.hpp"
 #include "utils/logger.hpp"
 
+#include <csignal>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
@@ -28,6 +29,11 @@
 namespace fs = std::filesystem;
 
 int main(int argc, char *argv[]) {
+
+#ifdef SIGPIPE
+    // writing to a chess engine that has exited must fail with an error we can report, not kill apgn
+    std::signal(SIGPIPE, SIG_IGN);
+#endif
 
     if (argc <= 1) {
         print_info();
