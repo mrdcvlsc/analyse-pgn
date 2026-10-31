@@ -376,7 +376,8 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
         analyzed_game.append(chess_game.moves[i]);
 
-        if ((opts.piece == Piece::Both || opts.piece == moving_player) && i < chess_game.moves.size() - 2) {
+        // the last element of `moves` is the game result ("1-0", "*", ...), every move before it can have a comment
+        if ((opts.piece == Piece::Both || opts.piece == moving_player) && i < chess_game.moves.size() - 1) {
             if (chess_game.comments.find(i) != chess_game.comments.end()) {
                 analyzed_game.append(chess_game.comments[i]);
             }
