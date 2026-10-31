@@ -81,6 +81,11 @@ void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat
                 player_stat.move_stats.push_back(std::make_pair(comment, cnt));
             }
 
+            // a side with no analysed moves (e.g. excluded with --player) has no accuracy, leave it out
+            if (total_player_moves.at(curr_player) == 0.0) {
+                continue;
+            }
+
             player_stat.accuracy = total_player_score.at(curr_player) / total_player_moves.at(curr_player);
             player_stats.push_back(player_stat);
         }
@@ -91,6 +96,10 @@ void generate_stats(std::vector<ChessGame> &chess_games, const std::string &stat
         // calculate average
 
         for (int i = 0; i < 2; i++) {
+            if (total_player_moves.at(i) == 0.0) {
+                continue;
+            }
+
             DEBUG_LOG("====================================================");
 
             accuracies.at(i) = total_player_score.at(i) / total_player_moves.at(i);
