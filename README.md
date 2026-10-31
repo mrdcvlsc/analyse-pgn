@@ -4,47 +4,48 @@
 
 A simple chess game PGN file analyser for the command-line terminal.
 
-This program will generate an `analyzed-<original-pgn-filename>.pgn` file, and an `analyzed-stats-<original-pgn-filename>.json` from a pgn file.
+This program will generate an `analyzed-<original-pgn-filename>.pgn` file, and an `analyzed-stats-<original-pgn-filename>.json` from a pgn file, next to the original file (e.g. `game.pgn` gives `analyzed-game.pgn` and `analyzed-stats-game.json`). A pgn file that has no complete game in it (moves and a result such as `1-0`) is skipped with a warning.
 
 The `analyzed-<original-pgn-filename>.pgn` will contain the following:
 
-- per-move comment showing the best move.
+- a per-move variation showing the engine's best move, its score and how the game would continue, whenever the move played was not the best move.
 
-- per-move comment on how good or bad the move was compared to the best move (list sorted by best to worst).
+- per-move comment on how good or bad the move was compared to the engine's best move (list sorted by best to worst). The difference is measured in centipawns (100 centipawns = 1 pawn). The second label of a pair is used instead of the first when the position is losing, i.e. its score is below -115 (`DISADVANTAGE` or `LOSING`).
   1. **`brilliant !!!` or `accurate !!!`**
-        - `brilliant !!!` - indicates that the move is the best move.
-        - `accurate !!!` - the move was one of the top move but the player is still in a losing position.
+        - `brilliant !!!` - indicates that the move is the best move (or forces mate at least as fast as the engine's best move).
+        - `accurate !!!` - the move is the best move, but the player is still in a losing position (also used for the best defence when the player is getting mated).
   2. **`excellent !!` or `accurate !!`**
-        - `excellent !!` -  indicates that the move is one of the top moves.
-        - `accurate !!` - the move was one of the good moves but the player is still in a losing position.
+        - `excellent !!` -  indicates that the move is one of the top moves (less than 10 centipawns worse than the best move).
+        - `accurate !!` - the move was one of the top moves, but the player is still in a losing position.
   3. **`good !` or `questionable ?`**
-        - `good !` - indicates that the move is decent or average, not a bad move.
-        - `questionable ?` - the move is not accurate at all in an already losing position.
-  7. **`inaccurate ?`** - indicates that the move resulted in a slight disadvantage.
-  8. **`mistake ??`** - the move is slightly losing.
-  8. **`mistake ???`** - the move is very much losing.
-  9. **`missed !?? | blunder !??`**
-        1. `missed` is when a player failed to find the best move that gives a very large advantage (missed win).
-        2. `blunder` is a losing move that is highly likely to cause the player to lose at the end.
+        - `good !` - indicates that the move is decent, not a bad move (less than 35 centipawns worse than the best move).
+        - `questionable ?` - the move was decent, but the player is still in a losing position.
+  4. **`inaccurate ?`** - the move is 35 to 70 centipawns worse than the best move.
+  5. **`mistake ??`** - the move is 70 to 140 centipawns worse than the best move.
+  6. **`mistake ???`** - the move is 140 to 222 centipawns worse than the best move (also used when the player gets mated sooner than with the best defence).
+  7. **`missed !?? | blunder !??`** - the move is 222 or more centipawns worse than the best move.
+        1. `missed` is when a player failed to find the best move that gives a very large advantage (missed win), but the player's score is still 0 or better. Also used for a forced mate that is slower than the engine's, or for missing a forced mate while still winning.
+        2. `blunder` is a losing move that is highly likely to cause the player to lose at the end. Also used for a move that allows a forced mate.
   
 - per-move comment on what is the current status of the player (list sorted by best to worst).
-  1.  **`WINNING`** - means that the ***advantage*** is so great the chance of ***winning*** is very high, as long as you don't blunder badly or play many inaccurate moves.
-  2.  **`ADVANTAGE`** - slightly better than the opponent.
-  3.  **`UNCERTAIN`** - means that the position is still equal; anything could happen.
-  4.  **`DISADVANTAGE`** - slightly worse than the opponent.
-  5.  **`LOSING`** - means that the ***disadvantage*** is so great the chances of ***losing*** are very high, as long as the other side does not blunder badly or play many inaccurate moves.
+  1.  **`WINNING`** (score above +150, or a forced mate for the player) - means that the ***advantage*** is so great the chance of ***winning*** is very high, as long as you don't blunder badly or play many inaccurate moves.
+  2.  **`ADVANTAGE`** (+116 to +150) - slightly better than the opponent.
+  3.  **`UNCERTAIN`** (-115 to +115) - means that the position is still equal; anything could happen.
+  4.  **`DISADVANTAGE`** (-150 to -116) - slightly worse than the opponent.
+  5.  **`LOSING`** (score below -150, or the player is getting mated) - means that the ***disadvantage*** is so great the chances of ***losing*** are very high, as long as the other side does not blunder badly or play many inaccurate moves.
 
-- per-move comment showing the `CP:<value>` (centipawn value) or the `MATE:<in-moves>` (checkmate in a certain number of moves).
+- per-move comment showing the `CP:<value>` (centipawn value, from the point of view of the player who made the move: positive is good for them) or the `MATE_IN:<n>` (forced checkmate in n moves; negative when the player is the one getting mated).
   
 Example Comment:
 
 - `brilliant !!! WINNING CP:276` - the `brilliant !!!` part indicates you found the best move, `WINNING` indicates the position after the move is winning with a 2.76 pawn (CP:276) advantage.
 - `mistake ?? WINNING CP:162` - the `mistake ??` part indicates your move is not one of the good moves; you lose some advantage, but your position is still `WINNING` with a 1.62 pawn (CP:162) advantage.
-- `missed ??? ADVANTAGE CP:147` - the `missed ???` part indicates that there was a winning move you didn't find and missed a larger advantage; the `ADVANTAGE` part indicates that you still have a slight advantage despite the missed opportunity.
+- `missed !?? ADVANTAGE CP:147` - the `missed !??` part indicates that there was a winning move you didn't find and missed a larger advantage; the `ADVANTAGE` part indicates that you still have a slight advantage despite the missed opportunity.
 
-The `analyzed-stats-<original-pgn-filename>.json` file will contain:
-- the total counts of brilliant, excellent, good, average, mistake, blunder, and missed moves in the pgn game.
-- it will also provide a percentage representing the accuracy of moves a color played throughout the whole game.
+The `analyzed-stats-<original-pgn-filename>.json` file will contain, for every game, its pgn tags and, for every analysed player (a color left out with `--player` is not listed):
+- `move_stats` - how many of the player's moves got each label (`brilliant !!!`, `excellent !!`, ..., `blunder !??`).
+- `accuracy` - a number from 0 to 1 representing the accuracy of the moves the color played throughout the whole game (1 means every move was `brilliant !!!`; each label has a weight, e.g. `excellent !!` 0.98, `accurate !!!` 0.80, `blunder !??` 0.01).
+- `centipawns` - the score of each of the player's analysed moves (0 for moves that lead to a forced mate).
 
 ## The resulting Analyzed pgn is recommended to be loaded on chess GUIs for better visualization like the following mentioned below:
 
@@ -59,12 +60,15 @@ The `analyzed-stats-<original-pgn-filename>.json` file will contain:
   - c++ standard: `>= C++23`.
   - Windows: `MinGW Makefile` + `gcc/g++` & `cmake v3.28+`.
   - Linux `gcc/g++ or clang/clang++` + `Makefile` (available by default in ubuntu flavors) and `cmake v3.28+`.
+  - The Boost (1.89) and glaze libraries are downloaded automatically by CMake the first time you configure the project, so an internet connection is needed for that.
 
 ## Possible Weird Errors That Could Happen
 
-- when a third-party executable is not allowed/trusted in your system, for example the `pgn-extract.exe` or `stockfish.exe` (`pgn-extract` or `stockfish` for ubuntu/linux), the the program might fail to run because of permission issues.
+- when a third-party executable is not allowed/trusted in your system, for example the `pgn-extract.exe` or `stockfish.exe` (`pgn-extract` or `stockfish` for ubuntu/linux), the program might fail to run because of permission issues.
 
-    use the `chmod` command in ubuntu to allow programs to read, write and execute process.
+    use the `chmod` command in ubuntu to allow programs to read, write and execute process, e.g. `chmod +x bin/engines/stockfish bin/pgn-extract/pgn-extract`.
+
+- when something goes wrong (for example a pgn file that does not exist, an invalid flag value, or a chess engine that stops responding) apgn prints `error: ...` and exits with status 1.
 
 ## For Developers
 
@@ -93,6 +97,19 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_
 
 cmake --build build --config Release
 ```
+
+The build puts the `apgn` executable in the repository root and `pgn-extract` in `bin/pgn-extract/`. apgn looks for the `bin` folder (`bin/pgn-extract` and `bin/engines`) next to its own executable, so keep them together when you move it.
+
+On Linux the `Makefile` wraps the same commands: `make` (configure and build in `build/`, `CMAKE_CONFIG=Release` by default), `make test` (run the tests) and `make package` (create the release `.zip`).
+
+### **Running the tests**
+
+```
+ctest --test-dir build -C Debug --output-on-failure                # every test
+ctest --test-dir build -C Debug -L regression --output-on-failure  # only the bug regression tests
+```
+
+The regression tests are in `tests/regression/`: one `test_*.cmake` script per fixed bug, registered with CTest automatically (helpers are in `tests/regression/common.cmake`). Scripts named `test_posix_*.cmake` are skipped on Windows; some of them use a scripted fake UCI engine (`tests/regression/fake_engine.py`), so they need Python 3. CI runs all of them in the "Regression tests" step.
 
 -------------------------------------------
 
@@ -132,6 +149,18 @@ cmake --build build --config Release
         default: 850
 ```
 
+**Allowed values** - apgn exits with an error when a value is outside these ranges:
+
+| flag | allowed values |
+|---|---|
+| `--depth` | 1 to 100 |
+| `--threads` | 1 to 1024 |
+| `--hash-size` | 1 to 33554432 (MB) |
+| `--analyse-start-on-move` | 0 to 10000 (0 and 1 both start from the first move) |
+| `--analyse-until-move` | 1 to 10000 |
+
+Only files with a `.pgn` extension (in any letter case, e.g. `GAME.PGN`) are treated as pgn files; other arguments are ignored with a message.
+
 
 **Defaults Flag values** - if a flag is not specified, the default value will be used.
 
@@ -142,11 +171,11 @@ cmake --build build --config Release
     apgn myGame1.pgn myGame2.pgn
 
 
-### **Example 2** - Using Costum Values:
+### **Example 2** - Using Custom Values:
 
     apgn --player Black --threads 4 myGame1.pgn myGame2.pgn
 
-    # NOTE: this examples will use the costum values for the specified flags
+    # NOTE: these examples will use the custom values for the specified flags
     #      and use the default values for the unspecified flags.
 
 ------------------------------
@@ -155,8 +184,8 @@ cmake --build build --config Release
 
 **Installation Part**
 
-1. **Download** the pre-compiled program [analyse-pgn](https://github.com/mrdcvlsc/analyse-pgn/releases/tag/v1.1) | [zip](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v1.1/apgn.zip) | [7z](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v1.1/apgn.7z) | [tar.gz](https://github.com/mrdcvlsc/analyse-pgn/releases/download/v1.1/apgn.tar.gz)
-2. **Move** and **Extract** the file where you want to put it permanently
+1. **Download** the pre-compiled program from the [latest release](https://github.com/mrdcvlsc/analyse-pgn/releases/latest): `release-apgn-windows-g++.zip` (on Linux: `release-apgn-linux-g++.zip` or `release-apgn-linux-clang++.zip`; the `debug-` archives are debug builds)
+2. **Move** and **Extract** the file where you want to put it permanently (keep the `bin` folder next to `apgn`, it contains the chess engine and pgn-extract)
 
 3. **Add path** of _analyse-pgn_ to your **Environment Variables**. below are some tutorial on how to do this:
 
@@ -164,13 +193,13 @@ cmake --build build --config Release
 - [example2 - Architect Ryan's Blog](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/)
 - [example3 - From Aseem Kishore](https://helpdeskgeek.com/windows-10/add-windows-path-environment-variable/)
 
-**Running The Program** (you can skip the steps 1,2,&,3 (Installation Part) after you have done it once)
+**Running The Program** (you can skip the steps 1, 2 & 3 (Installation Part) after you have done it once)
 
 4. **Copy** the filepath of the _.pgn_ file you want to analyse
 
-4. **Open** the command line terminal **CMD**
+5. **Open** the command line terminal **CMD**
 
-5. **Follow the format** and **Paste** the pgn's path that you copied to **analyse** the game
+6. **Follow the format** and **Paste** the pgn's path that you copied to **analyse** the game
 
 **Command Format :**
   - **```apgn --player White /PATH/GAME.pgn ```** or
