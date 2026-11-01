@@ -4,6 +4,10 @@
 #    talking to a dead process and is killed by SIGPIPE without any message;
 #  - check_for_error() ignores the message it is given, so every failure
 #    reads "running chess engine failed" whatever actually went wrong.
+#
+# The system's error text differs per platform ("End of file" on POSIX,
+# "The pipe has been ended" on Windows), so the test checks the exit status
+# and apgn's own description of the step that failed.
 
 include(${CMAKE_CURRENT_LIST_DIR}/common.cmake)
 
@@ -13,15 +17,12 @@ write_file("${WORK_DIR}/game.pgn" "${SCHOLARS_MATE_PGN}")
 apgn_run(result output
     ENV FAKE_ENGINE_MODE=exit_on_start
     ARGS --engine "${FAKE_ENGINE}" --depth 2 game.pgn)
-if(result EQUAL 0)
-    fail("apgn must fail when the engine exits")
-endif()
-assert_contains("${output}" "End of file" "the engine closing its output must be reported")
+assert_equal("${result}" "1" "exit status when the engine exits immediately")
+assert_contains("${output}" "running chess engine failed" "the engine stopping must be reported")
 
-# 2. an executable that is not a UCI engine at all
-apgn_run(result output ARGS --engine /bin/echo --depth 2 game.pgn)
-if(result EQUAL 0)
-    fail("apgn must fail when the engine is not a UCI engine")
-endif()
+# 2. an executable that is not a UCI engine at all: cmake without arguments
+#    prints its usage and exits
+apgn_run(result output ARGS --engine "${CMAKE_COMMAND}" --depth 2 game.pgn)
+assert_equal("${result}" "1" "exit status when the engine is not a UCI engine")
 assert_matches("${output}" "failed to send 'uci' to engine|while waiting for uciok"
     "the error must say which step of talking to the engine failed")

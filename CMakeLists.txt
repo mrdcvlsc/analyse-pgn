@@ -107,6 +107,12 @@ add_custom_target(package_for_release
 # "regression"; scripts named test_posix_*.cmake are skipped on Windows.
 # See tests/regression/common.cmake for the variables each script receives.
 
+# scripted UCI engine used by the tests that need exact engine scores
+add_executable(fake_engine ${CMAKE_SOURCE_DIR}/tests/regression/fake_engine.cpp)
+target_compile_features(fake_engine PRIVATE cxx_std_17)
+# linked like apgn, so it starts on Windows without the MinGW runtime DLLs on PATH
+target_link_libraries(fake_engine PRIVATE -static -static-libgcc -static-libstdc++)
+
 file(GLOB APGN_REGRESSION_TESTS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/regression/test_*.cmake)
 
 foreach(test_script ${APGN_REGRESSION_TESTS})
@@ -122,7 +128,7 @@ foreach(test_script ${APGN_REGRESSION_TESTS})
             -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
             -DBINARY_DIR=${CMAKE_BINARY_DIR}
             -DWORK_DIR=${CMAKE_BINARY_DIR}/regression/${test_name}
-            -DFAKE_ENGINE=${CMAKE_SOURCE_DIR}/tests/regression/fake_engine.py
+            -DFAKE_ENGINE=$<TARGET_FILE:fake_engine>
             -DBOOST_SOURCE_DIR=${boost_SOURCE_DIR}
             -DGLAZE_SOURCE_DIR=${glaze_SOURCE_DIR}
             -DGENERATOR=${CMAKE_GENERATOR}

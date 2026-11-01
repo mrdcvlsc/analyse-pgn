@@ -109,7 +109,7 @@ ctest --test-dir build -C Debug --output-on-failure                # every test
 ctest --test-dir build -C Debug -L regression --output-on-failure  # only the bug regression tests
 ```
 
-The regression tests are in `tests/regression/`: one `test_*.cmake` script per fixed bug, registered with CTest automatically (helpers are in `tests/regression/common.cmake`). Scripts named `test_posix_*.cmake` are skipped on Windows; some of them use a scripted fake UCI engine (`tests/regression/fake_engine.py`), so they need Python 3. CI runs all of them in the "Regression tests" step.
+The regression tests are in `tests/regression/`: one `test_*.cmake` script per fixed bug, registered with CTest automatically (helpers are in `tests/regression/common.cmake`). Tests that need exact engine scores use a small scripted UCI engine, `tests/regression/fake_engine.cpp`, which CMake builds next to apgn (target `fake_engine`). Scripts named `test_posix_*.cmake` are skipped on Windows (they need `make` or POSIX locales). CI runs all of them in the "Regression tests" step.
 
 -------------------------------------------
 

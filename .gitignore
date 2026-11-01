@@ -46,7 +46,3 @@ build
 build-release
 .cache
 *.zip
-
-# Python bytecode caches (e.g. from the fake engine used by the regression tests)
-__pycache__/
-*.pyc

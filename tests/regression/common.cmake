@@ -7,12 +7,13 @@
 #   SOURCE_DIR     repository root
 #   BINARY_DIR     top-level CMake build directory
 #   WORK_DIR       scratch directory for this test (recreated on every run)
-#   FAKE_ENGINE    path to tests/regression/fake_engine.py
+#   FAKE_ENGINE    path to the fake_engine executable built from
+#                  tests/regression/fake_engine.cpp (a scripted UCI engine)
 #   BOOST_SOURCE_DIR, GLAZE_SOURCE_DIR, GENERATOR, C_COMPILER, CXX_COMPILER
 #                  values from the parent build, for tests that run CMake
 #
 # Scripts named test_posix_*.cmake are only registered on non-Windows hosts
-# (they use the Python fake engine, `make`, or POSIX locales).
+# (they use `make` or POSIX locales).
 
 cmake_minimum_required(VERSION 3.28)
 
