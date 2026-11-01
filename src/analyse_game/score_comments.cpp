@@ -35,25 +35,29 @@ std::string score_comments(int cp_pmvbmv_dif, int cp_pmv, int cp_bmv, int cm_pmv
 
     std::string comment = "";
 
-    if (cm_pmv != 0) { // about to have checkmate
-        if (cm_bmv >= 0 && cm_pmv < 0) {
-            // player move is bad and is now allowed to be checkmated
-            comment = " " + comments::losing::BLUNDER.second;
-        } else if (cm_pmv < 0) { // losing
-            if (cm_bmv == cm_pmv) {
-                comment = " " + comments::losing::ACCURATE_2.second;
-            } else if (std::abs(cm_bmv) > std::abs(cm_pmv)) {
+    // the "losing" labels (accurate, questionable) are for positions that are at a disadvantage,
+    // the same threshold as the DISADVANTAGE / LOSING status below, not for every score <= 0.
+    const bool losing_position = cp_pmv < -115;
+
+    if (cm_pmv != 0) { // the player's move leads to a forced checkmate, for or against the player
+        if (cm_pmv < 0) { // the player is getting checkmated
+            if (cm_bmv >= 0) {
+                // player move is bad and is now allowed to be checkmated
+                comment = " " + comments::losing::BLUNDER.second;
+            } else if (std::abs(cm_pmv) >= std::abs(cm_bmv)) {
+                // delays the checkmate at least as long as the engine's best move: the best defence
+                comment = " " + comments::losing::ACCURATE_3.second;
+            } else {
+                // gets checkmated sooner than with the engine's best move
                 comment = " " + comments::losing::MISTAKE_3.second;
-            } else {
-                comment = " wtf ?!!";
             }
-        } else if (cm_pmv > 0) { // winning
-            if (cm_pmv == cm_bmv) {
-                comment = " " + comments::winning::EXCELLENT.second;
-            } else if (cm_pmv > cm_bmv) {
-                comment = " " + comments::winning::MISSED.second;
+        } else { // the player forces checkmate
+            if (cm_bmv <= 0 || cm_pmv <= cm_bmv) {
+                // mates at least as fast as the engine's best move (or the engine's move did not force mate)
+                comment = " " + comments::winning::BRILLIANT.second;
             } else {
-                comment = " god-move !!!!";
+                // still mates, but slower than the engine's best move
+                comment = " " + comments::winning::MISSED.second;
             }
         }
     } else {
@@ -64,19 +68,19 @@ std::string score_comments(int cp_pmvbmv_dif, int cp_pmv, int cp_bmv, int cm_pmv
             // player is about to checkmate the opponent but failed to, then player is about to get checkmated
             comment = " " + comments::losing::BLUNDER.second;
         } else if (cp_pmvbmv_dif == 0) {
-            if (cp_pmv > 0) {
+            if (!losing_position) {
                 comment = " " + comments::winning::BRILLIANT.second; // found the best move and is winning
             } else {
                 comment = " " + comments::losing::ACCURATE_3.second; // found the best move but is losing
             }
         } else if (cp_pmvbmv_dif > -10) {
-            if (cp_pmv > 0) {
+            if (!losing_position) {
                 comment = " " + comments::winning::EXCELLENT.second; // found a top move and is winning
             } else {
                 comment = " " + comments::losing::ACCURATE_2.second; // found a top move but is losing
             }
         } else if (cp_pmvbmv_dif > -35) {
-            if (cp_pmv > 0) {
+            if (!losing_position) {
                 comment = " " + comments::winning::GOOD.second; // found a good move and is winning
             } else {
                 comment = " " + comments::losing::QUESTIONABLE.second; // found a good move but is losing
@@ -104,7 +108,7 @@ std::string score_comments(int cp_pmvbmv_dif, int cp_pmv, int cp_bmv, int cm_pmv
     } else if (cp_pmv > 115) {
         comment += " ADVANTAGE";
     } else if (cp_pmv < -115) {
-        comment += " DISDVANTAGE";
+        comment += " DISADVANTAGE";
     } else {
         comment += " UNCERTAIN";
     }

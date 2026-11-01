@@ -34,7 +34,7 @@ position startpos moves e2e4
 go depth 9
 ```
 
-This will output something like shown below:
+This will output something like shown below (this sample output was taken from a different, later position, so its moves do not follow `e2e4`):
 
 ```bash
 info depth 1 seldepth 1 multipv 1 score cp -6 nodes 632 nps 632000 tbhits 0 time 1 pv f5e6
@@ -90,7 +90,7 @@ info depth 9 seldepth 15 multipv 1 score cp -48 nodes 25636 nps 8545333 tbhits 0
 * **`score cp -48`**
   The engine’s numerical evaluation in **centipawns** (1.00 = 1 pawn = 100 centipawns).
 
-  * `cp -48` means the position is evaluated about **−0.48 pawns** (≈ half a pawn) **in favor of Black**. By convention a **positive** `cp` means advantage for White, **negative** for Black. (If there were a forced mate the engine would print `score mate N` instead.) ([python-chess.readthedocs.io][2])
+  * `cp -48` means the **side to move** is about **−0.48 pawns** (≈ half a pawn) worse. UCI scores are always from the engine's point of view, i.e. the side to move in the position given with `position`, **not** from White's point of view: a **positive** `cp` is good for the side to move, **negative** is bad for it. To show the score from White's point of view, flip the sign when Black is to move. apgn relies on this: it asks for the score before the player's move, so the score is from the moving player's point of view. (If there were a forced mate the engine would print `score mate N` instead.) ([Stockfish 11 `src/uci.cpp`](https://github.com/official-stockfish/Stockfish/blob/sf_11/src/uci.cpp#L251-L255))
 
 * **`nodes 25636`**
   How many search tree nodes the engine has visited so far during this search (total node count).
@@ -99,7 +99,7 @@ info depth 9 seldepth 15 multipv 1 score cp -48 nodes 25636 nps 8545333 tbhits 0
   Nodes Per Second — the engine’s current speed. It’s computed from `nodes` / `time` (converted to seconds). Here the engine did 25,636 nodes in `time 3` ms → ~8,545,333 nps (25,636 ÷ 0.003 s). That’s why `nps` looks very large even though `nodes` is modest.
 
 * **`tbhits 0`**
-  Number of tablebase (Syzygy/etc.) probes/hits used during the search. `0` = no tablebase entries were consulted for this report. (If you have tablebase files available and the engine probes them, this number increases.) ([official-stockfish.github.io][3])
+  Number of tablebase (Syzygy/etc.) probes/hits used during the search. `0` = no tablebase entries were consulted for this report. (If you have tablebase files available and the engine probes them, this number increases.)
 
 * **`time 3`**
   Time used so far for this search in **milliseconds**. (`time` in UCI is reported in ms.) In this line the engine has been searching ~3 ms.
@@ -109,5 +109,5 @@ info depth 9 seldepth 15 multipv 1 score cp -48 nodes 25636 nps 8545333 tbhits 0
 
 ### A couple of quick notes
 
-* If you see `score mate N` instead of `score cp X`, that indicates a forced mate in N plies (positive = mate for White, negative = mate for Black). ([andreinc][4])
+* If you see `score mate N` instead of `score cp X`, that indicates a forced mate in N **moves** (not plies), again from the side to move's point of view: positive = the side to move gives mate, negative = the side to move gets mated. ([Stockfish 11 `src/uci.cpp`](https://github.com/official-stockfish/Stockfish/blob/sf_11/src/uci.cpp#L251-L255))
 * `info` lines are **continuous updates**; the final choice is returned later as `bestmove ...`. Use `pv` and `score` as *current* candidates, not definitive until search ends.

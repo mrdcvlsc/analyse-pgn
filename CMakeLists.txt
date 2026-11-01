@@ -23,7 +23,9 @@ set(FETCHCONTENT_SILENT OFF)
 
 FetchContent_Declare(
   Boost
-  URL https://github.com/boostorg/boost/releases/download/boost-1.89.0/boost-1.89.0-cmake.7z
+  # .tar.xz rather than .7z: libarchive cannot convert the UTF-16 names stored in .7z
+  # archives under a C/POSIX locale, which made configuring fail on such systems
+  URL https://github.com/boostorg/boost/releases/download/boost-1.89.0/boost-1.89.0-cmake.tar.xz
 )
 
 FetchContent_MakeAvailable(Boost)
@@ -67,7 +69,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 # set_warnings_as_errors_for_own_sources(${PROJECT_NAME})
 
-if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer)
 endif()
 
@@ -99,3 +101,41 @@ add_custom_target(package_for_release
     COMMENT "Archiving build"
     DEPENDS ${PROJECT_NAME}
 )
+
+# ---- regression tests --------------------------------------------------------
+# Every tests/regression/test_*.cmake script becomes a CTest test labelled
+# "regression"; scripts named test_posix_*.cmake are skipped on Windows.
+# See tests/regression/common.cmake for the variables each script receives.
+
+# scripted UCI engine used by the tests that need exact engine scores
+add_executable(fake_engine ${CMAKE_SOURCE_DIR}/tests/regression/fake_engine.cpp)
+target_compile_features(fake_engine PRIVATE cxx_std_17)
+# linked like apgn, so it starts on Windows without the MinGW runtime DLLs on PATH
+target_link_libraries(fake_engine PRIVATE -static -static-libgcc -static-libstdc++)
+
+file(GLOB APGN_REGRESSION_TESTS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/regression/test_*.cmake)
+
+foreach(test_script ${APGN_REGRESSION_TESTS})
+    get_filename_component(test_name ${test_script} NAME_WE)
+
+    if(WIN32 AND test_name MATCHES "^test_posix_")
+        continue()
+    endif()
+
+    add_test(NAME ${test_name}
+        COMMAND ${CMAKE_COMMAND}
+            -DAPGN=$<TARGET_FILE:${PROJECT_NAME}>
+            -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+            -DBINARY_DIR=${CMAKE_BINARY_DIR}
+            -DWORK_DIR=${CMAKE_BINARY_DIR}/regression/${test_name}
+            -DFAKE_ENGINE=$<TARGET_FILE:fake_engine>
+            -DBOOST_SOURCE_DIR=${boost_SOURCE_DIR}
+            -DGLAZE_SOURCE_DIR=${glaze_SOURCE_DIR}
+            -DGENERATOR=${CMAKE_GENERATOR}
+            -DC_COMPILER=${CMAKE_C_COMPILER}
+            -DCXX_COMPILER=${CMAKE_CXX_COMPILER}
+            -P ${test_script}
+    )
+
+    set_tests_properties(${test_name} PROPERTIES LABELS regression TIMEOUT 1200)
+endforeach()

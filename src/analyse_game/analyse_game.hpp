@@ -40,7 +40,7 @@ struct UciOptions {
 
 std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine, const UciOptions &opts);
 
-// return the last 2 lines of a uci `go` command.
+// returns the `bestmove` line of a uci `go` command and the last `info` line that has a score.
 std::pair<std::string, std::string> get_ucigo_bestmove(process::process &uci_process,
     const std::string &go_command,
     asio::writable_pipe &pipe_stdin,

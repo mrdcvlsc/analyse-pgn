@@ -11,7 +11,9 @@
 #include "utils/get_exe_dir.hpp"
 #include "utils/logger.hpp"
 
+#include <csignal>
 #include <cstdlib>
+#include <exception>
 #include <filesystem>
 #include <iostream>
 #include <map>
@@ -27,7 +29,12 @@
 
 namespace fs = std::filesystem;
 
-int main(int argc, char *argv[]) {
+static int run_apgn(int argc, char *argv[]) {
+
+#ifdef SIGPIPE
+    // writing to a chess engine that has exited must fail with an error we can report, not kill apgn
+    std::signal(SIGPIPE, SIG_IGN);
+#endif
 
     if (argc <= 1) {
         print_info();
@@ -52,6 +59,12 @@ int main(int argc, char *argv[]) {
         std::cout << "loading chess games in " << pgn_file.string() << " file...\n";
         auto chess_games = load_games(pgn_file.string());
 
+        if (chess_games.empty()) {
+            std::cerr << "warning: no games found in " << pgn_file.string()
+                      << " (a game needs its moves and a result such as 1-0), skipping it\n";
+            continue;
+        }
+
         std::cout << '\n';
 
         std::string analyzed_games = "";
@@ -74,4 +87,14 @@ int main(int argc, char *argv[]) {
     }
 
     return 0;
+}
+
+int main(int argc, char *argv[]) {
+    try {
+        return run_apgn(argc, argv);
+    } catch (const std::exception &error) {
+        // report failures (bad arguments, missing files, engine errors) instead of aborting
+        std::cerr << "\nerror: " << error.what() << '\n';
+        return 1;
+    }
 }

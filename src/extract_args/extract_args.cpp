@@ -4,14 +4,47 @@
 
 #include "../utils/get_exe_dir.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <cstddef>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <thread>
 #include <utility>
 #include <vector>
+
+// a pgn file is recognised by its extension (".pgn", any letter case), not by "pgn" appearing anywhere in the path
+static bool is_pgn_file(const std::string &argument) {
+    auto extension = std::filesystem::path(argument).extension().string();
+    std::transform(extension.begin(), extension.end(), extension.begin(),
+        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+    return extension == ".pgn";
+}
+
+// the longest possible legal chess game is under 9,000 moves
+static const int MAX_MOVE_NUMBER = 10'000;
+
+// converts a flag value that is_number() accepted (digits only) and exits with an error
+// when it is outside [min, max], so nonsense values never reach the engine or overflow `int`
+static int flag_number(const std::string &flag, const std::string &value, int min, int max) {
+    const auto first_digit = value.find_first_not_of('0');
+    const auto digits      = (first_digit == std::string::npos) ? std::string("0") : value.substr(first_digit);
+
+    // more than 10 digits cannot be a valid value, compare the rest as a 64-bit number
+    const long long number = (digits.size() > 10) ? static_cast<long long>(max) + 1 : std::stoll(digits);
+
+    if (number < min || number > max) {
+        std::cerr << "Argument Error: " << flag << " " << value << "\n\n\tthe value of " << flag
+                  << " must be between " << min << " and " << max << "\n";
+        exit(1);
+    }
+
+    return static_cast<int>(number);
+}
 
 std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
 
@@ -40,25 +73,26 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
         } else if (arguments[i] == "--threads") {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             if (is_number(arguments[++i])) {
-                options.threads = std::atoi(arguments[i].data());
+                options.threads = flag_number(arguments[i - 1], arguments[i], 1, 1024);
             } else {
                 assert_invalid("threads value", arguments[i - 1], arguments[i]);
             }
         } else if (arguments[i] == "--depth") {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             if (is_number(arguments[++i])) {
-                options.depth = std::atoi(arguments[i].data());
+                options.depth = flag_number(arguments[i - 1], arguments[i], 1, 100);
             } else {
                 assert_invalid("depth value", arguments[i - 1], arguments[i]);
             }
         } else if (arguments[i] == "--hash-size") {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             if (is_number(arguments[++i])) {
-                options.hash_size = std::atoi(arguments[i].data());
+                options.hash_size = flag_number(arguments[i - 1], arguments[i], 1, 33'554'432);
             } else {
                 assert_invalid("hash-size value", arguments[i - 1], arguments[i]);
             }
         } else if (arguments[i] == "--player") {
+            assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             i++;
 
             if (arguments[i] == "Both") {
@@ -76,18 +110,18 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
         } else if (arguments[i] == "--analyse-start-on-move") {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             if (is_number(arguments[++i])) {
-                options.start_on_move = std::atoi(arguments[i].data());
+                options.start_on_move = flag_number(arguments[i - 1], arguments[i], 0, MAX_MOVE_NUMBER);
             } else {
                 assert_invalid("analyse-start-on-move value", arguments[i - 1], arguments[i]);
             }
         } else if (arguments[i] == "--analyse-until-move") {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             if (is_number(arguments[++i])) {
-                options.until_move = std::atoi(arguments[i].data());
+                options.until_move = flag_number(arguments[i - 1], arguments[i], 1, MAX_MOVE_NUMBER);
             } else {
                 assert_invalid("analyse-until-move value", arguments[i - 1], arguments[i]);
             }
-        } else if (std::string(arguments[i]).find("pgn") != std::string::npos) {
+        } else if (is_pgn_file(arguments[i])) {
             auto pgn_file_arg = std::filesystem::path(arguments[i]);
             std::cout << "pgn file detected : " << pgn_file_arg << '\n';
             arg_paths.chess_pgn_files.push_back(pgn_file_arg);
@@ -118,7 +152,7 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
 
         int number = 1;
         for (const auto &pgn_files : arg_paths.chess_pgn_files) {
-            std::cout << number << ".) " << pgn_files.string() << '\n';
+            std::cout << number++ << ".) " << pgn_files.string() << '\n';
         }
     }
 

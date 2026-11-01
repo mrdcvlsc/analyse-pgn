@@ -13,7 +13,7 @@ bool is_number(const std::string &input) {
 
 void assert_missing_flagvalue(int index, std::size_t arg_cnt, const std::string &argument) {
     if (index + 1 >= arg_cnt) {
-        std::cerr << "INVALID ARGUMENT:\n\n\tThe given flag" << argument << "' does not have a value\n\n";
+        std::cerr << "INVALID ARGUMENT:\n\n\tThe given flag '" << argument << "' does not have a value\n\n";
         exit(1);
     }
 }

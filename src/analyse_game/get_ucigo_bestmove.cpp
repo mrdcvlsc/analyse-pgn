@@ -10,8 +10,8 @@ std::pair<std::string, std::string> get_ucigo_bestmove(process::process &uci_pro
 
     error_code ec;
 
-    std::string line_2nd_last = "";
-    std::string line_last     = "";
+    std::string last_scored_info = ""; // last "info ... score ..." line, the result of the deepest search
+    std::string line_last        = "";
 
     DEBUG_LOG(">>> send: " + go_command);
     asio::write(pipe_stdin, asio::buffer(go_command), ec);
@@ -26,8 +26,12 @@ std::pair<std::string, std::string> get_ucigo_bestmove(process::process &uci_pro
         std::string line = readline_child_stdout(child_stdout_buf);
         DEBUG_LOG("engine: " + line);
 
-        line_2nd_last = line_last;
-        line_last     = line;
+        // other lines (e.g. "info string ...", "info ... currmove ...") can come between the score and bestmove
+        if (line.rfind("info", 0) == 0 && line.find(" score ") != std::string::npos) {
+            last_scored_info = line;
+        }
+
+        line_last = line;
 
         if (line.find("bestmove") != std::string::npos) {
             break;
@@ -40,5 +44,5 @@ std::pair<std::string, std::string> get_ucigo_bestmove(process::process &uci_pro
         }
     }
 
-    return std::make_pair(line_last, line_2nd_last);
+    return std::make_pair(line_last, last_scored_info);
 }

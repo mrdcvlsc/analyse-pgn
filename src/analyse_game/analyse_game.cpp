@@ -5,7 +5,9 @@
 #include "../utils/logger.hpp"
 #include "../utils/process_utils.hpp"
 
+#include <algorithm>
 #include <array>
+#include <cctype>
 #include <boost/asio.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/error.hpp>
@@ -36,6 +38,30 @@
 #include <utility>
 
 namespace fs = std::filesystem;
+
+// returns the move after "bestmove" in a uci `bestmove <move> [ponder <move>]` line.
+// moves are 4 characters long, or 5 for promotions (e.g. "e7e8q"), so they must not be cut to a fixed length.
+static std::string parse_bestmove(const std::string &bestmove_line) {
+    std::istringstream words(bestmove_line);
+    std::string word;
+
+    while (words >> word) {
+        if (word == "bestmove" && words >> word) {
+            return word;
+        }
+    }
+
+    return "";
+}
+
+// pgn-extract writes promotions as "b7a8Q", uci engines use (and answer with) a lowercase piece: "b7a8q".
+static std::string to_uci_move(std::string move) {
+    if (move.size() == 5) {
+        move[4] = static_cast<char>(std::tolower(static_cast<unsigned char>(move[4])));
+    }
+
+    return move;
+}
 
 std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine, const UciOptions &opts) {
 
@@ -133,9 +159,23 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
     // start game analysis
 
-    std::string moves, bestmove_keyword = "bestmove ";
-    moves.reserve(chess_game.moves.size() * 5 + 30);
-    moves.append("position startpos moves\n");
+    // a game can start from a custom position (SetUp/FEN tags), possibly with black to move first
+
+    std::string start_position = "startpos";
+    for (const auto &[tag, value] : chess_game.tags) {
+        if (tag == "FEN") {
+            start_position = "fen " + value;
+
+            std::istringstream fen_fields(value);
+            std::string piece_placement, side_to_move;
+            fen_fields >> piece_placement >> side_to_move;
+            chess_game.first_player = (side_to_move == "b") ? 1 : 0;
+        }
+    }
+
+    std::string moves;
+    moves.reserve(chess_game.moves.size() * 5 + start_position.size() + 30);
+    moves.append("position " + start_position + " moves\n");
 
     DEBUG_LOG(">>> send: " + moves);
     asio::write(pipe_stdin, asio::buffer(moves), ec);
@@ -148,20 +188,22 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
     std::array<int, 2> prev_cm_in_nmoves{0, 0};
 
-    for (int i = 0; i < (chess_game.moves.size() - 1) && i < opts.until_move; i++) {
+    // until_move is a move number; each move is two plies (white + black)
+    for (int i = 0; i < (chess_game.moves.size() - 1) && i < opts.until_move * 2; i++) {
         std::cout << "\r" << static_cast<float>(i) / static_cast<float>(chess_game.moves.size() - 1) * 100.f
                   << "%...";
 
         DEBUG_LOG("turn : " + std::to_string(i + 1) + "\n");
         DEBUG_LOG("moves: " + std::to_string(chess_game.moves.size()) + "\n");
 
-        const auto moving_player = static_cast<Piece>(i % 2);
-        const auto curr_player   = i % 2;
-        const auto move          = chess_game.moves[i];
+        const auto moving_player = static_cast<Piece>((i + chess_game.first_player) % 2);
+        const auto curr_player   = (i + chess_game.first_player) % 2;
+        const auto move          = to_uci_move(chess_game.moves[i]);
 
         DEBUG_LOG("move: " + move + "\n");
 
-        if (i >= opts.start_on_move * 2) {
+        // start_on_move is a 1-based move number (0 and 1 both mean "from the first move")
+        if (i >= std::max(0, opts.start_on_move - 1) * 2) {
             // get the best move
 
             std::string mv_best, best_mv_cont = "";
@@ -174,10 +216,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                 auto result =
                     get_ucigo_bestmove(uci_process, get_best_mv, pipe_stdin, pipe_stdout, child_stdout_buf, opts);
 
-                auto bm_idx = result.first.find(bestmove_keyword);
-                if (bm_idx != std::string::npos) {
-                    mv_best = result.first.substr(bm_idx + bestmove_keyword.size(), 4);
-                }
+                mv_best = parse_bestmove(result.first);
 
                 auto pv_keyword = std::string("pv "); // principal variation uci chess engine go result keyword
                 auto bmc_pv_idx = result.second.find(pv_keyword);
@@ -228,10 +267,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                     auto result = get_ucigo_bestmove(uci_process, analyse_player_mv, pipe_stdin, pipe_stdout,
                         child_stdout_buf, opts);
 
-                    auto bm_idx = result.first.find(bestmove_keyword);
-                    if (bm_idx != std::string::npos) {
-                        mv_player = result.first.substr(bm_idx + bestmove_keyword.size(), 4);
-                    }
+                    mv_player = parse_bestmove(result.first);
 
                     std::string item;
                     std::istringstream strstream(result.second);
@@ -329,8 +365,27 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
     asio::write(pipe_stdin, asio::buffer(quit_uci), ec);
     check_for_error("unable to properly close chess engine with 'quit': ", uci_process, ec);
 
-    uci_process.request_exit();
-    auto process_return_int = uci_process.wait();
+    // let the engine exit by itself after "quit" (closing its stdin too), killing it right away made it
+    // report exit status 15 (SIGTERM). it is only stopped forcefully if it is still running after a few seconds.
+    pipe_stdin.close();
+
+    bool engine_exited     = false;
+    int process_return_int = 0;
+
+    uci_process.async_wait([&](error_code wait_ec, int exit_code) {
+        engine_exited      = true;
+        process_return_int = wait_ec ? -1 : exit_code;
+    });
+
+    ctx.restart();
+    ctx.run_for(std::chrono::seconds(5));
+
+    if (!engine_exited) {
+        std::cout << "warning: " << chess_engine << " did not exit after 'quit', stopping it\n";
+        error_code terminate_ec;
+        uci_process.terminate(terminate_ec);
+        ctx.run(); // completes the pending wait
+    }
 
     if (process_return_int) {
         std::cout << "uci chess engine return status : " << process_return_int << '\n';
@@ -358,14 +413,15 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
     analyzed_game.push_back('\n');
 
     for (int i = 0; i < chess_game.moves.size(); i++) {
-        auto moving_player = static_cast<Piece>(i % 2);
+        auto moving_player = static_cast<Piece>((i + chess_game.first_player) % 2);
 
         analyzed_game.append(chess_game.moves[i]);
 
-        if ((opts.piece == Piece::Both || opts.piece == moving_player) && i < chess_game.moves.size() - 2) {
-            if (chess_game.comments.find(i) != chess_game.comments.end()) {
-                analyzed_game.append(chess_game.comments[i]);
-            }
+        // the last element of `moves` is the game result ("1-0", "*", ...), every move before it can have a comment
+        // moves without a comment (e.g. skipped by --analyse-start-on-move) still need a separator
+        if ((opts.piece == Piece::Both || opts.piece == moving_player) && i < chess_game.moves.size() - 1 &&
+            chess_game.comments.find(i) != chess_game.comments.end()) {
+            analyzed_game.append(chess_game.comments[i]);
         } else {
             analyzed_game.push_back(' ');
         }
