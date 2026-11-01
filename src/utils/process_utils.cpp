@@ -7,10 +7,12 @@
 
 void check_for_error(const std::string &msg, process::process &child_process, const error_code &ec) {
     if (ec) {
-        // end-of-file means the child process closed its output (it exited or crashed), that is an error too
+        // end-of-file means the child process closed its output (it exited or crashed), that is an error too.
+        // a broken pipe means the same: windows reports a closed pipe that way instead of end-of-file, and
+        // writing to a child process that has already exited fails with it on every platform.
         std::string what = msg + ec.message();
-        if (ec == asio::error::eof) {
-            what += " (the program stopped responding, is it a UCI chess engine?)";
+        if (ec == asio::error::eof || ec == asio::error::broken_pipe) {
+            what += " (the program stopped responding, it may have exited or crashed)";
         }
 
         child_process.request_exit();
