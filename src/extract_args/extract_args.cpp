@@ -25,7 +25,7 @@ static bool is_pgn_file(const std::string &argument) {
     return extension == ".pgn";
 }
 
-// --outputnag and --evaltags take one of "std", "apgn" or "both"
+// --move-symbols and --eval-format take one of "std", "apgn" or "both"
 static OutputMode flag_output_mode(const std::string &flag, const std::string &value) {
     if (value == "apgn") {
         return OutputMode::Apgn;
@@ -165,28 +165,28 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
             } else {
                 assert_invalid("player value", arguments[i - 1], arguments[i]);
             }
-        } else if (arguments[i] == "--threshold") {
+        } else if (arguments[i] == "--min-loss") {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             if (is_pawn_number(arguments[++i])) {
-                options.threshold = flag_pawns(arguments[i - 1], arguments[i], 0, 1'000);
+                options.min_loss = flag_pawns(arguments[i - 1], arguments[i], 0, 1'000);
             } else {
-                assert_invalid("threshold value", arguments[i - 1], arguments[i]);
+                assert_invalid("min-loss value", arguments[i - 1], arguments[i]);
             }
-        } else if (arguments[i] == "--limitscore") {
+        } else if (arguments[i] == "--stop-at-score") {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             if (is_pawn_number(arguments[++i])) {
-                options.limit_score = flag_pawns(arguments[i - 1], arguments[i], 1, 10'000);
+                options.stop_at_score = flag_pawns(arguments[i - 1], arguments[i], 1, 10'000);
             } else {
-                assert_invalid("limitscore value", arguments[i - 1], arguments[i]);
+                assert_invalid("stop-at-score value", arguments[i - 1], arguments[i]);
             }
-        } else if (arguments[i] == "--outputnag") {
+        } else if (arguments[i] == "--move-symbols") {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             i++;
-            options.nag_mode = flag_output_mode(arguments[i - 1], arguments[i]);
-        } else if (arguments[i] == "--evaltags") {
+            options.move_symbols = flag_output_mode(arguments[i - 1], arguments[i]);
+        } else if (arguments[i] == "--eval-format") {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             i++;
-            options.eval_mode = flag_output_mode(arguments[i - 1], arguments[i]);
+            options.eval_format = flag_output_mode(arguments[i - 1], arguments[i]);
         } else if (arguments[i] == "--analyse-start-on-move") {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             if (is_number(arguments[++i])) {
@@ -219,11 +219,11 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
               << "\nhash size              : " << options.hash_size << "\nplayer to analyse      : " << piece
               << "\nstart analysis on move : " << options.start_on_move
               << "\nanalyse until move     : " << options.until_move
-              << "\nannotation threshold   : " << pawns_text(options.threshold) << " pawns"
-              << "\nscore limit            : "
-              << ((options.limit_score > 0) ? (pawns_text(options.limit_score) + " pawns") : std::string("off"))
-              << "\nmove assessment output : " << output_mode_text(options.nag_mode)
-              << "\nscore output           : " << output_mode_text(options.eval_mode) << "\n\n";
+              << "\nminimum loss annotated : " << pawns_text(options.min_loss) << " pawns"
+              << "\nstop at score          : "
+              << ((options.stop_at_score > 0) ? (pawns_text(options.stop_at_score) + " pawns") : std::string("off"))
+              << "\nmove symbols           : " << output_mode_text(options.move_symbols)
+              << "\neval format            : " << output_mode_text(options.eval_format) << "\n\n";
 
     if (options.depth > 12) {
         std::cout << "NOTE: depth is set greater than 12!!!\n"

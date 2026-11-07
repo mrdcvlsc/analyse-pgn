@@ -10,9 +10,9 @@ The `analyzed-<original-pgn-filename>.pgn` will contain the following:
 
 - a per-move variation showing the engine's best move, its score and how the game would continue, whenever the move played was not the best move.
 
-Use `--threshold` to leave the near-best moves alone: with `--threshold 0.50`, a move that is less than half a pawn worse than the engine's best move gets no comment, no score and no best-move variation at all, while moves involving a forced mate are always annotated. The statistics are not affected by it.
+Use `--min-loss` to leave the near-best moves alone: with `--min-loss 0.50`, a move that is less than half a pawn worse than the engine's best move gets no comment, no score and no best-move variation at all, while moves involving a forced mate are always annotated. The statistics are not affected by it.
 
-Use `--limitscore` to stop once a game is decided: with `--limitscore 2.00`, as soon as a move's score reaches +2 or -2 pawns, or a forced mate is found, apgn stops analysing that game, says which move it stopped on, and writes the remaining moves without comments. Each game in the file is analysed until it reaches the limit on its own.
+Use `--stop-at-score` to stop once a game is decided: with `--stop-at-score 2.00`, as soon as a move's score reaches +2 or -2 pawns, or a forced mate is found, apgn stops analysing that game, says which move it stopped on, and writes the remaining moves without comments. Each game in the file is analysed until it reaches the limit on its own.
 
 - per-move comment on how good or bad the move was compared to the engine's best move (list sorted by best to worst). The difference is measured in centipawns (100 centipawns = 1 pawn). The second label of a pair is used instead of the first when the position is losing, i.e. its score is below -115 (`DISADVANTAGE` or `LOSING`).
   1. **`brilliant !!!` or `accurate !!!`**
@@ -40,7 +40,7 @@ Use `--limitscore` to stop once a game is decided: with `--limitscore 2.00`, as 
 
 ### **Standard NAGs instead of words**
 
-With `--outputnag std`, the assessment is written as standard NAGs right after the move instead of apgn's words, so other programs can read it: `1. e4 $1 $18 { CP:300 }`. `--outputnag both` writes the NAG and the words. The move's quality maps as follows, in the way lichess and chessbase use, where only a notable or a bad move gets a glyph:
+With `--move-symbols std`, the assessment is written as standard NAGs right after the move instead of apgn's words, so other programs can read it: `1. e4 $1 $18 { CP:300 }`. `--move-symbols both` writes the NAG and the words. The move's quality maps as follows, in the way lichess and chessbase use, where only a notable or a bad move gets a glyph:
 
 | apgn label | NAG |
 |---|---|
@@ -64,7 +64,7 @@ The best-move variation keeps its comment and is given no NAGs, and the statisti
 
 ### **Standard eval tags instead of CP: text**
 
-With `--evaltags std`, a move's score is written as the `[%eval ...]` tag that lichess, chessbase and scid read, at the start of the move's comment: `1. e4 { [%eval 0.25] excellent !! UNCERTAIN }`. `--evaltags both` writes the tag and apgn's own text. A centipawn score becomes pawns with two decimals, and a forced mate becomes `#` and a number of moves (`[%eval #3]`).
+With `--eval-format std`, a move's score is written as the `[%eval ...]` tag that lichess, chessbase and scid read, at the start of the move's comment: `1. e4 { [%eval 0.25] excellent !! UNCERTAIN }`. `--eval-format both` writes the tag and apgn's own text. A centipawn score becomes pawns with two decimals, and a forced mate becomes `#` and a number of moves (`[%eval #3]`).
 
 `[%eval]` values are from White's point of view, while apgn's `CP:`/`MATE_IN:` are from the moving player's, so the sign is flipped for black's moves: `CP:-30` on a black move is written as `[%eval 0.30]`. The best-move variation carries a tag of its own, and the statistics keep using centipawns from the moving player's point of view.
 
@@ -159,22 +159,23 @@ The regression tests are in `tests/regression/`: one `test_*.cmake` script per f
 --player [Both|White|Black] - select one of the options.
         default: Both
 
---threshold [N] - do not annotate a move that is less than N pawns worse
-                  than the engine's best move; a move involving a forced mate
-                  is always annotated.
+--min-loss [N] - do not annotate a move that is less than N pawns worse
+                 than the engine's best move; a move involving a forced mate
+                 is always annotated.
         default: 0 (annotate every analysed move)
 
---limitscore [N] - stop analysing a game once its score reaches +N or -N pawns,
-                   or a forced mate is found; the moves after it are left
-                   unannotated.
+--stop-at-score [N] - stop analysing a game once its score reaches +N or
+                      -N pawns, or a forced mate is found; the moves after
+                      it are left unannotated.
         default: off (analyse every move)
 
---outputnag [std|apgn|both] - how to write the move assessment: standard NAGs,
-                              apgn's own words, or both.
+--move-symbols [std|apgn|both] - how to write the move assessment:
+                                 standard NAGs, apgn's own words, or both.
         default: apgn
 
---evaltags [std|apgn|both] - how to write the score of a move: a standard
-                             [%eval] tag, apgn's own text, or both.
+--eval-format [std|apgn|both] - how to write the score of a move: a
+                                standard [%eval] tag, apgn's own text, or
+                                both.
         default: apgn
 
 --analyse-start-on-move [N] - the move number where the engine will start the
@@ -208,10 +209,10 @@ The regression tests are in `tests/regression/`: one `test_*.cmake` script per f
 | `--depth` | 1 to 100 |
 | `--threads` | 1 to 1024 |
 | `--hash-size` | 1 to 33554432 (MB) |
-| `--threshold` | 0 to 10.00 (pawns, up to two decimals) |
-| `--limitscore` | 0.01 to 100.00 (pawns, up to two decimals) |
-| `--outputnag` | `std`, `apgn` or `both` |
-| `--evaltags` | `std`, `apgn` or `both` |
+| `--min-loss` | 0 to 10.00 (pawns, up to two decimals) |
+| `--stop-at-score` | 0.01 to 100.00 (pawns, up to two decimals) |
+| `--move-symbols` | `std`, `apgn` or `both` |
+| `--eval-format` | `std`, `apgn` or `both` |
 | `--analyse-start-on-move` | 0 to 10000 (0 and 1 both start from the first move) |
 | `--analyse-until-move` | 1 to 10000 |
 

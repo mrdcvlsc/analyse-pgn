@@ -22,22 +22,23 @@ void print_help() {
                  "--player [Both|White|Black] - select one of the options.\n"
                  "\tdefault: Both\n\n"
 
-                 "--threshold [N] - do not annotate a move that is less than N pawns worse\n"
-                 "                  than the engine's best move; a move involving a forced mate\n"
-                 "                  is always annotated.\n"
+                 "--min-loss [N] - do not annotate a move that is less than N pawns worse\n"
+                 "                 than the engine's best move; a move involving a forced mate\n"
+                 "                 is always annotated.\n"
                  "\tdefault: 0 (annotate every analysed move)\n\n"
 
-                 "--limitscore [N] - stop analysing a game once its score reaches +N or -N pawns,\n"
-                 "                   or a forced mate is found; the moves after it are left\n"
-                 "                   unannotated.\n"
+                 "--stop-at-score [N] - stop analysing a game once its score reaches +N or\n"
+                 "                      -N pawns, or a forced mate is found; the moves after\n"
+                 "                      it are left unannotated.\n"
                  "\tdefault: off (analyse every move)\n\n"
 
-                 "--outputnag [std|apgn|both] - how to write the move assessment: standard NAGs,\n"
-                 "                              apgn's own words, or both.\n"
+                 "--move-symbols [std|apgn|both] - how to write the move assessment:\n"
+                 "                                 standard NAGs, apgn's own words, or both.\n"
                  "\tdefault: apgn\n\n"
 
-                 "--evaltags [std|apgn|both] - how to write the score of a move: a standard\n"
-                 "                             [%eval] tag, apgn's own text, or both.\n"
+                 "--eval-format [std|apgn|both] - how to write the score of a move: a\n"
+                 "                                standard [%eval] tag, apgn's own text, or\n"
+                 "                                both.\n"
                  "\tdefault: apgn\n\n"
 
                  "--analyse-start-on-move [N] - the move number where the engine will start the\n"

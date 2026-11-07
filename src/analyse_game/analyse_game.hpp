@@ -42,11 +42,11 @@ struct UciOptions {
     int hash_size;
     int start_on_move; // start analysis on move N
     int until_move;    // analyse only until move N
-    int threshold;     // smallest centipawn loss worth annotating; 0 = annotate every analysed move
-    int limit_score;   // stop analysing a game at this centipawn score; 0 = analyse every move
+    int min_loss;      // smallest centipawn loss worth annotating; 0 = annotate every analysed move
+    int stop_at_score;   // stop analysing a game at this centipawn score; 0 = analyse every move
     Piece piece;
-    OutputMode nag_mode; // how to write the move assessment (--outputnag)
-    OutputMode eval_mode; // how to write the score of a move (--evaltags)
+    OutputMode move_symbols; // how to write the move assessment (--move-symbols)
+    OutputMode eval_format; // how to write the score of a move (--eval-format)
 };
 
 std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine, const UciOptions &opts);

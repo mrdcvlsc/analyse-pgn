@@ -1,4 +1,4 @@
-# Feature: --limitscore N (pawns) stops analysing a game once it is decided,
+# Feature: --stop-at-score N (pawns) stops analysing a game once it is decided,
 # so a game that is already won or lost is not analysed to the last move
 # (issue #16, second request).
 
@@ -44,7 +44,7 @@ set(comment_regex "[A-Z]+[ \n]+(CP|MATE_IN):-?[0-9]+[ \n]*}")
 
 apgn_run(result output
     ENV FAKE_ENGINE_PLAN=${WORK_DIR}/plan-limit.txt
-    ARGS --engine "${FAKE_ENGINE}" --limitscore 2.00 game.pgn)
+    ARGS --engine "${FAKE_ENGINE}" --stop-at-score 2.00 game.pgn)
 assert_equal("${result}" "0" "apgn should succeed")
 assert_contains("${output}" "skipping the rest of this game" "apgn must say that it stopped early")
 assert_contains("${output}" "+2.14" "the message must name the score that crossed the limit")
@@ -76,7 +76,7 @@ assert_equal("${black_moves}" "1" "the statistics count only the analysed black 
 
 apgn_run(result output
     ENV FAKE_ENGINE_PLAN=${WORK_DIR}/plan-mate.txt
-    ARGS --engine "${FAKE_ENGINE}" --limitscore 2.00 mate.pgn)
+    ARGS --engine "${FAKE_ENGINE}" --stop-at-score 2.00 mate.pgn)
 assert_equal("${result}" "0" "apgn should succeed")
 assert_contains("${output}" "forced mate" "a forced mate must be reported as the reason for stopping")
 assert_contains("${output}" "on move 1" "the message must name the move it stopped on")
@@ -90,7 +90,7 @@ assert_equal("${comments}" "1" "only the move that found the mate is annotated")
 
 apgn_run(result output
     ENV FAKE_ENGINE_PLAN=${WORK_DIR}/plan-inside.txt
-    ARGS --engine "${FAKE_ENGINE}" --limitscore 2.00 inside.pgn)
+    ARGS --engine "${FAKE_ENGINE}" --stop-at-score 2.00 inside.pgn)
 assert_equal("${result}" "0" "apgn should succeed")
 assert_not_contains("${output}" "skipping the rest" "a game inside the limit must be analysed to the end")
 
@@ -102,7 +102,7 @@ assert_equal("${comments}" "7" "every move of a game inside the limit is annotat
 
 apgn_run(result output
     ENV FAKE_ENGINE_PLAN=${WORK_DIR}/plan-limit.txt
-    ARGS --engine "${FAKE_ENGINE}" --limitscore 2.00 two.pgn)
+    ARGS --engine "${FAKE_ENGINE}" --stop-at-score 2.00 two.pgn)
 assert_equal("${result}" "0" "apgn should succeed")
 
 read_file(analysed "${WORK_DIR}/analyzed-two.pgn")
@@ -114,12 +114,12 @@ assert_equal("${comments}" "6" "both games are analysed until they reach the lim
 
 apgn_run(result output
     ENV FAKE_ENGINE_PLAN=${WORK_DIR}/plan-limit.txt
-    ARGS --engine "${FAKE_ENGINE}" --limitscore 0 game.pgn)
-assert_equal("${result}" "1" "exit status for --limitscore 0")
+    ARGS --engine "${FAKE_ENGINE}" --stop-at-score 0 game.pgn)
+assert_equal("${result}" "1" "exit status for --stop-at-score 0")
 assert_contains("${output}" "must be between" "an out-of-range limit must be rejected with its range")
 
 apgn_run(result output
     ENV FAKE_ENGINE_PLAN=${WORK_DIR}/plan-limit.txt
-    ARGS --engine "${FAKE_ENGINE}" --limitscore 1.234 game.pgn)
-assert_equal("${result}" "1" "exit status for --limitscore 1.234")
-assert_contains("${output}" "invalid limitscore value" "a malformed limit must be rejected")
+    ARGS --engine "${FAKE_ENGINE}" --stop-at-score 1.234 game.pgn)
+assert_equal("${result}" "1" "exit status for --stop-at-score 1.234")
+assert_contains("${output}" "invalid stop-at-score value" "a malformed limit must be rejected")

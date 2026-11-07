@@ -1,4 +1,4 @@
-# Feature: --outputnag std|apgn|both writes the move assessment as standard
+# Feature: --move-symbols std|apgn|both writes the move assessment as standard
 # NAGs instead of (or beside) apgn's own words, so other tools can read it
 # (issue #16, third request).
 
@@ -53,8 +53,8 @@ set(second_env FAKE_ENGINE_PLAN=${WORK_DIR}/plan-second.txt)
 
 # ---- std mode replaces the words with NAGs ----
 
-apgn_run(result output ENV ${first_env} ARGS --engine "${FAKE_ENGINE}" --outputnag std first.pgn)
-assert_equal("${result}" "0" "apgn should succeed with --outputnag std")
+apgn_run(result output ENV ${first_env} ARGS --engine "${FAKE_ENGINE}" --move-symbols std first.pgn)
+assert_equal("${result}" "0" "apgn should succeed with --move-symbols std")
 assert_not_contains("${output}" "Unknown" "pgn-extract must accept the NAGs apgn writes")
 
 read_file(analysed "${WORK_DIR}/analyzed-first.pgn")
@@ -72,8 +72,8 @@ assert_not_contains("${analysed}" "blunder" "std mode must not write apgn's word
 assert_not_contains("${analysed}" "WINNING" "std mode must not write apgn's status words")
 assert_contains("${analysed}" "CP:300" "std mode still writes the score")
 
-apgn_run(result output ENV ${second_env} ARGS --engine "${FAKE_ENGINE}" --outputnag std second.pgn)
-assert_equal("${result}" "0" "apgn should succeed with --outputnag std")
+apgn_run(result output ENV ${second_env} ARGS --engine "${FAKE_ENGINE}" --move-symbols std second.pgn)
+assert_equal("${result}" "0" "apgn should succeed with --move-symbols std")
 
 read_file(analysed "${WORK_DIR}/analyzed-second.pgn")
 assert_matches("${analysed}" "1\\.[ \n]+e4[ \n]+\\$10[ \n]+{" "1. e4: a good move needs no move NAG")
@@ -88,20 +88,20 @@ assert_matches("${analysed}" "Qxf7#[ \n]+\\$16[ \n]+{" "4. Qxf7#: white slightly
 
 apgn_run(result output ENV ${first_env} ARGS --engine "${FAKE_ENGINE}" plain.pgn)
 assert_equal("${result}" "0" "apgn should succeed without the flag")
-apgn_run(result output ENV ${first_env} ARGS --engine "${FAKE_ENGINE}" --outputnag apgn nags.pgn)
-assert_equal("${result}" "0" "apgn should succeed with --outputnag apgn")
+apgn_run(result output ENV ${first_env} ARGS --engine "${FAKE_ENGINE}" --move-symbols apgn nags.pgn)
+assert_equal("${result}" "0" "apgn should succeed with --move-symbols apgn")
 
 read_file(plain "${WORK_DIR}/analyzed-plain.pgn")
 read_file(explicit_apgn "${WORK_DIR}/analyzed-nags.pgn")
 string(REPLACE "nags" "plain" explicit_apgn_renamed "${explicit_apgn}")
-assert_equal("${explicit_apgn_renamed}" "${plain}" "--outputnag apgn must match the output without the flag")
+assert_equal("${explicit_apgn_renamed}" "${plain}" "--move-symbols apgn must match the output without the flag")
 assert_not_contains("${plain}" "$1" "the default output has no NAGs")
 assert_matches("${plain}" "1\\.[ \n]+e4[ \n]+{[ \n]*brilliant" "the default output keeps apgn's words")
 
 # ---- both mode writes the NAG and the words ----
 
-apgn_run(result output ENV ${first_env} ARGS --engine "${FAKE_ENGINE}" --outputnag both both.pgn)
-assert_equal("${result}" "0" "apgn should succeed with --outputnag both")
+apgn_run(result output ENV ${first_env} ARGS --engine "${FAKE_ENGINE}" --move-symbols both both.pgn)
+assert_equal("${result}" "0" "apgn should succeed with --move-symbols both")
 
 read_file(analysed "${WORK_DIR}/analyzed-both.pgn")
 assert_matches("${analysed}" "1\\.[ \n]+e4[ \n]+\\$1[ \n]+\\$18[ \n]+{[ \n]*brilliant[ \n]+!!![ \n]+WINNING" "both mode writes the NAG and the words")
@@ -114,6 +114,6 @@ assert_not_matches("${analysed}" "Nf3[ \n]+\\$" "the best-move variation gets no
 
 # ---- invalid mode ----
 
-apgn_run(result output ENV ${first_env} ARGS --engine "${FAKE_ENGINE}" --outputnag lichess first.pgn)
-assert_equal("${result}" "1" "exit status for an unknown --outputnag mode")
-assert_contains("${output}" "invalid outputnag value" "an unknown mode must be rejected")
+apgn_run(result output ENV ${first_env} ARGS --engine "${FAKE_ENGINE}" --move-symbols lichess first.pgn)
+assert_equal("${result}" "1" "exit status for an unknown --move-symbols mode")
+assert_contains("${output}" "invalid move-symbols value" "an unknown mode must be rejected")

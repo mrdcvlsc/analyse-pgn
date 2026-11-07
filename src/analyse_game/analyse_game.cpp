@@ -54,7 +54,7 @@ static std::string parse_bestmove(const std::string &bestmove_line) {
     return "";
 }
 
-// "+2.14" / "-0.50" for a centipawn score, for the message about the --limitscore flag
+// "+2.14" / "-0.50" for a centipawn score, for the message about the --stop-at-score flag
 static std::string signed_pawns_text(int centipawns) {
     const auto absolute  = std::abs(centipawns);
     const auto whole     = absolute / 100;
@@ -326,7 +326,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                 comment = score_comments(cp_pmv_bmv_diff, mv_player_cp, mv_best_cp, mv_player_cm, mv_best_cm);
 
                 // the whole annotation of this move is built in this one string, and written once below
-                // unless --threshold leaves the move unannotated
+                // unless --min-loss leaves the move unannotated
                 std::string move_comment;
 
                 std::istringstream interpret_stream(comment);
@@ -349,8 +349,8 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
                 const bool white_to_move = moving_player == Piece::White;
 
-                // --outputnag: the NAGs belong right after the move, before any comment
-                if (opts.nag_mode != OutputMode::Apgn) {
+                // --move-symbols: the NAGs belong right after the move, before any comment
+                if (opts.move_symbols != OutputMode::Apgn) {
                     const auto move_glyph     = comments::move_nag(comment_type);
                     const auto position_glyph = comments::position_nag(position_status, white_to_move);
 
@@ -365,18 +365,18 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
                 move_comment += " {";
 
-                // --evaltags: the tag goes at the start of the comment, where readers expect it
-                if (opts.eval_mode != OutputMode::Apgn) {
+                // --eval-format: the tag goes at the start of the comment, where readers expect it
+                if (opts.eval_format != OutputMode::Apgn) {
                     move_comment += eval_tag(mv_player_cp, mv_player_cm, white_to_move);
                 }
 
                 // in std mode the NAGs above replace apgn's own words
-                if (opts.nag_mode != OutputMode::Std) {
+                if (opts.move_symbols != OutputMode::Std) {
                     move_comment += comment;
                 }
 
                 // in std mode the tag above replaces apgn's own score text
-                if (opts.eval_mode != OutputMode::Std) {
+                if (opts.eval_format != OutputMode::Std) {
                     move_comment += score_text(mv_player_cp, mv_player_cm);
                 }
 
@@ -388,13 +388,13 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                 if (move != mv_best) {
                     move_comment += " (" + mv_best + " {";
 
-                    if (opts.eval_mode != OutputMode::Apgn) {
+                    if (opts.eval_format != OutputMode::Apgn) {
                         move_comment += eval_tag(mv_best_cp, mv_best_cm, white_to_move);
                     }
 
                     move_comment += " was the best move";
 
-                    if (opts.eval_mode != OutputMode::Std) {
+                    if (opts.eval_format != OutputMode::Std) {
                         move_comment += score_text(mv_best_cp, mv_best_cm);
                     }
 
@@ -404,18 +404,18 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                 // either search found a forced mate (for or against the player)
                 const bool mate_found = (mv_player_cm != 0) || (mv_best_cm != 0);
 
-                // --threshold: a move that is less than `threshold` centipawns worse than the engine's best
+                // --min-loss: a move that is less than `min_loss` centipawns worse than the engine's best
                 // move is left unannotated. a move involving a forced mate is always annotated, because a
                 // centipawn loss is not meaningful for it. the statistics count the move either way.
                 const int centipawn_loss = mv_best_cp - mv_player_cp;
 
-                if (opts.threshold <= 0 || mate_found || centipawn_loss >= opts.threshold) {
+                if (opts.min_loss <= 0 || mate_found || centipawn_loss >= opts.min_loss) {
                     chess_game.comments[i] = move_comment;
                 }
 
-                // --limitscore: the game is decided, stop analysing the rest of it. the remaining moves stay
+                // --stop-at-score: the game is decided, stop analysing the rest of it. the remaining moves stay
                 // in the output without a comment, and the next game in the file is analysed as usual.
-                if (opts.limit_score > 0) {
+                if (opts.stop_at_score > 0) {
                     const int move_number   = (i + chess_game.first_player) / 2 + 1;
                     const int white_view_cp = white_to_move ? mv_player_cp : -mv_player_cp;
 
@@ -425,7 +425,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                         break;
                     }
 
-                    if (std::abs(mv_player_cp) >= opts.limit_score) {
+                    if (std::abs(mv_player_cp) >= opts.stop_at_score) {
                         std::cout << "\nscore reached " << signed_pawns_text(white_view_cp)
                                   << " pawns from white's point of view on move " << move_number
                                   << ", skipping the rest of this game\n";

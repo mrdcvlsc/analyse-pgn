@@ -1,4 +1,4 @@
-# Feature: --threshold N (pawns) leaves moves that are less than N worse than
+# Feature: --min-loss N (pawns) leaves moves that are less than N worse than
 # the engine's best move unannotated, so small, uninteresting losses do not
 # clutter the output (issue #16, first request).
 
@@ -13,19 +13,19 @@ file(RENAME "${WORK_DIR}/copy/game.pgn" "${WORK_DIR}/same.pgn")
 # explicit centipawn loss (best score - played score). every best move must be
 # legal in its position, or pgn-extract rejects the variation apgn writes for it.
 write_file("${WORK_DIR}/plan.txt" [=[
-# 1. e4      loses 20 -> under a 0.50 threshold
+# 1. e4      loses 20 -> under a 0.50 minimum loss
 0 d2d4 cp:50 cp:30
-# 1... e5    loses exactly 50 -> at the threshold, still annotated
+# 1... e5    loses exactly 50 -> at the minimum loss, still annotated
 1 d7d5 cp:0 cp:-50
 # 2. Bc4     loses 200 -> annotated
 2 g1f3 cp:100 cp:-100
-# 2... Nc6   loses 5 -> under the threshold
+# 2... Nc6   loses 5 -> under the minimum loss
 3 g8f6 cp:0 cp:-5
 # 3. Qh5     forces mate -> always annotated
 4 g1f3 cp:50 mate:3
 # 3... Nf6   gets mated -> always annotated
 5 g7g6 mate:-2 mate:-5
-# 4. Qxf7#   loses 10 -> under the threshold
+# 4. Qxf7#   loses 10 -> under the minimum loss
 6 a2a4 cp:20 cp:10
 ]=])
 
@@ -39,16 +39,16 @@ assert_equal("${result}" "0" "apgn should succeed without the flag")
 
 read_file(analysed "${WORK_DIR}/analyzed-game.pgn")
 count_matches(comments "${analysed}" "${comment_regex}")
-assert_equal("${comments}" "7" "annotated moves without --threshold")
+assert_equal("${comments}" "7" "annotated moves without --min-loss")
 
-# ---- with --threshold 0.50 only the losses of 50 centipawns or more remain ----
+# ---- with --min-loss 0.50 only the losses of 50 centipawns or more remain ----
 
-apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --threshold 0.50 same.pgn)
-assert_equal("${result}" "0" "apgn should succeed with --threshold 0.50")
+apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --min-loss 0.50 same.pgn)
+assert_equal("${result}" "0" "apgn should succeed with --min-loss 0.50")
 
 read_file(filtered "${WORK_DIR}/analyzed-same.pgn")
 count_matches(comments "${filtered}" "${comment_regex}")
-assert_equal("${comments}" "4" "annotated moves with --threshold 0.50")
+assert_equal("${comments}" "4" "annotated moves with --min-loss 0.50")
 
 assert_not_matches("${filtered}" "1\\. e4[ \n]+{" "1. e4 loses 20, it must not be annotated")
 assert_not_matches("${filtered}" "Nc6[ \n]+{" "2... Nc6 loses 5, it must not be annotated")
@@ -59,21 +59,21 @@ assert_matches("${filtered}" "Qh5[ \n]+{[^}]*MATE_IN:3" "3. Qh5 forces mate, it 
 assert_matches("${filtered}" "Nf6[ \n]+{[^}]*MATE_IN:-5" "3... Nf6 gets mated, it must be annotated")
 
 # a move that is not annotated keeps no best-move variation either
-assert_not_matches("${filtered}" "\\(1\\. d4" "1. e4 is under the threshold: no best-move variation")
-assert_matches("${filtered}" "\\(2\\. Nf3" "2. Bc4 is above the threshold: it keeps its best-move variation")
+assert_not_matches("${filtered}" "\\(1\\. d4" "1. e4 is under the minimum loss: no best-move variation")
+assert_matches("${filtered}" "\\(2\\. Nf3" "2. Bc4 is above the minimum loss: it keeps its best-move variation")
 
 # ---- the statistics are unaffected by the flag ----
 
 read_file(stats_all "${WORK_DIR}/analyzed-stats-game.json")
 read_file(stats_filtered "${WORK_DIR}/analyzed-stats-same.json")
-assert_equal("${stats_filtered}" "${stats_all}" "--threshold must not change the statistics")
+assert_equal("${stats_filtered}" "${stats_all}" "--min-loss must not change the statistics")
 
 # ---- invalid values ----
 
-apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --threshold 10.01 game.pgn)
-assert_equal("${result}" "1" "exit status for --threshold 10.01")
-assert_contains("${output}" "must be between" "an out-of-range threshold must be rejected with its range")
+apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --min-loss 10.01 game.pgn)
+assert_equal("${result}" "1" "exit status for --min-loss 10.01")
+assert_contains("${output}" "must be between" "an out-of-range minimum loss must be rejected with its range")
 
-apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --threshold abc game.pgn)
-assert_equal("${result}" "1" "exit status for --threshold abc")
-assert_contains("${output}" "invalid threshold value" "a malformed threshold must be rejected")
+apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --min-loss abc game.pgn)
+assert_equal("${result}" "1" "exit status for --min-loss abc")
+assert_contains("${output}" "invalid min-loss value" "a malformed minimum loss must be rejected")

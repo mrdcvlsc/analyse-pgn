@@ -1,4 +1,4 @@
-# Feature: --evaltags std|apgn|both writes the score of a move as a standard
+# Feature: --eval-format std|apgn|both writes the score of a move as a standard
 # [%eval] tag instead of (or beside) apgn's CP:/MATE_IN: text, so lichess,
 # chessbase and scid can read it (issue #16, fourth request).
 #
@@ -38,8 +38,8 @@ set(engine_env FAKE_ENGINE_PLAN=${WORK_DIR}/plan.txt)
 
 # ---- std mode replaces CP:/MATE_IN: with a standard tag ----
 
-apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --evaltags std std.pgn)
-assert_equal("${result}" "0" "apgn should succeed with --evaltags std")
+apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --eval-format std std.pgn)
+assert_equal("${result}" "0" "apgn should succeed with --eval-format std")
 assert_not_contains("${output}" "Unknown" "pgn-extract must accept the eval tags apgn writes")
 
 read_file(analysed "${WORK_DIR}/analyzed-std.pgn")
@@ -53,7 +53,7 @@ assert_matches("${analysed}" "Qxf7#[ \n]+{[ \n]*\\[%eval[ \n]+#-2\\]" "4. Qxf7#:
 
 assert_not_contains("${analysed}" "CP:" "std mode must not write apgn's score text")
 assert_not_contains("${analysed}" "MATE_IN:" "std mode must not write apgn's mate text")
-assert_contains("${analysed}" "excellent !!" "--evaltags only changes the score, the words stay")
+assert_contains("${analysed}" "excellent !!" "--eval-format only changes the score, the words stay")
 
 # the best-move variation carries a tag of its own
 assert_matches("${analysed}" "\\(1\\.[ \n]+d4[ \n]+{[ \n]*\\[%eval[ \n]+0\\.30\\][ \n]+was[ \n]+the[ \n]+best[ \n]+move,"
@@ -64,19 +64,19 @@ assert_matches("${analysed}" "\\(3\\.\\.\\.[ \n]+g6[ \n]+{[ \n]*\\[%eval[ \n]+#1
 
 apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" plain.pgn)
 assert_equal("${result}" "0" "apgn should succeed without the flag")
-apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --evaltags apgn apgn.pgn)
-assert_equal("${result}" "0" "apgn should succeed with --evaltags apgn")
+apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --eval-format apgn apgn.pgn)
+assert_equal("${result}" "0" "apgn should succeed with --eval-format apgn")
 
 read_file(plain "${WORK_DIR}/analyzed-plain.pgn")
 read_file(explicit_apgn "${WORK_DIR}/analyzed-apgn.pgn")
-assert_equal("${explicit_apgn}" "${plain}" "--evaltags apgn must match the output without the flag")
+assert_equal("${explicit_apgn}" "${plain}" "--eval-format apgn must match the output without the flag")
 assert_not_contains("${plain}" "%eval" "the default output has no eval tags")
 assert_contains("${plain}" "CP:25" "the default output keeps apgn's score text")
 
 # ---- both mode writes the tag and apgn's text ----
 
-apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --evaltags both both.pgn)
-assert_equal("${result}" "0" "apgn should succeed with --evaltags both")
+apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --eval-format both both.pgn)
+assert_equal("${result}" "0" "apgn should succeed with --eval-format both")
 
 read_file(analysed "${WORK_DIR}/analyzed-both.pgn")
 assert_matches("${analysed}" "1\\.[ \n]+e4[ \n]+{[ \n]*\\[%eval[ \n]+0\\.25\\][ \n]+excellent" "both mode writes the tag and the words")
@@ -86,6 +86,6 @@ assert_contains("${analysed}" "MATE_IN:3" "both mode keeps apgn's mate text")
 
 # ---- invalid mode ----
 
-apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --evaltags lichess std.pgn)
-assert_equal("${result}" "1" "exit status for an unknown --evaltags mode")
-assert_contains("${output}" "invalid evaltags value" "an unknown mode must be rejected")
+apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --eval-format lichess std.pgn)
+assert_equal("${result}" "1" "exit status for an unknown --eval-format mode")
+assert_contains("${output}" "invalid eval-format value" "an unknown mode must be rejected")
