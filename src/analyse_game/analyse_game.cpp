@@ -200,13 +200,9 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
             start_position = "fen " + value;
 
             std::istringstream fen_fields(value);
-            std::string piece_placement, side_to_move, castling, en_passant;
-            int halfmove_clock = 0, fullmove_number = 0;
-            fen_fields >> piece_placement >> side_to_move >> castling >> en_passant >> halfmove_clock >> fullmove_number;
+            std::string piece_placement, side_to_move;
+            fen_fields >> piece_placement >> side_to_move;
             chess_game.first_player = (side_to_move == "b") ? 1 : 0;
-
-            // a FEN without a usable move number counts from 1
-            chess_game.first_move_number = (fullmove_number > 0) ? fullmove_number : 1;
         }
     }
 
@@ -431,8 +427,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                 // --stop-at-score: the game is decided, stop analysing the rest of it. the remaining moves stay
                 // in the output without a comment, and the next game in the file is analysed as usual.
                 if (opts.stop_at_score > 0) {
-                    // the game's own move number, which a FEN position can start at any number
-                    const int move_number   = chess_game.first_move_number + (i + chess_game.first_player) / 2;
+                    const int move_number   = (i + chess_game.first_player) / 2 + 1;
                     const int white_view_cp = white_to_move ? mv_player_cp : -mv_player_cp;
 
                     // only the move played decides the game: a mate that the engine's best move would have

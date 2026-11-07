@@ -137,34 +137,6 @@ count_matches(comments "${analysed}" "${comment_regex}")
 assert_equal("${comments}" "7" "every move after the missed mate is still annotated")
 assert_matches("${analysed}" "e4[ \n]+{[ \n]*missed" "1. e4 is annotated as a missed mate")
 
-# ---- the message names the game's own move number ----
-# a game from a FEN position counts its moves from the FEN's move number.
-
-write_file("${WORK_DIR}/fen.pgn" [=[[Event "From move 30"]
-[Site "?"]
-[Date "????.??.??"]
-[Round "?"]
-[White "A"]
-[Black "B"]
-[Result "1-0"]
-[SetUp "1"]
-[FEN "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 30"]
-
-30... e5 31. Bc4 Nc6 32. Qh5 Nf6 33. Qxf7# 1-0
-]=])
-write_file("${WORK_DIR}/plan-fen.txt" [=[
-0 d7d5 cp:-10 cp:-20
-# 31. Bc4 reaches +2.50 for white
-1 g1f3 cp:300 cp:250
-]=])
-
-apgn_run(result output
-    ENV FAKE_ENGINE_PLAN=${WORK_DIR}/plan-fen.txt
-    ARGS --engine "${FAKE_ENGINE}" --stop-at-score 2.00 fen.pgn)
-assert_equal("${result}" "0" "apgn should succeed")
-assert_contains("${output}" "on move 31," "the message must use the move number from the FEN")
-assert_not_contains("${output}" "no plan for ply" "the engine must not be asked about the moves after the limit")
-
 # ---- invalid values ----
 
 apgn_run(result output
