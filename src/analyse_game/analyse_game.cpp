@@ -392,13 +392,23 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                         move_comment += eval_tag(mv_best_cp, mv_best_cm, white_to_move);
                     }
 
-                    move_comment += " was the best move";
+                    // in std mode the NAGs replace apgn's words here too: the parentheses already mark the
+                    // variation as the alternative, so only its score is written
+                    const bool apgn_words = opts.move_symbols != OutputMode::Std;
+
+                    if (apgn_words) {
+                        move_comment += " was the best move";
+                    }
 
                     if (opts.eval_format != OutputMode::Std) {
                         move_comment += score_text(mv_best_cp, mv_best_cm);
                     }
 
-                    move_comment += ", followed by } " + best_mv_cont + " ) ";
+                    if (apgn_words) {
+                        move_comment += ", followed by";
+                    }
+
+                    move_comment += " } " + best_mv_cont + " ) ";
                 }
 
                 // either search found a forced mate (for or against the player)
