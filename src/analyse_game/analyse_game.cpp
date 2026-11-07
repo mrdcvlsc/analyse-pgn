@@ -116,14 +116,9 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
     asio::streambuf child_stdout_buf;
 
-    // initial uci chess engine output
-
-    asio::read_until(pipe_stdout, child_stdout_buf, '\n', ec);
-    check_for_error("running chess engine failed: ", uci_process, ec);
-    auto uci_output = readline_child_stdout(child_stdout_buf);
-    DEBUG_LOG("engine: " + uci_output);
-
-    // initialize uci chess engine
+    // initialize uci chess engine. an engine may print a banner when it starts (stockfish does) or print
+    // nothing until its first command (uci does not require a banner), so apgn does not wait for one: any
+    // banner is read and skipped by the wait for "uciok" below.
 
     std::cout << "running " << chess_engine << "...\n";
 
@@ -205,9 +200,13 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
             start_position = "fen " + value;
 
             std::istringstream fen_fields(value);
-            std::string piece_placement, side_to_move;
-            fen_fields >> piece_placement >> side_to_move;
+            std::string piece_placement, side_to_move, castling, en_passant;
+            int halfmove_clock = 0, fullmove_number = 0;
+            fen_fields >> piece_placement >> side_to_move >> castling >> en_passant >> halfmove_clock >> fullmove_number;
             chess_game.first_player = (side_to_move == "b") ? 1 : 0;
+
+            // a FEN without a usable move number counts from 1
+            chess_game.first_move_number = (fullmove_number > 0) ? fullmove_number : 1;
         }
     }
 
@@ -327,7 +326,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
                 int cp_pmv_bmv_diff = mv_player_cp - mv_best_cp;
                 comment = score_comments(cp_pmv_bmv_diff, mv_player_cp, mv_best_cp, mv_player_cm, mv_best_cm);
-
+
                 // the whole annotation of this move is built in this one string, and written once below
                 // unless --min-loss leaves the move unannotated
                 std::string move_comment;
@@ -432,10 +431,13 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                 // --stop-at-score: the game is decided, stop analysing the rest of it. the remaining moves stay
                 // in the output without a comment, and the next game in the file is analysed as usual.
                 if (opts.stop_at_score > 0) {
-                    const int move_number   = (i + chess_game.first_player) / 2 + 1;
+                    // the game's own move number, which a FEN position can start at any number
+                    const int move_number   = chess_game.first_move_number + (i + chess_game.first_player) / 2;
                     const int white_view_cp = white_to_move ? mv_player_cp : -mv_player_cp;
 
-                    if (mate_found) {
+                    // only the move played decides the game: a mate that the engine's best move would have
+                    // forced, but the player missed, leaves the game open
+                    if (mv_player_cm != 0) {
                         std::cout << "\nforced mate found on move " << move_number
                                   << ", skipping the rest of this game\n";
                         break;

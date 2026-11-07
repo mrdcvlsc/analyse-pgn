@@ -46,7 +46,7 @@ Example Comment:
 
 **Fewer annotations.** `--min-loss` leaves the near-best moves alone: with `--min-loss 0.50`, a move that is less than half a pawn worse than the engine's best move gets no comment, no score and no best-move variation at all. That includes the best move itself, which loses nothing, so its `brilliant !!!` or `accurate !!!` label (and its `$1` with `--move-symbols`) is left out too. Moves involving a forced mate are always annotated. The statistics are not affected by it.
 
-**Stopping early.** `--stop-at-score` stops once a game is decided: with `--stop-at-score 2.00`, as soon as a move's score reaches +2 or -2 pawns, or a forced mate is found, apgn stops analysing that game and prints which move it stopped on (the score in that message is from White's point of view). The move that reached the score is annotated as usual, unless `--min-loss` leaves it out, and the remaining moves are written without comments. Each game in the file is analysed until it reaches the limit on its own, and the statistics count only the analysed moves.
+**Stopping early.** `--stop-at-score` stops once a game is decided: with `--stop-at-score 2.00`, as soon as a move's score reaches +2 or -2 pawns, or the move played leads to a forced mate (for either side), apgn stops analysing that game and prints which move it stopped on (the score in that message is from White's point of view, and the move number is the game's own, so a game from a FEN position counts from the FEN's move number). A mate that only the engine's best move would have forced does not stop the analysis: the player missed it, and the game is still open. The move that reached the score is annotated as usual, unless `--min-loss` leaves it out, and the remaining moves are written without comments. Each game in the file is analysed until it reaches the limit on its own, and the statistics count only the analysed moves.
 
 #### **Standard NAGs instead of words**
 
@@ -107,6 +107,10 @@ The `analyzed-stats-<original-pgn-filename>.json` file will contain, for every g
     use the `chmod` command in ubuntu to allow programs to read, write and execute process, e.g. `chmod +x bin/engines/stockfish bin/pgn-extract/pgn-extract`.
 
 - when something goes wrong (for example a pgn file that does not exist, an invalid flag value, or a chess engine that stops responding) apgn prints `error: ...` and exits with status 1.
+
+- when pgn-extract rejects an analysed game while writing the analysed pgn file, that game is missing from the file. apgn names how many games are missing, still writes the other games and the statistics, and exits with status 1 at the end.
+
+- the comments, NAGs and variations already in a pgn file are ignored: only the moves of the game itself are analysed, so an annotated game (or a file apgn has analysed before) can be analysed again.
 
 ## For Developers
 
@@ -169,8 +173,8 @@ The regression tests are in `tests/regression/`: one `test_*.cmake` script per f
         default: 0 (annotate every analysed move)
 
 --stop-at-score [N] - stop analysing a game once its score reaches +N or
-                      -N pawns, or a forced mate is found; the moves after
-                      it are left unannotated.
+                      -N pawns, or the move played leads to a forced mate;
+                      the moves after it are left unannotated.
         default: off (analyse every move)
 
 --move-symbols [std|apgn|both] - how to write the move assessment:

@@ -28,8 +28,8 @@ void print_help() {
                  "\tdefault: 0 (annotate every analysed move)\n\n"
 
                  "--stop-at-score [N] - stop analysing a game once its score reaches +N or\n"
-                 "                      -N pawns, or a forced mate is found; the moves after\n"
-                 "                      it are left unannotated.\n"
+                 "                      -N pawns, or the move played leads to a forced mate;\n"
+                 "                      the moves after it are left unannotated.\n"
                  "\tdefault: off (analyse every move)\n\n"
 
                  "--move-symbols [std|apgn|both] - how to write the move assessment:\n"

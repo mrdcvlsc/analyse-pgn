@@ -110,6 +110,61 @@ assert_contains("${analysed}" "Second game" "both games must be in the output")
 count_matches(comments "${analysed}" "${comment_regex}")
 assert_equal("${comments}" "6" "both games are analysed until they reach the limit")
 
+# ---- a mate the player missed does not decide the game ----
+# the engine's best move would force mate, but the move played keeps a level
+# position: the game is still open, so the analysis goes on to the end.
+
+write_file("${WORK_DIR}/missed.pgn" "${SCHOLARS_MATE_PGN}")
+write_file("${WORK_DIR}/plan-missed.txt" [=[
+# 1. e4 misses a mate in 5 (d4), and leaves white only +0.20
+0 d2d4 mate:5 cp:20
+1 d7d5 cp:-20 cp:-20
+2 g1f3 cp:30 cp:30
+3 g8f6 cp:-30 cp:-30
+4 g1f3 cp:40 cp:40
+5 g7g6 cp:-40 cp:-40
+6 a2a4 cp:50 cp:50
+]=])
+
+apgn_run(result output
+    ENV FAKE_ENGINE_PLAN=${WORK_DIR}/plan-missed.txt
+    ARGS --engine "${FAKE_ENGINE}" --stop-at-score 2.00 missed.pgn)
+assert_equal("${result}" "0" "apgn should succeed")
+assert_not_contains("${output}" "skipping the rest" "a missed mate that leaves a level game must not stop the analysis")
+
+read_file(analysed "${WORK_DIR}/analyzed-missed.pgn")
+count_matches(comments "${analysed}" "${comment_regex}")
+assert_equal("${comments}" "7" "every move after the missed mate is still annotated")
+assert_matches("${analysed}" "e4[ \n]+{[ \n]*missed" "1. e4 is annotated as a missed mate")
+
+# ---- the message names the game's own move number ----
+# a game from a FEN position counts its moves from the FEN's move number.
+
+write_file("${WORK_DIR}/fen.pgn" [=[[Event "From move 30"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "A"]
+[Black "B"]
+[Result "1-0"]
+[SetUp "1"]
+[FEN "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 30"]
+
+30... e5 31. Bc4 Nc6 32. Qh5 Nf6 33. Qxf7# 1-0
+]=])
+write_file("${WORK_DIR}/plan-fen.txt" [=[
+0 d7d5 cp:-10 cp:-20
+# 31. Bc4 reaches +2.50 for white
+1 g1f3 cp:300 cp:250
+]=])
+
+apgn_run(result output
+    ENV FAKE_ENGINE_PLAN=${WORK_DIR}/plan-fen.txt
+    ARGS --engine "${FAKE_ENGINE}" --stop-at-score 2.00 fen.pgn)
+assert_equal("${result}" "0" "apgn should succeed")
+assert_contains("${output}" "on move 31," "the message must use the move number from the FEN")
+assert_not_contains("${output}" "no plan for ply" "the engine must not be asked about the moves after the limit")
+
 # ---- invalid values ----
 
 apgn_run(result output

@@ -43,7 +43,9 @@ std::vector<ChessGame> load_games(const std::string &filename) {
     std::cout << "converting '" + filename + "' file to long-algebraic notation...\n";
 
     auto child_process = process::process(ctx.get_executor(), pgn_extract,
-        {"-Wlalg", "--nocomments", "--nonags", "--nomovenumbers", "--nochecks", filename},
+        // only the moves of the game itself: an annotated game's comments, NAGs and variations (apgn's own
+        // output has all three) would otherwise be read as moves
+        {"-Wlalg", "--nocomments", "--nonags", "--novars", "--nomovenumbers", "--nochecks", filename},
         // {"-Wlalg", "--nocomments", "--nomovenumbers", filename},
         process::process_stdio{{}, pipe_stdout, {}});
 

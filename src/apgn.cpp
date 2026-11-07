@@ -55,6 +55,9 @@ static int run_apgn(int argc, char *argv[]) {
     std::cout << std::fixed << std::setprecision(2);
     std::cout << "analyse pgn (apgn) program starting...\n\n";
 
+    // analysed games that pgn-extract could not write, over every pgn file
+    std::size_t missing_games = 0;
+
     for (const auto &pgn_file : chess_pgn_files) {
         std::cout << "loading chess games in " << pgn_file.string() << " file...\n";
         auto chess_games = load_games(pgn_file.string());
@@ -75,7 +78,7 @@ static int run_apgn(int argc, char *argv[]) {
         std::cout << '\n';
 
         auto analyzed_pgn_file = (pgn_file.parent_path() / ("analyzed-" + pgn_file.filename().string())).string();
-        save_games(analyzed_pgn_file, analyzed_games);
+        missing_games += save_games(analyzed_pgn_file, analyzed_games, chess_games.size());
 
         std::cout << '\n';
 
@@ -84,6 +87,13 @@ static int run_apgn(int argc, char *argv[]) {
                               .string();
 
         generate_stats(chess_games, stats_file);
+    }
+
+    // the other games and the statistics are still written, but the run did not fully succeed
+    if (missing_games) {
+        std::cerr << "\nerror: " << missing_games
+                  << " analysed game(s) could not be saved, see the warnings above\n";
+        return 1;
     }
 
     return 0;

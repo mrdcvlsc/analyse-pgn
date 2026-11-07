@@ -15,14 +15,32 @@
 #include <boost/system/detail/error_code.hpp>
 
 #include <cstdlib>
+#include <cstddef>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
 
-void save_games(const std::string &output_filename, const std::string &long_algebraic_notation_games) {
+// the number of games in a pgn file written by pgn-extract, which always gives a game its Event tag
+static std::size_t count_games(const std::string &filename) {
+    std::ifstream file(filename);
+    std::string line;
+    std::size_t games = 0;
+
+    while (std::getline(file, line)) {
+        if (line.rfind("[Event ", 0) == 0) {
+            games++;
+        }
+    }
+
+    return games;
+}
+
+std::size_t save_games(
+    const std::string &output_filename, const std::string &long_algebraic_notation_games, std::size_t game_count) {
     std::cout << "saving analyzed pgn file : " << output_filename << '\n';
 
     namespace asio    = boost::asio;
@@ -64,5 +82,17 @@ void save_games(const std::string &output_filename, const std::string &long_alge
 
     std::cout << "conversion done!\n";
 
-    std::cout << "pgn game saved to " << output_filename << "!\n";
+    // pgn-extract leaves out a game it cannot read (an illegal move in it) and still exits with 0
+    const auto saved   = count_games(output_filename);
+    const auto missing = (saved < game_count) ? game_count - saved : 0;
+
+    if (missing) {
+        std::cerr << "warning: pgn-extract rejected " << missing << " of the " << game_count
+                  << " analysed games (see its messages above), they are missing from " << output_filename << '\n';
+        std::cout << saved << " of " << game_count << " analysed games saved to " << output_filename << '\n';
+    } else {
+        std::cout << "pgn game saved to " << output_filename << "!\n";
+    }
+
+    return missing;
 }

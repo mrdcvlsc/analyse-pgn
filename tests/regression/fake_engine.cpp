@@ -17,6 +17,8 @@
 // FAKE_ENGINE_MODE
 //     normal                 (default) behave as described above.
 //     exit_on_start          exit immediately, before printing anything.
+//     no_banner              print nothing until the first command, as
+//                            UCI allows (Stockfish prints a banner first).
 //     info_string_after_pv   after the scored `info` line, print an
 //                            `info string` line before `bestmove`, as
 //                            real engines do (e.g. Stockfish NNUE notes).
@@ -101,7 +103,7 @@ int main() {
     if (mode.empty()) {
         mode = "normal";
     }
-    if (mode != "normal" && mode != "exit_on_start" && mode != "info_string_after_pv") {
+    if (mode != "normal" && mode != "exit_on_start" && mode != "no_banner" && mode != "info_string_after_pv") {
         fail("unknown FAKE_ENGINE_MODE: " + mode);
     }
     if (mode == "exit_on_start") {
@@ -111,7 +113,9 @@ int main() {
     const auto plan = load_plan(environment("FAKE_ENGINE_PLAN"));
     int ply         = 0;
 
-    send("Fake UCI engine for apgn tests");
+    if (mode != "no_banner") {
+        send("Fake UCI engine for apgn tests");
+    }
 
     std::string line;
     while (std::getline(std::cin, line)) {
