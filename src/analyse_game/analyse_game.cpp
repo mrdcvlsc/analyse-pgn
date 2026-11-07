@@ -54,6 +54,25 @@ static std::string parse_bestmove(const std::string &bestmove_line) {
     return "";
 }
 
+// a standard [%eval] tag: pawns from white's point of view ("[%eval 0.25]"), or "#n" moves for a forced
+// mate ("[%eval #3]"), negative when white is the one getting mated. apgn's own scores are from the
+// moving player's point of view, so they are flipped for black's moves.
+static std::string eval_tag(int centipawns, int mate_in_moves, bool white_to_move) {
+    const int white_view = white_to_move ? 1 : -1;
+
+    if (!centipawns && mate_in_moves) {
+        return " [%eval #" + std::to_string(mate_in_moves * white_view) + "]";
+    }
+
+    const auto score     = centipawns * white_view;
+    const auto absolute  = std::abs(score);
+    const auto whole     = absolute / 100;
+    const auto remainder = absolute % 100;
+
+    return " [%eval " + std::string((score < 0) ? "-" : "") + std::to_string(whole) + "." +
+           ((remainder < 10) ? "0" : "") + std::to_string(remainder) + "]";
+}
+
 // pgn-extract writes promotions as "b7a8Q", uci engines use (and answer with) a lowercase piece: "b7a8q".
 static std::string to_uci_move(std::string move) {
     if (move.size() == 5) {
@@ -289,7 +308,15 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
                 int cp_pmv_bmv_diff = mv_player_cp - mv_best_cp;
                 comment = score_comments(cp_pmv_bmv_diff, mv_player_cp, mv_best_cp, mv_player_cm, mv_best_cm);
-                chess_game.comments[i] = " {" + comment;
+                chess_game.comments[i] = " {";
+
+                // --evaltags: the tag goes at the start of the comment, where readers expect it
+                if (opts.eval_mode != OutputMode::Apgn) {
+                    chess_game.comments[i] +=
+                        eval_tag(mv_player_cp, mv_player_cm, moving_player == Piece::White);
+                }
+
+                chess_game.comments[i] += comment;
 
                 std::istringstream interpret_stream(comment);
                 interpret_stream >> tmp_item;
@@ -305,9 +332,12 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
                 chess_game.interpret_stats.at(curr_player)[comments::rank(comment_type)]++;
 
-                chess_game.comments[i] += (!mv_player_cp && mv_player_cm)
-                                              ? (" MATE_IN:" + std::to_string(mv_player_cm))
-                                              : (" CP:" + std::to_string(mv_player_cp));
+                // in std mode the tag above replaces apgn's own score text
+                if (opts.eval_mode != OutputMode::Std) {
+                    chess_game.comments[i] += (!mv_player_cp && mv_player_cm)
+                                                  ? (" MATE_IN:" + std::to_string(mv_player_cm))
+                                                  : (" CP:" + std::to_string(mv_player_cp));
+                }
 
                 chess_game.comments[i] += " } ";
 
@@ -315,11 +345,22 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                 chess_game.best_move_centipawn[i]   = mv_best_cp;
 
                 if (move != mv_best) {
-                    chess_game.comments[i] +=
-                        " (" + mv_best + " { was the best move" +
-                        ((!mv_best_cp && mv_best_cm) ? (" MATE_IN:" + std::to_string(mv_best_cm))
-                                                     : (" CP:" + std::to_string(mv_best_cp))) +
-                        (", followed by } " + best_mv_cont + " ) ");
+                    chess_game.comments[i] += " (" + mv_best + " {";
+
+                    if (opts.eval_mode != OutputMode::Apgn) {
+                        chess_game.comments[i] +=
+                            eval_tag(mv_best_cp, mv_best_cm, moving_player == Piece::White);
+                    }
+
+                    chess_game.comments[i] += " was the best move";
+
+                    if (opts.eval_mode != OutputMode::Std) {
+                        chess_game.comments[i] += (!mv_best_cp && mv_best_cm)
+                                                      ? (" MATE_IN:" + std::to_string(mv_best_cm))
+                                                      : (" CP:" + std::to_string(mv_best_cp));
+                    }
+
+                    chess_game.comments[i] += ", followed by } " + best_mv_cont + " ) ";
                 }
             }
 
