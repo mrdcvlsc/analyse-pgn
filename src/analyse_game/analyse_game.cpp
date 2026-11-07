@@ -54,33 +54,36 @@ static std::string parse_bestmove(const std::string &bestmove_line) {
     return "";
 }
 
-// "+2.14" / "-0.50" for a centipawn score, for the message about the --stop-at-score flag
-static std::string signed_pawns_text(int centipawns) {
+// a centipawn score in pawns: "0.25", "-1.30", or with plus_sign "+2.14"
+static std::string pawns_text(int centipawns, bool plus_sign) {
     const auto absolute  = std::abs(centipawns);
     const auto whole     = absolute / 100;
     const auto remainder = absolute % 100;
+    const auto sign      = (centipawns < 0) ? "-" : (plus_sign ? "+" : "");
 
-    return std::string((centipawns < 0) ? "-" : "+") + std::to_string(whole) + "." +
-           ((remainder < 10) ? "0" : "") + std::to_string(remainder);
+    return sign + std::to_string(whole) + "." + ((remainder < 10) ? "0" : "") + std::to_string(remainder);
 }
 
-// a standard [%eval] tag: pawns from white's point of view ("[%eval 0.25]"), or "#n" moves for a forced
-// mate ("[%eval #3]"), negative when white is the one getting mated. apgn's own scores are from the
-// moving player's point of view, so they are flipped for black's moves.
+// a standard [%eval] tag for the position after the move, as lichess writes it: pawns from white's point of
+// view ("[%eval 0.25]"), or "#n" for a forced mate in n moves ("[%eval #3]", negative when black mates).
+// apgn's scores are the engine's, for the moving player and counting the move itself: they are flipped for
+// black's moves, and a mate the moving player gives has one move fewer left after the move. a move that
+// delivers mate gets no tag, since the game is over.
 static std::string eval_tag(int centipawns, int mate_in_moves, bool white_to_move) {
     const int white_view = white_to_move ? 1 : -1;
 
     if (!centipawns && mate_in_moves) {
-        return " [%eval #" + std::to_string(mate_in_moves * white_view) + "]";
+        // a mate against the moving player is still that many moves away after the move
+        const int moves_left = (mate_in_moves > 0) ? mate_in_moves - 1 : mate_in_moves;
+
+        if (moves_left == 0) {
+            return "";
+        }
+
+        return " [%eval #" + std::to_string(moves_left * white_view) + "]";
     }
 
-    const auto score     = centipawns * white_view;
-    const auto absolute  = std::abs(score);
-    const auto whole     = absolute / 100;
-    const auto remainder = absolute % 100;
-
-    return " [%eval " + std::string((score < 0) ? "-" : "") + std::to_string(whole) + "." +
-           ((remainder < 10) ? "0" : "") + std::to_string(remainder) + "]";
+    return " [%eval " + pawns_text(centipawns * white_view, false) + "]";
 }
 
 // apgn's own score text, from the moving player's point of view: " CP:25", or " MATE_IN:3" for a forced mate
@@ -363,33 +366,35 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                     }
                 }
 
-                move_comment += " {";
+                // what goes inside the comment's braces. it can be empty: a move that delivers mate has no
+                // eval tag, so with both std modes nothing is left, and then no comment is written at all
+                std::string move_text;
 
                 // --eval-format: the tag goes at the start of the comment, where readers expect it
                 if (opts.eval_format != OutputMode::Apgn) {
-                    move_comment += eval_tag(mv_player_cp, mv_player_cm, white_to_move);
+                    move_text += eval_tag(mv_player_cp, mv_player_cm, white_to_move);
                 }
 
                 // in std mode the NAGs above replace apgn's own words
                 if (opts.move_symbols != OutputMode::Std) {
-                    move_comment += comment;
+                    move_text += comment;
                 }
 
                 // in std mode the tag above replaces apgn's own score text
                 if (opts.eval_format != OutputMode::Std) {
-                    move_comment += score_text(mv_player_cp, mv_player_cm);
+                    move_text += score_text(mv_player_cp, mv_player_cm);
                 }
 
-                move_comment += " } ";
+                move_comment += move_text.empty() ? std::string(" ") : (" {" + move_text + " } ");
 
                 chess_game.player_move_centipawn[i] = mv_player_cp;
                 chess_game.best_move_centipawn[i]   = mv_best_cp;
 
                 if (move != mv_best) {
-                    move_comment += " (" + mv_best + " {";
+                    std::string best_text;
 
                     if (opts.eval_format != OutputMode::Apgn) {
-                        move_comment += eval_tag(mv_best_cp, mv_best_cm, white_to_move);
+                        best_text += eval_tag(mv_best_cp, mv_best_cm, white_to_move);
                     }
 
                     // in std mode the NAGs replace apgn's words here too: the parentheses already mark the
@@ -397,18 +402,19 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                     const bool apgn_words = opts.move_symbols != OutputMode::Std;
 
                     if (apgn_words) {
-                        move_comment += " was the best move";
+                        best_text += " was the best move";
                     }
 
                     if (opts.eval_format != OutputMode::Std) {
-                        move_comment += score_text(mv_best_cp, mv_best_cm);
+                        best_text += score_text(mv_best_cp, mv_best_cm);
                     }
 
                     if (apgn_words) {
-                        move_comment += ", followed by";
+                        best_text += ", followed by";
                     }
 
-                    move_comment += " } " + best_mv_cont + " ) ";
+                    move_comment += " (" + mv_best + (best_text.empty() ? std::string() : (" {" + best_text + " }")) +
+                                    " " + best_mv_cont + " ) ";
                 }
 
                 // either search found a forced mate (for or against the player)
@@ -436,7 +442,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                     }
 
                     if (std::abs(mv_player_cp) >= opts.stop_at_score) {
-                        std::cout << "\nscore reached " << signed_pawns_text(white_view_cp)
+                        std::cout << "\nscore reached " << pawns_text(white_view_cp, true)
                                   << " pawns from white's point of view on move " << move_number
                                   << ", skipping the rest of this game\n";
                         break;
