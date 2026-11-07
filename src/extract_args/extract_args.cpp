@@ -64,8 +64,13 @@ static std::string pawns_text(int centipawns) {
 // converts a flag value in pawns that is_pawn_number() accepted ("0.5", "2.00") into centipawns,
 // and exits with an error when it is outside [min_centipawns, max_centipawns]
 static int flag_pawns(const std::string &flag, const std::string &value, int min_centipawns, int max_centipawns) {
-    const auto dot        = value.find('.');
-    const auto whole_text = value.substr(0, dot);
+    const auto dot = value.find('.');
+
+    // leading zeros do not change the value ("0001.50" is 1.50), so they must not count towards the
+    // length check below; is_pawn_number() guarantees at least one digit before the '.'
+    auto whole_text        = value.substr(0, dot);
+    const auto first_digit = whole_text.find_first_not_of('0');
+    whole_text             = (first_digit == std::string::npos) ? std::string("0") : whole_text.substr(first_digit);
 
     auto fraction_text = (dot == std::string::npos) ? std::string() : value.substr(dot + 1);
     fraction_text.resize(2, '0'); // "5" is 50 centipawns, "05" is 5
