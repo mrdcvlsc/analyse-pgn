@@ -23,6 +23,12 @@ const std::pair<std::uint8_t, std::string> BLUNDER      = {11, "blunder !??"};
 } // namespace losing
 
 std::pair<std::uint8_t, std::string> rank(const std::string &comment);
+
+// the standard NAG for a move-quality label, or "" for a label that is not worth a glyph.
+std::string move_nag(const std::string &label);
+
+// the standard NAG for a position status, converted to white's point of view.
+std::string position_nag(const std::string &status, bool white_to_move);
 } // namespace comments
 
 std::string score_comments(int cp_pmvbmv_dif, int cp_pmv, int cp_bmv, int cm_pmv, int cm_bmv);

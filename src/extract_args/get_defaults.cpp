@@ -32,7 +32,11 @@ std::pair<std::string, UciOptions> get_defaults() {
     options.hash_size     = 850;
     options.start_on_move = 0;
     options.until_move    = 1'000;
+    options.min_loss      = 0;
+    options.stop_at_score = 0;
     options.piece         = Piece::Both;
+    options.move_symbols  = OutputMode::Apgn;
+    options.eval_format   = OutputMode::Apgn;
 
     return std::make_pair(chess_engine, options);
 }

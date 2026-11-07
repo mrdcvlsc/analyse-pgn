@@ -25,8 +25,71 @@ static bool is_pgn_file(const std::string &argument) {
     return extension == ".pgn";
 }
 
+// --move-symbols and --eval-format take one of "std", "apgn" or "both"
+static OutputMode flag_output_mode(const std::string &flag, const std::string &value) {
+    if (value == "apgn") {
+        return OutputMode::Apgn;
+    } else if (value == "std") {
+        return OutputMode::Std;
+    } else if (value == "both") {
+        return OutputMode::Both;
+    }
+
+    assert_invalid(flag.substr(2) + " value", flag, value); // exits
+    return OutputMode::Apgn;
+}
+
+static std::string output_mode_text(OutputMode mode) {
+    switch (mode) {
+    case OutputMode::Std:
+        return "std";
+    case OutputMode::Both:
+        return "both";
+    default:
+        return "apgn";
+    }
+}
+
 // the longest possible legal chess game is under 9,000 moves
 static const int MAX_MOVE_NUMBER = 10'000;
+
+// "0.50" for 50 centipawns, for messages about flags whose value is given in pawns
+static std::string pawns_text(int centipawns) {
+    const auto whole     = centipawns / 100;
+    const auto remainder = centipawns % 100;
+
+    return std::to_string(whole) + "." + ((remainder < 10) ? "0" : "") + std::to_string(remainder);
+}
+
+// converts a flag value in pawns that is_pawn_number() accepted ("0.5", "2.00") into centipawns,
+// and exits with an error when it is outside [min_centipawns, max_centipawns]
+static int flag_pawns(const std::string &flag, const std::string &value, int min_centipawns, int max_centipawns) {
+    const auto dot = value.find('.');
+
+    // leading zeros do not change the value ("0001.50" is 1.50), so they must not count towards the
+    // length check below; is_pawn_number() guarantees at least one digit before the '.'
+    auto whole_text        = value.substr(0, dot);
+    const auto first_digit = whole_text.find_first_not_of('0');
+    whole_text             = (first_digit == std::string::npos) ? std::string("0") : whole_text.substr(first_digit);
+
+    auto fraction_text = (dot == std::string::npos) ? std::string() : value.substr(dot + 1);
+    fraction_text.resize(2, '0'); // "5" is 50 centipawns, "05" is 5
+
+    // a whole part this long cannot be in range, and would overflow the conversion below
+    const long long whole = (whole_text.size() > 9) ? static_cast<long long>(max_centipawns) + 1
+                                                    : std::stoll(whole_text);
+
+    const long long centipawns = whole * 100 + std::stoll(fraction_text);
+
+    if (centipawns < min_centipawns || centipawns > max_centipawns) {
+        std::cerr << "Argument Error: " << flag << " " << value << "\n\n\tthe value of " << flag
+                  << " must be between " << pawns_text(min_centipawns) << " and " << pawns_text(max_centipawns)
+                  << " pawns\n";
+        exit(1);
+    }
+
+    return static_cast<int>(centipawns);
+}
 
 // converts a flag value that is_number() accepted (digits only) and exits with an error
 // when it is outside [min, max], so nonsense values never reach the engine or overflow `int`
@@ -107,6 +170,28 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
             } else {
                 assert_invalid("player value", arguments[i - 1], arguments[i]);
             }
+        } else if (arguments[i] == "--min-loss") {
+            assert_missing_flagvalue(i, arguments.size(), arguments[i]);
+            if (is_pawn_number(arguments[++i])) {
+                options.min_loss = flag_pawns(arguments[i - 1], arguments[i], 0, 1'000);
+            } else {
+                assert_invalid("min-loss value", arguments[i - 1], arguments[i]);
+            }
+        } else if (arguments[i] == "--stop-at-score") {
+            assert_missing_flagvalue(i, arguments.size(), arguments[i]);
+            if (is_pawn_number(arguments[++i])) {
+                options.stop_at_score = flag_pawns(arguments[i - 1], arguments[i], 1, 10'000);
+            } else {
+                assert_invalid("stop-at-score value", arguments[i - 1], arguments[i]);
+            }
+        } else if (arguments[i] == "--move-symbols") {
+            assert_missing_flagvalue(i, arguments.size(), arguments[i]);
+            i++;
+            options.move_symbols = flag_output_mode(arguments[i - 1], arguments[i]);
+        } else if (arguments[i] == "--eval-format") {
+            assert_missing_flagvalue(i, arguments.size(), arguments[i]);
+            i++;
+            options.eval_format = flag_output_mode(arguments[i - 1], arguments[i]);
         } else if (arguments[i] == "--analyse-start-on-move") {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             if (is_number(arguments[++i])) {
@@ -138,7 +223,12 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
               << "\nthreads                : " << options.threads << "\ndepth                  : " << options.depth
               << "\nhash size              : " << options.hash_size << "\nplayer to analyse      : " << piece
               << "\nstart analysis on move : " << options.start_on_move
-              << "\nanalyse until move     : " << options.until_move << "\n\n";
+              << "\nanalyse until move     : " << options.until_move
+              << "\nminimum loss annotated : " << pawns_text(options.min_loss) << " pawns"
+              << "\nstop at score          : "
+              << ((options.stop_at_score > 0) ? (pawns_text(options.stop_at_score) + " pawns") : std::string("off"))
+              << "\nmove symbols           : " << output_mode_text(options.move_symbols)
+              << "\neval format            : " << output_mode_text(options.eval_format) << "\n\n";
 
     if (options.depth > 12) {
         std::cout << "NOTE: depth is set greater than 12!!!\n"
