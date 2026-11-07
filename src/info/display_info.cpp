@@ -22,6 +22,11 @@ void print_help() {
                  "--player [Both|White|Black] - select one of the options.\n"
                  "\tdefault: Both\n\n"
 
+                 "--limitscore [N] - stop analysing a game once its score reaches +N or -N pawns,\n"
+                 "                   or a forced mate is found; the moves after it are left\n"
+                 "                   unannotated.\n"
+                 "\tdefault: off (analyse every move)\n\n"
+
                  "--analyse-start-on-move [N] - the move number where the engine will start the\n"
                  "                              analysis, the engine will skip moves before it.\n"
                  "\tdefault: 0\n\n"
