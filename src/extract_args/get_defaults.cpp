@@ -36,6 +36,7 @@ std::pair<std::string, UciOptions> get_defaults() {
     options.limit_score   = 0;
     options.piece         = Piece::Both;
     options.nag_mode      = OutputMode::Apgn;
+    options.eval_mode     = OutputMode::Apgn;
 
     return std::make_pair(chess_engine, options);
 }

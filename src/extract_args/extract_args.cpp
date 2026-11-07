@@ -25,7 +25,7 @@ static bool is_pgn_file(const std::string &argument) {
     return extension == ".pgn";
 }
 
-// --outputnag takes one of "std", "apgn" or "both"
+// --outputnag and --evaltags take one of "std", "apgn" or "both"
 static OutputMode flag_output_mode(const std::string &flag, const std::string &value) {
     if (value == "apgn") {
         return OutputMode::Apgn;
@@ -183,6 +183,10 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             i++;
             options.nag_mode = flag_output_mode(arguments[i - 1], arguments[i]);
+        } else if (arguments[i] == "--evaltags") {
+            assert_missing_flagvalue(i, arguments.size(), arguments[i]);
+            i++;
+            options.eval_mode = flag_output_mode(arguments[i - 1], arguments[i]);
         } else if (arguments[i] == "--analyse-start-on-move") {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             if (is_number(arguments[++i])) {
@@ -218,7 +222,8 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
               << "\nannotation threshold   : " << pawns_text(options.threshold) << " pawns"
               << "\nscore limit            : "
               << ((options.limit_score > 0) ? (pawns_text(options.limit_score) + " pawns") : std::string("off"))
-              << "\nmove assessment output : " << output_mode_text(options.nag_mode) << "\n\n";
+              << "\nmove assessment output : " << output_mode_text(options.nag_mode)
+              << "\nscore output           : " << output_mode_text(options.eval_mode) << "\n\n";
 
     if (options.depth > 12) {
         std::cout << "NOTE: depth is set greater than 12!!!\n"

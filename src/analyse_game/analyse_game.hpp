@@ -46,6 +46,7 @@ struct UciOptions {
     int limit_score;   // stop analysing a game at this centipawn score; 0 = analyse every move
     Piece piece;
     OutputMode nag_mode; // how to write the move assessment (--outputnag)
+    OutputMode eval_mode; // how to write the score of a move (--evaltags)
 };
 
 std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine, const UciOptions &opts);

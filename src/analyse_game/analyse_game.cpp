@@ -64,6 +64,31 @@ static std::string signed_pawns_text(int centipawns) {
            ((remainder < 10) ? "0" : "") + std::to_string(remainder);
 }
 
+// a standard [%eval] tag: pawns from white's point of view ("[%eval 0.25]"), or "#n" moves for a forced
+// mate ("[%eval #3]"), negative when white is the one getting mated. apgn's own scores are from the
+// moving player's point of view, so they are flipped for black's moves.
+static std::string eval_tag(int centipawns, int mate_in_moves, bool white_to_move) {
+    const int white_view = white_to_move ? 1 : -1;
+
+    if (!centipawns && mate_in_moves) {
+        return " [%eval #" + std::to_string(mate_in_moves * white_view) + "]";
+    }
+
+    const auto score     = centipawns * white_view;
+    const auto absolute  = std::abs(score);
+    const auto whole     = absolute / 100;
+    const auto remainder = absolute % 100;
+
+    return " [%eval " + std::string((score < 0) ? "-" : "") + std::to_string(whole) + "." +
+           ((remainder < 10) ? "0" : "") + std::to_string(remainder) + "]";
+}
+
+// apgn's own score text, from the moving player's point of view: " CP:25", or " MATE_IN:3" for a forced mate
+static std::string score_text(int centipawns, int mate_in_moves) {
+    return (!centipawns && mate_in_moves) ? (" MATE_IN:" + std::to_string(mate_in_moves))
+                                          : (" CP:" + std::to_string(centipawns));
+}
+
 // pgn-extract writes promotions as "b7a8Q", uci engines use (and answer with) a lowercase piece: "b7a8q".
 static std::string to_uci_move(std::string move) {
     if (move.size() == 5) {
@@ -322,11 +347,12 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
                 chess_game.interpret_stats.at(curr_player)[comments::rank(comment_type)]++;
 
+                const bool white_to_move = moving_player == Piece::White;
+
                 // --outputnag: the NAGs belong right after the move, before any comment
                 if (opts.nag_mode != OutputMode::Apgn) {
-                    const auto move_glyph = comments::move_nag(comment_type);
-                    const auto position_glyph =
-                        comments::position_nag(position_status, moving_player == Piece::White);
+                    const auto move_glyph     = comments::move_nag(comment_type);
+                    const auto position_glyph = comments::position_nag(position_status, white_to_move);
 
                     if (!move_glyph.empty()) {
                         move_comment += " " + move_glyph;
@@ -339,13 +365,20 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
                 move_comment += " {";
 
+                // --evaltags: the tag goes at the start of the comment, where readers expect it
+                if (opts.eval_mode != OutputMode::Apgn) {
+                    move_comment += eval_tag(mv_player_cp, mv_player_cm, white_to_move);
+                }
+
                 // in std mode the NAGs above replace apgn's own words
                 if (opts.nag_mode != OutputMode::Std) {
                     move_comment += comment;
                 }
 
-                move_comment += (!mv_player_cp && mv_player_cm) ? (" MATE_IN:" + std::to_string(mv_player_cm))
-                                                                 : (" CP:" + std::to_string(mv_player_cp));
+                // in std mode the tag above replaces apgn's own score text
+                if (opts.eval_mode != OutputMode::Std) {
+                    move_comment += score_text(mv_player_cp, mv_player_cm);
+                }
 
                 move_comment += " } ";
 
@@ -353,10 +386,19 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                 chess_game.best_move_centipawn[i]   = mv_best_cp;
 
                 if (move != mv_best) {
-                    move_comment += " (" + mv_best + " { was the best move" +
-                                    ((!mv_best_cp && mv_best_cm) ? (" MATE_IN:" + std::to_string(mv_best_cm))
-                                                                 : (" CP:" + std::to_string(mv_best_cp))) +
-                                    (", followed by } " + best_mv_cont + " ) ");
+                    move_comment += " (" + mv_best + " {";
+
+                    if (opts.eval_mode != OutputMode::Apgn) {
+                        move_comment += eval_tag(mv_best_cp, mv_best_cm, white_to_move);
+                    }
+
+                    move_comment += " was the best move";
+
+                    if (opts.eval_mode != OutputMode::Std) {
+                        move_comment += score_text(mv_best_cp, mv_best_cm);
+                    }
+
+                    move_comment += ", followed by } " + best_mv_cont + " ) ";
                 }
 
                 // either search found a forced mate (for or against the player)
@@ -375,7 +417,7 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                 // in the output without a comment, and the next game in the file is analysed as usual.
                 if (opts.limit_score > 0) {
                     const int move_number   = (i + chess_game.first_player) / 2 + 1;
-                    const int white_view_cp = (moving_player == Piece::White) ? mv_player_cp : -mv_player_cp;
+                    const int white_view_cp = white_to_move ? mv_player_cp : -mv_player_cp;
 
                     if (mate_found) {
                         std::cout << "\nforced mate found on move " << move_number
