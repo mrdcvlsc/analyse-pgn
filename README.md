@@ -10,6 +10,8 @@ The `analyzed-<original-pgn-filename>.pgn` will contain the following:
 
 - a per-move variation showing the engine's best move, its score and how the game would continue, whenever the move played was not the best move.
 
+Use `--threshold` to leave the near-best moves alone: with `--threshold 0.50`, a move that is less than half a pawn worse than the engine's best move gets no comment, no score and no best-move variation at all, while moves involving a forced mate are always annotated. The statistics are not affected by it.
+
 - per-move comment on how good or bad the move was compared to the engine's best move (list sorted by best to worst). The difference is measured in centipawns (100 centipawns = 1 pawn). The second label of a pair is used instead of the first when the position is losing, i.e. its score is below -115 (`DISADVANTAGE` or `LOSING`).
   1. **`brilliant !!!` or `accurate !!!`**
         - `brilliant !!!` - indicates that the move is the best move (or forces mate at least as fast as the engine's best move).
@@ -125,6 +127,11 @@ The regression tests are in `tests/regression/`: one `test_*.cmake` script per f
 --player [Both|White|Black] - select one of the options.
         default: Both
 
+--threshold [N] - do not annotate a move that is less than N pawns worse
+                  than the engine's best move; a move involving a forced mate
+                  is always annotated.
+        default: 0 (annotate every analysed move)
+
 --analyse-start-on-move [N] - the move number where the engine will start the
                               analysis, the engine will skip moves before it.
         default: 0
@@ -156,6 +163,7 @@ The regression tests are in `tests/regression/`: one `test_*.cmake` script per f
 | `--depth` | 1 to 100 |
 | `--threads` | 1 to 1024 |
 | `--hash-size` | 1 to 33554432 (MB) |
+| `--threshold` | 0 to 10.00 (pawns, up to two decimals) |
 | `--analyse-start-on-move` | 0 to 10000 (0 and 1 both start from the first move) |
 | `--analyse-until-move` | 1 to 10000 |
 
