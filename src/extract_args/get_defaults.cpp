@@ -33,6 +33,7 @@ std::pair<std::string, UciOptions> get_defaults() {
     options.start_on_move = 0;
     options.until_move    = 1'000;
     options.threshold     = 0;
+    options.limit_score   = 0;
     options.piece         = Piece::Both;
 
     return std::make_pair(chess_engine, options);

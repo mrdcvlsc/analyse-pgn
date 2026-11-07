@@ -27,6 +27,11 @@ void print_help() {
                  "                  is always annotated.\n"
                  "\tdefault: 0 (annotate every analysed move)\n\n"
 
+                 "--limitscore [N] - stop analysing a game once its score reaches +N or -N pawns,\n"
+                 "                   or a forced mate is found; the moves after it are left\n"
+                 "                   unannotated.\n"
+                 "\tdefault: off (analyse every move)\n\n"
+
                  "--analyse-start-on-move [N] - the move number where the engine will start the\n"
                  "                              analysis, the engine will skip moves before it.\n"
                  "\tdefault: 0\n\n"

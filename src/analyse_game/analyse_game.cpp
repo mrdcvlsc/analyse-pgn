@@ -54,6 +54,16 @@ static std::string parse_bestmove(const std::string &bestmove_line) {
     return "";
 }
 
+// "+2.14" / "-0.50" for a centipawn score, for the message about the --limitscore flag
+static std::string signed_pawns_text(int centipawns) {
+    const auto absolute  = std::abs(centipawns);
+    const auto whole     = absolute / 100;
+    const auto remainder = absolute % 100;
+
+    return std::string((centipawns < 0) ? "-" : "+") + std::to_string(whole) + "." +
+           ((remainder < 10) ? "0" : "") + std::to_string(remainder);
+}
+
 // pgn-extract writes promotions as "b7a8Q", uci engines use (and answer with) a lowercase piece: "b7a8q".
 static std::string to_uci_move(std::string move) {
     if (move.size() == 5) {
@@ -321,14 +331,36 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                                     (", followed by } " + best_mv_cont + " ) ");
                 }
 
+                // either search found a forced mate (for or against the player)
+                const bool mate_found = (mv_player_cm != 0) || (mv_best_cm != 0);
+
                 // --threshold: a move that is less than `threshold` centipawns worse than the engine's best
                 // move is left unannotated. a move involving a forced mate is always annotated, because a
                 // centipawn loss is not meaningful for it. the statistics count the move either way.
-                const bool mate_found    = (mv_player_cm != 0) || (mv_best_cm != 0);
                 const int centipawn_loss = mv_best_cp - mv_player_cp;
 
                 if (opts.threshold <= 0 || mate_found || centipawn_loss >= opts.threshold) {
                     chess_game.comments[i] = move_comment;
+                }
+
+                // --limitscore: the game is decided, stop analysing the rest of it. the remaining moves stay
+                // in the output without a comment, and the next game in the file is analysed as usual.
+                if (opts.limit_score > 0) {
+                    const int move_number   = (i + chess_game.first_player) / 2 + 1;
+                    const int white_view_cp = (moving_player == Piece::White) ? mv_player_cp : -mv_player_cp;
+
+                    if (mate_found) {
+                        std::cout << "\nforced mate found on move " << move_number
+                                  << ", skipping the rest of this game\n";
+                        break;
+                    }
+
+                    if (std::abs(mv_player_cp) >= opts.limit_score) {
+                        std::cout << "\nscore reached " << signed_pawns_text(white_view_cp)
+                                  << " pawns from white's point of view on move " << move_number
+                                  << ", skipping the rest of this game\n";
+                        break;
+                    }
                 }
             }
 

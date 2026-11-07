@@ -147,6 +147,13 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
             } else {
                 assert_invalid("threshold value", arguments[i - 1], arguments[i]);
             }
+        } else if (arguments[i] == "--limitscore") {
+            assert_missing_flagvalue(i, arguments.size(), arguments[i]);
+            if (is_pawn_number(arguments[++i])) {
+                options.limit_score = flag_pawns(arguments[i - 1], arguments[i], 1, 10'000);
+            } else {
+                assert_invalid("limitscore value", arguments[i - 1], arguments[i]);
+            }
         } else if (arguments[i] == "--analyse-start-on-move") {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             if (is_number(arguments[++i])) {
@@ -179,7 +186,10 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
               << "\nhash size              : " << options.hash_size << "\nplayer to analyse      : " << piece
               << "\nstart analysis on move : " << options.start_on_move
               << "\nanalyse until move     : " << options.until_move
-              << "\nannotation threshold   : " << pawns_text(options.threshold) << " pawns\n\n";
+              << "\nannotation threshold   : " << pawns_text(options.threshold) << " pawns"
+              << "\nscore limit            : "
+              << ((options.limit_score > 0) ? (pawns_text(options.limit_score) + " pawns") : std::string("off"))
+              << "\n\n";
 
     if (options.depth > 12) {
         std::cout << "NOTE: depth is set greater than 12!!!\n"

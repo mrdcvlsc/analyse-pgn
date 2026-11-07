@@ -12,6 +12,8 @@ The `analyzed-<original-pgn-filename>.pgn` will contain the following:
 
 Use `--threshold` to leave the near-best moves alone: with `--threshold 0.50`, a move that is less than half a pawn worse than the engine's best move gets no comment, no score and no best-move variation at all, while moves involving a forced mate are always annotated. The statistics are not affected by it.
 
+Use `--limitscore` to stop once a game is decided: with `--limitscore 2.00`, as soon as a move's score reaches +2 or -2 pawns, or a forced mate is found, apgn stops analysing that game, says which move it stopped on, and writes the remaining moves without comments. Each game in the file is analysed until it reaches the limit on its own.
+
 - per-move comment on how good or bad the move was compared to the engine's best move (list sorted by best to worst). The difference is measured in centipawns (100 centipawns = 1 pawn). The second label of a pair is used instead of the first when the position is losing, i.e. its score is below -115 (`DISADVANTAGE` or `LOSING`).
   1. **`brilliant !!!` or `accurate !!!`**
         - `brilliant !!!` - indicates that the move is the best move (or forces mate at least as fast as the engine's best move).
@@ -132,6 +134,11 @@ The regression tests are in `tests/regression/`: one `test_*.cmake` script per f
                   is always annotated.
         default: 0 (annotate every analysed move)
 
+--limitscore [N] - stop analysing a game once its score reaches +N or -N pawns,
+                   or a forced mate is found; the moves after it are left
+                   unannotated.
+        default: off (analyse every move)
+
 --analyse-start-on-move [N] - the move number where the engine will start the
                               analysis, the engine will skip moves before it.
         default: 0
@@ -164,6 +171,7 @@ The regression tests are in `tests/regression/`: one `test_*.cmake` script per f
 | `--threads` | 1 to 1024 |
 | `--hash-size` | 1 to 33554432 (MB) |
 | `--threshold` | 0 to 10.00 (pawns, up to two decimals) |
+| `--limitscore` | 0.01 to 100.00 (pawns, up to two decimals) |
 | `--analyse-start-on-move` | 0 to 10000 (0 and 1 both start from the first move) |
 | `--analyse-until-move` | 1 to 10000 |
 

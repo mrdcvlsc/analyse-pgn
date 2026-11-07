@@ -36,6 +36,7 @@ struct UciOptions {
     int start_on_move; // start analysis on move N
     int until_move;    // analyse only until move N
     int threshold;     // smallest centipawn loss worth annotating; 0 = annotate every analysed move
+    int limit_score;   // stop analysing a game at this centipawn score; 0 = analyse every move
     Piece piece;
 };
 
