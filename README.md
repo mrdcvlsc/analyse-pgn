@@ -4,6 +4,8 @@
 
 A simple chess game PGN file analyser for the command-line terminal.
 
+apgn is made for complete games: games played from the standard starting position through to the last move, as they are recorded from real matches. Other kinds of PGN games, such as positions set up with `SetUp`/`FEN` tags, are not what apgn is designed for. Its move numbers (in messages and in flags like `--analyse-start-on-move`) always count from the first move in the game.
+
 This program will generate an `analyzed-<original-pgn-filename>.pgn` file, and an `analyzed-stats-<original-pgn-filename>.json` from a pgn file, next to the original file (e.g. `game.pgn` gives `analyzed-game.pgn` and `analyzed-stats-game.json`). A pgn file that has no complete game in it (moves and a result such as `1-0`) is skipped with a warning.
 
 The `analyzed-<original-pgn-filename>.pgn` will contain the following:
@@ -110,7 +112,7 @@ The `analyzed-stats-<original-pgn-filename>.json` file will contain, for every g
 
 - when pgn-extract rejects an analysed game while writing the analysed pgn file, that game is missing from the file. apgn names how many games are missing, still writes the other games and the statistics, and exits with status 1 at the end.
 
-- the comments, NAGs and variations already in a pgn file are ignored: only the moves of the game itself are analysed, so an annotated game (or a file apgn has analysed before) can be analysed again.
+- only the moves of the game itself are analysed. Comments, NAGs and variations in the file are ignored, so a file apgn has already analysed can be analysed again.
 
 ## For Developers
 
