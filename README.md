@@ -34,6 +34,30 @@ The `analyzed-<original-pgn-filename>.pgn` will contain the following:
   4.  **`DISADVANTAGE`** (-150 to -116) - slightly worse than the opponent.
   5.  **`LOSING`** (score below -150, or the player is getting mated) - means that the ***disadvantage*** is so great the chances of ***losing*** are very high, as long as the other side does not blunder badly or play many inaccurate moves.
 
+### **Standard NAGs instead of words**
+
+With `--outputnag std`, the assessment is written as standard NAGs right after the move instead of apgn's words, so other programs can read it: `1. e4 $1 $18 { CP:300 }`. `--outputnag both` writes the NAG and the words. The move's quality maps as follows, in the way lichess and chessbase use, where only a notable or a bad move gets a glyph:
+
+| apgn label | NAG |
+|---|---|
+| `brilliant !!!`, `accurate !!!` (the best move) | `$1` (!) |
+| `excellent !!`, `accurate !!`, `good !`, `questionable ?` | none |
+| `inaccurate ?` | `$6` (?!) |
+| `mistake ??`, `mistake ???`, `missed !??` | `$2` (?) |
+| `blunder !??` | `$4` (??) |
+
+The position status becomes a position NAG. apgn's status is from the moving player's point of view, while position NAGs are always from White's, so it is converted:
+
+| status | white to move | black to move |
+|---|---|---|
+| `WINNING` | `$18` (+-) | `$19` (-+) |
+| `ADVANTAGE` | `$16` (+/-) | `$17` (-/+) |
+| `UNCERTAIN` | `$10` (=) | `$10` (=) |
+| `DISADVANTAGE` | `$17` (-/+) | `$16` (+/-) |
+| `LOSING` | `$19` (-+) | `$18` (+-) |
+
+The best-move variation keeps its comment and is given no NAGs, and the statistics keep using apgn's labels.
+
 - per-move comment showing the `CP:<value>` (centipawn value, from the point of view of the player who made the move: positive is good for them) or the `MATE_IN:<n>` (forced checkmate in n moves; negative when the player is the one getting mated).
   
 Example Comment:
@@ -125,6 +149,10 @@ The regression tests are in `tests/regression/`: one `test_*.cmake` script per f
 --player [Both|White|Black] - select one of the options.
         default: Both
 
+--outputnag [std|apgn|both] - how to write the move assessment: standard NAGs,
+                              apgn's own words, or both.
+        default: apgn
+
 --analyse-start-on-move [N] - the move number where the engine will start the
                               analysis, the engine will skip moves before it.
         default: 0
@@ -156,6 +184,7 @@ The regression tests are in `tests/regression/`: one `test_*.cmake` script per f
 | `--depth` | 1 to 100 |
 | `--threads` | 1 to 1024 |
 | `--hash-size` | 1 to 33554432 (MB) |
+| `--outputnag` | `std`, `apgn` or `both` |
 | `--analyse-start-on-move` | 0 to 10000 (0 and 1 both start from the first move) |
 | `--analyse-until-move` | 1 to 10000 |
 
