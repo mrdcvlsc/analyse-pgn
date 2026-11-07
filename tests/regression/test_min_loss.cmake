@@ -77,3 +77,15 @@ assert_contains("${output}" "must be between" "an out-of-range minimum loss must
 apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --min-loss abc game.pgn)
 assert_equal("${result}" "1" "exit status for --min-loss abc")
 assert_contains("${output}" "invalid min-loss value" "a malformed minimum loss must be rejected")
+
+# ---- leading zeros do not change a value ----
+# "0000000000.50" is 0.50; a whole part longer than 9 characters used to be
+# rejected as out of range even when it was only zeros.
+
+write_file("${WORK_DIR}/zeros.pgn" "${SCHOLARS_MATE_PGN}")
+apgn_run(result output ENV ${engine_env} ARGS --engine "${FAKE_ENGINE}" --min-loss 0000000000.50 zeros.pgn)
+assert_equal("${result}" "0" "--min-loss 0000000000.50 is 0.50 and must be accepted")
+
+read_file(zeros "${WORK_DIR}/analyzed-zeros.pgn")
+count_matches(comments "${zeros}" "${comment_regex}")
+assert_equal("${comments}" "4" "--min-loss 0000000000.50 behaves like --min-loss 0.50")
