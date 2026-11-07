@@ -23,6 +23,13 @@ namespace asio    = boost::asio;
 
 const int NOT_EXPECTED_LINE_OUTPUT_LIMIT = 100'000;
 
+// how an annotation is written: apgn's own words, the standard PGN form, or both
+enum struct OutputMode : char {
+    Apgn,
+    Std,
+    Both,
+};
+
 enum struct Piece : char {
     White,
     Black,
@@ -35,7 +42,11 @@ struct UciOptions {
     int hash_size;
     int start_on_move; // start analysis on move N
     int until_move;    // analyse only until move N
+    int min_loss;      // smallest centipawn loss worth annotating; 0 = annotate every analysed move
+    int stop_at_score; // stop analysing a game at this centipawn score; 0 = analyse every move
     Piece piece;
+    OutputMode move_symbols; // how to write the move assessment (--move-symbols)
+    OutputMode eval_format;  // how to write the score of a move (--eval-format)
 };
 
 std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine, const UciOptions &opts);

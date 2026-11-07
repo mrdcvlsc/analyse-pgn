@@ -18,7 +18,10 @@ apgn_run(result output
     ENV FAKE_ENGINE_MODE=exit_on_start
     ARGS --engine "${FAKE_ENGINE}" --depth 2 game.pgn)
 assert_equal("${result}" "1" "exit status when the engine exits immediately")
-assert_contains("${output}" "running chess engine failed" "the engine stopping must be reported")
+# apgn's first step is sending "uci" (the engine owes no banner before it), and
+# whether that write or the wait for "uciok" fails first depends on timing
+assert_matches("${output}" "failed to send 'uci' to engine|while waiting for uciok"
+    "the engine stopping must be reported")
 
 # 2. an executable that is not a UCI engine at all: cmake without arguments
 #    prints its usage and exits

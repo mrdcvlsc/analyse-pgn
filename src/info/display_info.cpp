@@ -22,6 +22,25 @@ void print_help() {
                  "--player [Both|White|Black] - select one of the options.\n"
                  "\tdefault: Both\n\n"
 
+                 "--min-loss [N] - do not annotate a move that is less than N pawns worse\n"
+                 "                 than the engine's best move; a move involving a forced mate\n"
+                 "                 is always annotated.\n"
+                 "\tdefault: 0 (annotate every analysed move)\n\n"
+
+                 "--stop-at-score [N] - stop analysing a game once its score reaches +N or\n"
+                 "                      -N pawns, or the move played leads to a forced mate;\n"
+                 "                      the moves after it are left unannotated.\n"
+                 "\tdefault: off (analyse every move)\n\n"
+
+                 "--move-symbols [std|apgn|both] - how to write the move assessment:\n"
+                 "                                 standard NAGs, apgn's own words, or both.\n"
+                 "\tdefault: apgn\n\n"
+
+                 "--eval-format [std|apgn|both] - how to write the score of a move: a\n"
+                 "                                standard [%eval] tag, apgn's own text, or\n"
+                 "                                both.\n"
+                 "\tdefault: apgn\n\n"
+
                  "--analyse-start-on-move [N] - the move number where the engine will start the\n"
                  "                              analysis, the engine will skip moves before it.\n"
                  "\tdefault: 0\n\n"

@@ -42,6 +42,44 @@ Example Comment:
 - `mistake ?? WINNING CP:162` - the `mistake ??` part indicates your move is not one of the good moves; you lose some advantage, but your position is still `WINNING` with a 1.62 pawn (CP:162) advantage.
 - `missed !?? ADVANTAGE CP:147` - the `missed !??` part indicates that there was a winning move you didn't find and missed a larger advantage; the `ADVANTAGE` part indicates that you still have a slight advantage despite the missed opportunity.
 
+### **Choosing what is annotated, and how**
+
+**Fewer annotations.** `--min-loss` leaves the near-best moves alone: with `--min-loss 0.50`, a move that is less than half a pawn worse than the engine's best move gets no comment, no score and no best-move variation at all. That includes the best move itself, which loses nothing, so its `brilliant !!!` or `accurate !!!` label (and its `$1` with `--move-symbols`) is left out too. Moves involving a forced mate are always annotated. The statistics are not affected by it.
+
+**Stopping early.** `--stop-at-score` stops once a game is decided: with `--stop-at-score 2.00`, as soon as a move's score reaches +2 or -2 pawns, or the move played leads to a forced mate (for either side), apgn stops analysing that game and prints which move it stopped on (the score in that message is from White's point of view). A mate that only the engine's best move would have forced does not stop the analysis: the player missed it, and the game is still open. The move that reached the score is annotated as usual, unless `--min-loss` leaves it out, and the remaining moves are written without comments. Each game in the file is analysed until it reaches the limit on its own, and the statistics count only the analysed moves.
+
+#### **Standard NAGs instead of words**
+
+With `--move-symbols std`, the assessment is written as standard NAGs right after the move instead of apgn's words, so other programs can read it: `1. e4 $1 $18 { CP:300 }`. The best-move variation keeps only its score, without apgn's wording: `(1. d4 { CP:320 })`. `--move-symbols both` writes the NAGs and keeps all of apgn's words. The best move gets `!`, inaccuracies, mistakes and blunders get the usual `?!`, `?` and `??`, and the moves in between get no glyph:
+
+| apgn label | NAG |
+|---|---|
+| `brilliant !!!`, `accurate !!!` (the best move; in a losing position it may only be the best defence) | `$1` (!) |
+| `excellent !!`, `accurate !!`, `good !`, `questionable ?` | none |
+| `inaccurate ?` | `$6` (?!) |
+| `mistake ??`, `mistake ???`, `missed !??` | `$2` (?) |
+| `blunder !??` | `$4` (??) |
+
+The position status becomes a position NAG. apgn's status is from the moving player's point of view, while position NAGs are always from White's, so it is converted:
+
+| status | white to move | black to move |
+|---|---|---|
+| `WINNING` | `$18` (+-) | `$19` (-+) |
+| `ADVANTAGE` | `$16` (+/-) | `$17` (-/+) |
+| `UNCERTAIN` | `$10` (=) | `$10` (=) |
+| `DISADVANTAGE` | `$17` (-/+) | `$16` (+/-) |
+| `LOSING` | `$19` (-+) | `$18` (+-) |
+
+The best-move variation is given no NAGs, and the statistics keep using apgn's labels.
+
+#### **Standard eval tags instead of CP: text**
+
+With `--eval-format std`, a move's score is written as the `[%eval ...]` tag that lichess, chessbase and scid read, at the start of the move's comment: `1. e4 { [%eval 0.25] excellent !! UNCERTAIN }`. `--eval-format both` writes the tag and apgn's own text. A centipawn score becomes pawns with two decimals, and a forced mate becomes `#` and a number of moves (`[%eval #3]`). Like lichess, the tag is the evaluation of the position after the move: a move that starts a mate in 3 (apgn's `MATE_IN:3`) is followed by `[%eval #2]`, and the move that delivers mate gets no tag, since the game is over.
+
+`[%eval]` values are from White's point of view, while apgn's `CP:`/`MATE_IN:` are from the moving player's, so the sign is flipped for black's moves: `CP:-30` on a black move is written as `[%eval 0.30]`. The best-move variation carries a tag of its own, and the statistics keep using centipawns from the moving player's point of view.
+
+With both flags set to `std`, the output has no apgn wording at all, for example `1. e4 $1 $10 { [%eval 0.30] } (1. d4 { [%eval 0.30] })`.
+
 The `analyzed-stats-<original-pgn-filename>.json` file will contain, for every game, its pgn tags and, for every analysed player (a color left out with `--player` is not listed):
 - `move_stats` - how many of the player's moves got each label (`brilliant !!!`, `excellent !!`, ..., `blunder !??`).
 - `accuracy` - a number from 0 to 1 representing the accuracy of the moves the color played throughout the whole game (1 means every move was `brilliant !!!`; each label has a weight, e.g. `excellent !!` 0.98, `accurate !!!` 0.80, `blunder !??` 0.01).
@@ -69,6 +107,10 @@ The `analyzed-stats-<original-pgn-filename>.json` file will contain, for every g
     use the `chmod` command in ubuntu to allow programs to read, write and execute process, e.g. `chmod +x bin/engines/stockfish bin/pgn-extract/pgn-extract`.
 
 - when something goes wrong (for example a pgn file that does not exist, an invalid flag value, or a chess engine that stops responding) apgn prints `error: ...` and exits with status 1.
+
+- when pgn-extract rejects an analysed game while writing the analysed pgn file, that game is missing from the file. apgn names how many games are missing, still writes the other games and the statistics, and exits with status 1 at the end.
+
+- the comments, NAGs and variations already in a pgn file are ignored: only the moves of the game itself are analysed, so an annotated game (or a file apgn has analysed before) can be analysed again.
 
 ## For Developers
 
@@ -125,6 +167,25 @@ The regression tests are in `tests/regression/`: one `test_*.cmake` script per f
 --player [Both|White|Black] - select one of the options.
         default: Both
 
+--min-loss [N] - do not annotate a move that is less than N pawns worse
+                 than the engine's best move; a move involving a forced mate
+                 is always annotated.
+        default: 0 (annotate every analysed move)
+
+--stop-at-score [N] - stop analysing a game once its score reaches +N or
+                      -N pawns, or the move played leads to a forced mate;
+                      the moves after it are left unannotated.
+        default: off (analyse every move)
+
+--move-symbols [std|apgn|both] - how to write the move assessment:
+                                 standard NAGs, apgn's own words, or both.
+        default: apgn
+
+--eval-format [std|apgn|both] - how to write the score of a move: a
+                                standard [%eval] tag, apgn's own text, or
+                                both.
+        default: apgn
+
 --analyse-start-on-move [N] - the move number where the engine will start the
                               analysis, the engine will skip moves before it.
         default: 0
@@ -156,6 +217,10 @@ The regression tests are in `tests/regression/`: one `test_*.cmake` script per f
 | `--depth` | 1 to 100 |
 | `--threads` | 1 to 1024 |
 | `--hash-size` | 1 to 33554432 (MB) |
+| `--min-loss` | 0 to 10.00 (pawns, up to two decimals) |
+| `--stop-at-score` | 0.01 to 100.00 (pawns, up to two decimals) |
+| `--move-symbols` | `std`, `apgn` or `both` |
+| `--eval-format` | `std`, `apgn` or `both` |
 | `--analyse-start-on-move` | 0 to 10000 (0 and 1 both start from the first move) |
 | `--analyse-until-move` | 1 to 10000 |
 

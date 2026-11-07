@@ -54,6 +54,44 @@ static std::string parse_bestmove(const std::string &bestmove_line) {
     return "";
 }
 
+// a centipawn score in pawns: "0.25", "-1.30", or with plus_sign "+2.14"
+static std::string pawns_text(int centipawns, bool plus_sign) {
+    const auto absolute  = std::abs(centipawns);
+    const auto whole     = absolute / 100;
+    const auto remainder = absolute % 100;
+    const auto sign      = (centipawns < 0) ? "-" : (plus_sign ? "+" : "");
+
+    return sign + std::to_string(whole) + "." + ((remainder < 10) ? "0" : "") + std::to_string(remainder);
+}
+
+// a standard [%eval] tag for the position after the move, as lichess writes it: pawns from white's point of
+// view ("[%eval 0.25]"), or "#n" for a forced mate in n moves ("[%eval #3]", negative when black mates).
+// apgn's scores are the engine's, for the moving player and counting the move itself: they are flipped for
+// black's moves, and a mate the moving player gives has one move fewer left after the move. a move that
+// delivers mate gets no tag, since the game is over.
+static std::string eval_tag(int centipawns, int mate_in_moves, bool white_to_move) {
+    const int white_view = white_to_move ? 1 : -1;
+
+    if (!centipawns && mate_in_moves) {
+        // a mate against the moving player is still that many moves away after the move
+        const int moves_left = (mate_in_moves > 0) ? mate_in_moves - 1 : mate_in_moves;
+
+        if (moves_left == 0) {
+            return "";
+        }
+
+        return " [%eval #" + std::to_string(moves_left * white_view) + "]";
+    }
+
+    return " [%eval " + pawns_text(centipawns * white_view, false) + "]";
+}
+
+// apgn's own score text, from the moving player's point of view: " CP:25", or " MATE_IN:3" for a forced mate
+static std::string score_text(int centipawns, int mate_in_moves) {
+    return (!centipawns && mate_in_moves) ? (" MATE_IN:" + std::to_string(mate_in_moves))
+                                          : (" CP:" + std::to_string(centipawns));
+}
+
 // pgn-extract writes promotions as "b7a8Q", uci engines use (and answer with) a lowercase piece: "b7a8q".
 static std::string to_uci_move(std::string move) {
     if (move.size() == 5) {
@@ -78,14 +116,9 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
     asio::streambuf child_stdout_buf;
 
-    // initial uci chess engine output
-
-    asio::read_until(pipe_stdout, child_stdout_buf, '\n', ec);
-    check_for_error("running chess engine failed: ", uci_process, ec);
-    auto uci_output = readline_child_stdout(child_stdout_buf);
-    DEBUG_LOG("engine: " + uci_output);
-
-    // initialize uci chess engine
+    // initialize uci chess engine. an engine may print a banner when it starts (stockfish does) or print
+    // nothing until its first command (uci does not require a banner), so apgn does not wait for one: any
+    // banner is read and skipped by the wait for "uciok" below.
 
     std::cout << "running " << chess_engine << "...\n";
 
@@ -289,7 +322,10 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
                 int cp_pmv_bmv_diff = mv_player_cp - mv_best_cp;
                 comment = score_comments(cp_pmv_bmv_diff, mv_player_cp, mv_best_cp, mv_player_cm, mv_best_cm);
-                chess_game.comments[i] = " {" + comment;
+
+                // the whole annotation of this move is built in this one string, and written once below
+                // unless --min-loss leaves the move unannotated
+                std::string move_comment;
 
                 std::istringstream interpret_stream(comment);
                 interpret_stream >> tmp_item;
@@ -298,6 +334,10 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                 interpret_stream >> tmp_item;
                 comment_type.append(tmp_item);
 
+                // score_comments() returns " <label> <status>", e.g. " blunder !?? LOSING"
+                std::string position_status;
+                interpret_stream >> position_status;
+
                 if (chess_game.interpret_stats.at(curr_player).find(comments::rank(comment_type)) ==
                     chess_game.interpret_stats.at(curr_player).end()) {
                     chess_game.interpret_stats.at(curr_player)[comments::rank(comment_type)] = 0.0;
@@ -305,21 +345,105 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
                 chess_game.interpret_stats.at(curr_player)[comments::rank(comment_type)]++;
 
-                chess_game.comments[i] += (!mv_player_cp && mv_player_cm)
-                                              ? (" MATE_IN:" + std::to_string(mv_player_cm))
-                                              : (" CP:" + std::to_string(mv_player_cp));
+                const bool white_to_move = moving_player == Piece::White;
 
-                chess_game.comments[i] += " } ";
+                // --move-symbols: the NAGs belong right after the move, before any comment
+                if (opts.move_symbols != OutputMode::Apgn) {
+                    const auto move_glyph     = comments::move_nag(comment_type);
+                    const auto position_glyph = comments::position_nag(position_status, white_to_move);
+
+                    if (!move_glyph.empty()) {
+                        move_comment += " " + move_glyph;
+                    }
+
+                    if (!position_glyph.empty()) {
+                        move_comment += " " + position_glyph;
+                    }
+                }
+
+                // what goes inside the comment's braces. it can be empty: a move that delivers mate has no
+                // eval tag, so with both std modes nothing is left, and then no comment is written at all
+                std::string move_text;
+
+                // --eval-format: the tag goes at the start of the comment, where readers expect it
+                if (opts.eval_format != OutputMode::Apgn) {
+                    move_text += eval_tag(mv_player_cp, mv_player_cm, white_to_move);
+                }
+
+                // in std mode the NAGs above replace apgn's own words
+                if (opts.move_symbols != OutputMode::Std) {
+                    move_text += comment;
+                }
+
+                // in std mode the tag above replaces apgn's own score text
+                if (opts.eval_format != OutputMode::Std) {
+                    move_text += score_text(mv_player_cp, mv_player_cm);
+                }
+
+                move_comment += move_text.empty() ? std::string(" ") : (" {" + move_text + " } ");
 
                 chess_game.player_move_centipawn[i] = mv_player_cp;
                 chess_game.best_move_centipawn[i]   = mv_best_cp;
 
                 if (move != mv_best) {
-                    chess_game.comments[i] +=
-                        " (" + mv_best + " { was the best move" +
-                        ((!mv_best_cp && mv_best_cm) ? (" MATE_IN:" + std::to_string(mv_best_cm))
-                                                     : (" CP:" + std::to_string(mv_best_cp))) +
-                        (", followed by } " + best_mv_cont + " ) ");
+                    std::string best_text;
+
+                    if (opts.eval_format != OutputMode::Apgn) {
+                        best_text += eval_tag(mv_best_cp, mv_best_cm, white_to_move);
+                    }
+
+                    // in std mode the NAGs replace apgn's words here too: the parentheses already mark the
+                    // variation as the alternative, so only its score is written
+                    const bool apgn_words = opts.move_symbols != OutputMode::Std;
+
+                    if (apgn_words) {
+                        best_text += " was the best move";
+                    }
+
+                    if (opts.eval_format != OutputMode::Std) {
+                        best_text += score_text(mv_best_cp, mv_best_cm);
+                    }
+
+                    if (apgn_words) {
+                        best_text += ", followed by";
+                    }
+
+                    move_comment += " (" + mv_best + (best_text.empty() ? std::string() : (" {" + best_text + " }")) +
+                                    " " + best_mv_cont + " ) ";
+                }
+
+                // either search found a forced mate (for or against the player)
+                const bool mate_found = (mv_player_cm != 0) || (mv_best_cm != 0);
+
+                // --min-loss: a move that is less than `min_loss` centipawns worse than the engine's best
+                // move is left unannotated. a move involving a forced mate is always annotated, because a
+                // centipawn loss is not meaningful for it. the statistics count the move either way.
+                const int centipawn_loss = mv_best_cp - mv_player_cp;
+
+                if (opts.min_loss <= 0 || mate_found || centipawn_loss >= opts.min_loss) {
+                    chess_game.comments[i] = move_comment;
+                }
+
+                // --stop-at-score: the game is decided, stop analysing the rest of it. the remaining moves stay
+                // in the output without a comment, and the next game in the file is analysed as usual.
+                if (opts.stop_at_score > 0) {
+                    const int move_number   = (i + chess_game.first_player) / 2 + 1;
+                    const int white_view_cp = white_to_move ? mv_player_cp : -mv_player_cp;
+
+                    // only the move played decides the game: a mate that the engine's best move would have
+                    // forced, but the player missed, leaves the game open
+                    if (mv_player_cm != 0) {
+                        std::cout << "\nforced mate found on move " << move_number
+                                  << ", skipping the rest of this game\n";
+                        break;
+                    }
+
+                    if (std::abs(mv_player_cp) >= opts.stop_at_score) {
+                        std::cout << "\nscore reached " << pawns_text(white_view_cp, true)
+                                  << " pawns from white's point of view on move " << move_number
+                                  << ", skipping the rest of this game\n";
+                        break;
+                    }
                 }
             }
 

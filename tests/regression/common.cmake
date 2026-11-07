@@ -25,12 +25,17 @@ set(APGN_RUN_COUNT 0)
 # Fast default engine settings so tests finish quickly and deterministically.
 set(APGN_FAST_ARGS --threads 1 --hash-size 16 --depth 6)
 
-# apgn_run(<result_var> <output_var> [ENV <k=v>...] ARGS <arg>...)
+# apgn_run(<result_var> <output_var> [ENV <k=v>...] [TIMEOUT <seconds>] ARGS <arg>...)
 #
 # Runs apgn inside WORK_DIR with stdout and stderr merged into <output_var>.
+# TIMEOUT (default 600) stops a run that hangs; <result_var> is then a message.
 # The output is also written to WORK_DIR/apgn-run-<n>.log for debugging.
 function(apgn_run result_var output_var)
-    cmake_parse_arguments(RUN "" "" "ENV;ARGS" ${ARGN})
+    cmake_parse_arguments(RUN "" "TIMEOUT" "ENV;ARGS" ${ARGN})
+
+    if(NOT RUN_TIMEOUT)
+        set(RUN_TIMEOUT 600)
+    endif()
 
     math(EXPR run_number "${APGN_RUN_COUNT} + 1")
     set(APGN_RUN_COUNT ${run_number} PARENT_SCOPE)
@@ -41,7 +46,7 @@ function(apgn_run result_var output_var)
         RESULT_VARIABLE result
         OUTPUT_VARIABLE output
         ERROR_VARIABLE output
-        TIMEOUT 600
+        TIMEOUT ${RUN_TIMEOUT}
     )
 
     file(WRITE "${WORK_DIR}/apgn-run-${run_number}.log"
