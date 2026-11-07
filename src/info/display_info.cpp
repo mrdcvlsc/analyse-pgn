@@ -32,6 +32,10 @@ void print_help() {
                  "                   unannotated.\n"
                  "\tdefault: off (analyse every move)\n\n"
 
+                 "--outputnag [std|apgn|both] - how to write the move assessment: standard NAGs,\n"
+                 "                              apgn's own words, or both.\n"
+                 "\tdefault: apgn\n\n"
+
                  "--analyse-start-on-move [N] - the move number where the engine will start the\n"
                  "                              analysis, the engine will skip moves before it.\n"
                  "\tdefault: 0\n\n"
