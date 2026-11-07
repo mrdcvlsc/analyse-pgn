@@ -74,7 +74,7 @@ The best-move variation is given no NAGs, and the statistics keep using apgn's l
 
 #### **Standard eval tags instead of CP: text**
 
-With `--eval-format std`, a move's score is written as the `[%eval ...]` tag that lichess, chessbase and scid read, at the start of the move's comment: `1. e4 { [%eval 0.25] excellent !! UNCERTAIN }`. `--eval-format both` writes the tag and apgn's own text. A centipawn score becomes pawns with two decimals, and a forced mate becomes `#` and a number of moves (`[%eval #3]`).
+With `--eval-format std`, a move's score is written as the `[%eval ...]` tag that lichess, chessbase and scid read, at the start of the move's comment: `1. e4 { [%eval 0.25] excellent !! UNCERTAIN }`. `--eval-format both` writes the tag and apgn's own text. A centipawn score becomes pawns with two decimals, and a forced mate becomes `#` and a number of moves (`[%eval #3]`). Like lichess, the tag is the evaluation of the position after the move: a move that starts a mate in 3 (apgn's `MATE_IN:3`) is followed by `[%eval #2]`, and the move that delivers mate gets no tag, since the game is over.
 
 `[%eval]` values are from White's point of view, while apgn's `CP:`/`MATE_IN:` are from the moving player's, so the sign is flipped for black's moves: `CP:-30` on a black move is written as `[%eval 0.30]`. The best-move variation carries a tag of its own, and the statistics keep using centipawns from the moving player's point of view.
 
