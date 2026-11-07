@@ -29,6 +29,39 @@ std::pair<std::uint8_t, std::string> rank(const std::string &comment) {
 
     return std::make_pair(0, "{ apgn - rank function invalid argument error }");
 }
+
+// follows the convention lichess and chessbase use, where only a notable or a bad move gets a glyph
+std::string move_nag(const std::string &label) {
+    if (label == winning::BRILLIANT.second || label == losing::ACCURATE_3.second) {
+        return "$1"; // ! the best move available
+    } else if (label == losing::INACCURATE.second) {
+        return "$6"; // ?! questionable move
+    } else if (label == losing::MISTAKE_2.second || label == losing::MISTAKE_3.second ||
+               label == winning::MISSED.second) {
+        return "$2"; // ? poor move
+    } else if (label == losing::BLUNDER.second) {
+        return "$4"; // ?? very poor move
+    }
+
+    return ""; // excellent, accurate !!, good and questionable are not worth a glyph
+}
+
+// apgn's status is from the moving player's point of view, position NAGs are always from white's
+std::string position_nag(const std::string &status, bool white_to_move) {
+    if (status == "WINNING") {
+        return white_to_move ? "$18" : "$19"; // +- / -+
+    } else if (status == "ADVANTAGE") {
+        return white_to_move ? "$16" : "$17"; // +/- / -/+
+    } else if (status == "DISADVANTAGE") {
+        return white_to_move ? "$17" : "$16"; // -/+ / +/-
+    } else if (status == "LOSING") {
+        return white_to_move ? "$19" : "$18"; // -+ / +-
+    } else if (status == "UNCERTAIN") {
+        return "$10"; // = an equal position, whoever is to move
+    }
+
+    return "";
+}
 } // namespace comments
 
 std::string score_comments(int cp_pmvbmv_dif, int cp_pmv, int cp_bmv, int cm_pmv, int cm_bmv) {

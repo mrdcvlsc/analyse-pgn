@@ -289,7 +289,6 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
                 int cp_pmv_bmv_diff = mv_player_cp - mv_best_cp;
                 comment = score_comments(cp_pmv_bmv_diff, mv_player_cp, mv_best_cp, mv_player_cm, mv_best_cm);
-                chess_game.comments[i] = " {" + comment;
 
                 std::istringstream interpret_stream(comment);
                 interpret_stream >> tmp_item;
@@ -298,12 +297,38 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                 interpret_stream >> tmp_item;
                 comment_type.append(tmp_item);
 
+                // score_comments() returns " <label> <status>", e.g. " blunder !?? LOSING"
+                std::string position_status;
+                interpret_stream >> position_status;
+
                 if (chess_game.interpret_stats.at(curr_player).find(comments::rank(comment_type)) ==
                     chess_game.interpret_stats.at(curr_player).end()) {
                     chess_game.interpret_stats.at(curr_player)[comments::rank(comment_type)] = 0.0;
                 }
 
                 chess_game.interpret_stats.at(curr_player)[comments::rank(comment_type)]++;
+
+                // --outputnag: the NAGs belong right after the move, before any comment
+                if (opts.nag_mode != OutputMode::Apgn) {
+                    const auto move_glyph = comments::move_nag(comment_type);
+                    const auto position_glyph =
+                        comments::position_nag(position_status, moving_player == Piece::White);
+
+                    if (!move_glyph.empty()) {
+                        chess_game.comments[i] += " " + move_glyph;
+                    }
+
+                    if (!position_glyph.empty()) {
+                        chess_game.comments[i] += " " + position_glyph;
+                    }
+                }
+
+                chess_game.comments[i] += " {";
+
+                // in std mode the NAGs above replace apgn's own words
+                if (opts.nag_mode != OutputMode::Std) {
+                    chess_game.comments[i] += comment;
+                }
 
                 chess_game.comments[i] += (!mv_player_cp && mv_player_cm)
                                               ? (" MATE_IN:" + std::to_string(mv_player_cm))

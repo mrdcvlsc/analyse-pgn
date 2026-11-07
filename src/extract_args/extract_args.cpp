@@ -25,6 +25,31 @@ static bool is_pgn_file(const std::string &argument) {
     return extension == ".pgn";
 }
 
+// --outputnag takes one of "std", "apgn" or "both"
+static OutputMode flag_output_mode(const std::string &flag, const std::string &value) {
+    if (value == "apgn") {
+        return OutputMode::Apgn;
+    } else if (value == "std") {
+        return OutputMode::Std;
+    } else if (value == "both") {
+        return OutputMode::Both;
+    }
+
+    assert_invalid(flag.substr(2) + " value", flag, value); // exits
+    return OutputMode::Apgn;
+}
+
+static std::string output_mode_text(OutputMode mode) {
+    switch (mode) {
+    case OutputMode::Std:
+        return "std";
+    case OutputMode::Both:
+        return "both";
+    default:
+        return "apgn";
+    }
+}
+
 // the longest possible legal chess game is under 9,000 moves
 static const int MAX_MOVE_NUMBER = 10'000;
 
@@ -107,6 +132,10 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
             } else {
                 assert_invalid("player value", arguments[i - 1], arguments[i]);
             }
+        } else if (arguments[i] == "--outputnag") {
+            assert_missing_flagvalue(i, arguments.size(), arguments[i]);
+            i++;
+            options.nag_mode = flag_output_mode(arguments[i - 1], arguments[i]);
         } else if (arguments[i] == "--analyse-start-on-move") {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             if (is_number(arguments[++i])) {
@@ -138,7 +167,8 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
               << "\nthreads                : " << options.threads << "\ndepth                  : " << options.depth
               << "\nhash size              : " << options.hash_size << "\nplayer to analyse      : " << piece
               << "\nstart analysis on move : " << options.start_on_move
-              << "\nanalyse until move     : " << options.until_move << "\n\n";
+              << "\nanalyse until move     : " << options.until_move
+              << "\nmove assessment output : " << output_mode_text(options.nag_mode) << "\n\n";
 
     if (options.depth > 12) {
         std::cout << "NOTE: depth is set greater than 12!!!\n"

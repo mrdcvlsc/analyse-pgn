@@ -33,6 +33,7 @@ std::pair<std::string, UciOptions> get_defaults() {
     options.start_on_move = 0;
     options.until_move    = 1'000;
     options.piece         = Piece::Both;
+    options.nag_mode      = OutputMode::Apgn;
 
     return std::make_pair(chess_engine, options);
 }
