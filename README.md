@@ -48,7 +48,7 @@ Example Comment:
 
 **Fewer annotations.** `--min-loss` leaves the near-best moves alone: with `--min-loss 0.50`, a move that is less than half a pawn worse than the engine's best move gets no comment, no score and no best-move variation at all. That includes the best move itself, which loses nothing, so its `brilliant !!!` or `accurate !!!` label (and its `$1` with `--move-symbols`) is left out too. Moves involving a forced mate are always annotated. The statistics are not affected by it.
 
-**Stopping early.** `--stop-at-score` stops once a game is decided: with `--stop-at-score 2.00`, as soon as a move's score reaches +2 or -2 pawns, or the move played leads to a forced mate (for either side), apgn stops analysing that game and prints which move it stopped on (the score in that message is from White's point of view). A mate that only the engine's best move would have forced does not stop the analysis: the player missed it, and the game is still open. The move that reached the score is annotated as usual, unless `--min-loss` leaves it out, and the remaining moves are written without comments. Each game in the file is analysed until it reaches the limit on its own, and the statistics count only the analysed moves.
+**Stopping early.** `--stop-at-score` stops once a game is decided: with `--stop-at-score 2.00`, as soon as a move's score reaches +2 or -2 pawns, or the player who just moved has a forced mate, apgn stops analysing that game and prints which move it stopped on (the score in that message is from White's point of view). A mate the player missed does not stop the analysis, and neither does a move that allows the opponent a mate: the opponent can still miss it, and if they play it, apgn stops on their move. The move that reached the score is annotated as usual, unless `--min-loss` leaves it out, and the remaining moves are written without comments. Each game in the file is analysed until it reaches the limit on its own, and the statistics count only the analysed moves.
 
 #### **Standard NAGs instead of words**
 
@@ -175,7 +175,7 @@ The regression tests are in `tests/regression/`: one `test_*.cmake` script per f
         default: 0 (annotate every analysed move)
 
 --stop-at-score [N] - stop analysing a game once its score reaches +N or
-                      -N pawns, or the move played leads to a forced mate;
+                      -N pawns, or the player who moved has a forced mate;
                       the moves after it are left unannotated.
         default: off (analyse every move)
 

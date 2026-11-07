@@ -137,6 +137,38 @@ count_matches(comments "${analysed}" "${comment_regex}")
 assert_equal("${comments}" "7" "every move after the missed mate is still annotated")
 assert_matches("${analysed}" "e4[ \n]+{[ \n]*missed" "1. e4 is annotated as a missed mate")
 
+# ---- a mate the player allows only decides the game once it is played ----
+# a move that allows the opponent a forced mate does not stop the analysis:
+# the opponent can still miss it, as amateurs often do. the analysis stops
+# when the moving player has the mate.
+
+write_file("${WORK_DIR}/allowed.pgn" "${SCHOLARS_MATE_PGN}")
+write_file("${WORK_DIR}/plan-allowed.txt" [=[
+0 d2d4 cp:30 cp:30
+# 1... e5 allows white a mate in 3
+1 d7d5 cp:0 mate:-3
+# 2. Bc4 misses it (the best move was 2. Qh5)
+2 d1h5 mate:3 cp:20
+3 g8f6 cp:-20 cp:-20
+4 g1f3 cp:20 cp:20
+# 3... Nf6 allows a mate in 1
+5 g7g6 cp:-20 mate:-1
+# 4. Qxf7# gives it: white has the mate, so the analysis stops here
+6 h5f7 mate:1 mate:1
+]=])
+
+apgn_run(result output
+    ENV FAKE_ENGINE_PLAN=${WORK_DIR}/plan-allowed.txt
+    ARGS --engine "${FAKE_ENGINE}" --stop-at-score 2.00 allowed.pgn)
+assert_equal("${result}" "0" "apgn should succeed")
+assert_not_contains("${output}" "on move 1," "1... e5 only allows a mate, it must not stop the analysis")
+assert_not_contains("${output}" "on move 3," "3... Nf6 only allows a mate, it must not stop the analysis")
+assert_contains("${output}" "forced mate found on move 4," "the analysis stops when white has the mate")
+
+read_file(analysed "${WORK_DIR}/analyzed-allowed.pgn")
+count_matches(comments "${analysed}" "${comment_regex}")
+assert_equal("${comments}" "7" "every move up to the mate is annotated")
+
 # ---- invalid values ----
 
 apgn_run(result output

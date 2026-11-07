@@ -430,9 +430,11 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
                     const int move_number   = (i + chess_game.first_player) / 2 + 1;
                     const int white_view_cp = white_to_move ? mv_player_cp : -mv_player_cp;
 
-                    // only the move played decides the game: a mate that the engine's best move would have
-                    // forced, but the player missed, leaves the game open
-                    if (mv_player_cm != 0) {
+                    // a forced mate decides the game only once the player who just moved has it. a mate that
+                    // the engine's best move would have forced, but the player missed, leaves the game open,
+                    // and so does a move that allows the opponent a mate: the opponent can still miss it, and
+                    // if they play it, the analysis stops on their move.
+                    if (mv_player_cm > 0) {
                         std::cout << "\nforced mate found on move " << move_number
                                   << ", skipping the rest of this game\n";
                         break;

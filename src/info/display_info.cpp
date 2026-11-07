@@ -28,7 +28,7 @@ void print_help() {
                  "\tdefault: 0 (annotate every analysed move)\n\n"
 
                  "--stop-at-score [N] - stop analysing a game once its score reaches +N or\n"
-                 "                      -N pawns, or the move played leads to a forced mate;\n"
+                 "                      -N pawns, or the player who moved has a forced mate;\n"
                  "                      the moves after it are left unannotated.\n"
                  "\tdefault: off (analyse every move)\n\n"
 
