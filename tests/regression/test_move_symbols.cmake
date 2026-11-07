@@ -72,6 +72,13 @@ assert_not_contains("${analysed}" "blunder" "std mode must not write apgn's word
 assert_not_contains("${analysed}" "WINNING" "std mode must not write apgn's status words")
 assert_contains("${analysed}" "CP:300" "std mode still writes the score")
 
+# in std mode the best-move variation holds only the score: the parentheses
+# already mark it as the alternative, so apgn's wording is left out there too
+assert_not_contains("${analysed}" "was the best move" "std mode must not write apgn's wording in variations")
+assert_not_contains("${analysed}" "followed by" "std mode must not write apgn's wording in variations")
+assert_matches("${analysed}" "\\(2\\.[ \n]+Nf3[ \n]+{[ \n]*CP:55[ \n]*}" "the best-move variation keeps its score in std mode")
+assert_not_matches("${analysed}" "Nf3[ \n]+\\$" "the best-move variation gets no NAGs in std mode")
+
 apgn_run(result output ENV ${second_env} ARGS --engine "${FAKE_ENGINE}" --move-symbols std second.pgn)
 assert_equal("${result}" "0" "apgn should succeed with --move-symbols std")
 
@@ -107,9 +114,9 @@ read_file(analysed "${WORK_DIR}/analyzed-both.pgn")
 assert_matches("${analysed}" "1\\.[ \n]+e4[ \n]+\\$1[ \n]+\\$18[ \n]+{[ \n]*brilliant[ \n]+!!![ \n]+WINNING" "both mode writes the NAG and the words")
 assert_matches("${analysed}" "Nf6[ \n]+\\$4[ \n]+\\$18[ \n]+{[ \n]*blunder" "both mode writes the NAG and the words")
 
-# ---- the best-move variation keeps its comment and gets no NAGs ----
+# ---- in both mode the best-move variation keeps apgn's wording, and gets no NAGs ----
 
-assert_matches("${analysed}" "\\(2\\.[ \n]+Nf3[ \n]+{[^}]*was[ \n]+the[ \n]+best[ \n]+move" "the best-move variation keeps its comment")
+assert_matches("${analysed}" "\\(2\\.[ \n]+Nf3[ \n]+{[^}]*was[ \n]+the[ \n]+best[ \n]+move" "the best-move variation keeps its wording in both mode")
 assert_not_matches("${analysed}" "Nf3[ \n]+\\$" "the best-move variation gets no NAGs")
 
 # ---- invalid mode ----
