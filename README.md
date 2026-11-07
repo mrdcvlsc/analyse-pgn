@@ -34,6 +34,12 @@ The `analyzed-<original-pgn-filename>.pgn` will contain the following:
   4.  **`DISADVANTAGE`** (-150 to -116) - slightly worse than the opponent.
   5.  **`LOSING`** (score below -150, or the player is getting mated) - means that the ***disadvantage*** is so great the chances of ***losing*** are very high, as long as the other side does not blunder badly or play many inaccurate moves.
 
+### **Standard eval tags instead of CP: text**
+
+With `--evaltags std`, a move's score is written as the `[%eval ...]` tag that lichess, chessbase and scid read, at the start of the move's comment: `1. e4 { [%eval 0.25] excellent !! UNCERTAIN }`. `--evaltags both` writes the tag and apgn's own text. A centipawn score becomes pawns with two decimals, and a forced mate becomes `#` and a number of moves (`[%eval #3]`).
+
+`[%eval]` values are from White's point of view, while apgn's `CP:`/`MATE_IN:` are from the moving player's, so the sign is flipped for black's moves: `CP:-30` on a black move is written as `[%eval 0.30]`. The best-move variation carries a tag of its own, and the statistics keep using centipawns from the moving player's point of view.
+
 - per-move comment showing the `CP:<value>` (centipawn value, from the point of view of the player who made the move: positive is good for them) or the `MATE_IN:<n>` (forced checkmate in n moves; negative when the player is the one getting mated).
   
 Example Comment:
@@ -125,6 +131,10 @@ The regression tests are in `tests/regression/`: one `test_*.cmake` script per f
 --player [Both|White|Black] - select one of the options.
         default: Both
 
+--evaltags [std|apgn|both] - how to write the score of a move: a standard
+                             [%eval] tag, apgn's own text, or both.
+        default: apgn
+
 --analyse-start-on-move [N] - the move number where the engine will start the
                               analysis, the engine will skip moves before it.
         default: 0
@@ -156,6 +166,7 @@ The regression tests are in `tests/regression/`: one `test_*.cmake` script per f
 | `--depth` | 1 to 100 |
 | `--threads` | 1 to 1024 |
 | `--hash-size` | 1 to 33554432 (MB) |
+| `--evaltags` | `std`, `apgn` or `both` |
 | `--analyse-start-on-move` | 0 to 10000 (0 and 1 both start from the first move) |
 | `--analyse-until-move` | 1 to 10000 |
 
