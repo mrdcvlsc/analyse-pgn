@@ -30,7 +30,8 @@ std::pair<std::uint8_t, std::string> rank(const std::string &comment) {
     return std::make_pair(0, "{ apgn - rank function invalid argument error }");
 }
 
-// follows the convention lichess and chessbase use, where only a notable or a bad move gets a glyph
+// the best move gets "!", inaccuracies, mistakes and blunders get "?!", "?" and "??", and the moves in between
+// get no glyph
 std::string move_nag(const std::string &label) {
     if (label == winning::BRILLIANT.second || label == losing::ACCURATE_3.second) {
         return "$1"; // ! the best move available
