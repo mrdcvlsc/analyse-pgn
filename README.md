@@ -52,7 +52,7 @@ Example Comment:
 
 #### **Standard NAGs instead of words**
 
-With `--move-symbols std`, the assessment is written as standard NAGs right after the move instead of apgn's words, so other programs can read it: `1. e4 $1 $18 { CP:300 }`. The best-move variation keeps only its score, without apgn's wording: `(1. d4 { CP:320 })`. `--move-symbols both` writes the NAGs and keeps all of apgn's words. The best move gets `!`, inaccuracies, mistakes and blunders get the usual `?!`, `?` and `??`, and the moves in between get no glyph:
+With `--move-symbols std`, the assessment is written as standard NAGs right after the move instead of apgn's words, so other programs can read it: an inaccuracy that still leaves White winning is written `1. e4 $6 $18 { CP:260 }`. The best-move variation keeps only its score, without apgn's wording: `1. e4 $6 $18 { CP:260 } (1. d4 { CP:320 })`. `--move-symbols both` writes the NAGs and keeps all of apgn's words. The best move gets `!`, inaccuracies, mistakes and blunders get the usual `?!`, `?` and `??`, and the moves in between get no glyph:
 
 | apgn label | NAG |
 |---|---|
