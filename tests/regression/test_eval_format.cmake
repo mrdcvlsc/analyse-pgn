@@ -5,12 +5,18 @@
 # [%eval] values are from white's point of view, while apgn's CP:/MATE_IN:
 # are from the moving player's, so the sign is flipped for black's moves.
 #
+# [%eval] is the evaluation of the position after the move, as lichess writes
+# it, while apgn's MATE_IN counts the move itself. so when the moving player
+# is the one giving mate, the tag counts one move fewer, and a move that
+# delivers mate gets no tag at all (the game is over). when the moving player
+# is the one getting mated, the count is the same.
+#
 # pgn-extract wraps long lines, so the assertions allow a newline wherever
 # they allow a space.
 
 include(${CMAKE_CURRENT_LIST_DIR}/common.cmake)
 
-foreach(name std plain apgn both)
+foreach(name std plain apgn both mates mates_standard)
     write_file("${WORK_DIR}/${name}.pgn" "${SCHOLARS_MATE_PGN}")
 endforeach()
 
@@ -26,7 +32,7 @@ write_file("${WORK_DIR}/plan.txt" [=[
 2 g1f3 cp:0 cp:0
 # 2... Nc6 black +30, so white -30        -> [%eval -0.30]
 3 g8f6 cp:35 cp:30
-# 3. Qh5   white mates in 3               -> [%eval #3]
+# 3. Qh5   white mates in 3 with this move -> 2 more after it: [%eval #2]
 4 g1f3 cp:50 mate:3
 # 3... Nf6 black mated in 2, so white #2  -> [%eval #2],     best move [%eval #1]
 5 g7g6 mate:-1 mate:-2
@@ -47,7 +53,7 @@ assert_matches("${analysed}" "1\\.[ \n]+e4[ \n]+{[ \n]*\\[%eval[ \n]+0\\.25\\]" 
 assert_matches("${analysed}" "e5[ \n]+{[ \n]*\\[%eval[ \n]+0\\.30\\]" "1... e5: black's -30 is white's +0.30")
 assert_matches("${analysed}" "Bc4[ \n]+{[ \n]*\\[%eval[ \n]+0\\.00\\]" "2. Bc4: a level position")
 assert_matches("${analysed}" "Nc6[ \n]+{[ \n]*\\[%eval[ \n]+-0\\.30\\]" "2... Nc6: black's +30 is white's -0.30")
-assert_matches("${analysed}" "Qh5[ \n]+{[ \n]*\\[%eval[ \n]+#3\\]" "3. Qh5: white mates in 3")
+assert_matches("${analysed}" "Qh5[ \n]+{[ \n]*\\[%eval[ \n]+#2\\]" "3. Qh5: white mates in 3 counting this move, so in 2 after it")
 assert_matches("${analysed}" "Nf6[ \n]+{[ \n]*\\[%eval[ \n]+#2\\]" "3... Nf6: black is mated in 2, so white mates in 2")
 assert_matches("${analysed}" "Qxf7#[ \n]+{[ \n]*\\[%eval[ \n]+#-2\\]" "4. Qxf7#: white is mated in 2")
 
@@ -81,8 +87,46 @@ assert_equal("${result}" "0" "apgn should succeed with --eval-format both")
 read_file(analysed "${WORK_DIR}/analyzed-both.pgn")
 assert_matches("${analysed}" "1\\.[ \n]+e4[ \n]+{[ \n]*\\[%eval[ \n]+0\\.25\\][ \n]+excellent" "both mode writes the tag and the words")
 assert_contains("${analysed}" "CP:25" "both mode keeps apgn's score text")
-assert_matches("${analysed}" "Qh5[ \n]+{[ \n]*\\[%eval[ \n]+#3\\]" "both mode writes the tag for a mate too")
+assert_matches("${analysed}" "Qh5[ \n]+{[ \n]*\\[%eval[ \n]+#2\\]" "both mode writes the tag for a mate too")
 assert_contains("${analysed}" "MATE_IN:3" "both mode keeps apgn's mate text")
+
+# ---- giving mate: the count after the move, and no tag once the game is over ----
+
+write_file("${WORK_DIR}/plan-mates.txt" [=[
+0 d2d4 cp:30 cp:25
+1 d7d5 cp:-25 cp:-30
+2 g1f3 cp:0 cp:0
+# 2... Nc6  black mates in 4 with this move -> 3 more after it: [%eval #-3]
+3 g8f6 cp:35 mate:4
+# 3. Qh5    the best move 3. Nf3 would deliver mate, so its variation has no tag
+4 g1f3 mate:1 cp:40
+5 g7g6 cp:0 cp:-10
+# 4. Qxf7#  delivers mate: the game is over after it, so no tag
+6 a2a4 cp:20 mate:1
+]=])
+set(mates_env FAKE_ENGINE_PLAN=${WORK_DIR}/plan-mates.txt)
+
+apgn_run(result output ENV ${mates_env} ARGS --engine "${FAKE_ENGINE}" --eval-format std mates.pgn)
+assert_equal("${result}" "0" "apgn should succeed with --eval-format std")
+assert_not_contains("${output}" "Unknown" "pgn-extract must accept the output")
+
+read_file(analysed "${WORK_DIR}/analyzed-mates.pgn")
+assert_matches("${analysed}" "Nc6[ \n]+{[ \n]*\\[%eval[ \n]+#-3\\]" "2... Nc6: black mates in 4 counting this move, so in 3 after it")
+assert_matches("${analysed}" "\\(3\\.[ \n]+Nf3[ \n]+{[ \n]*was[ \n]+the[ \n]+best[ \n]+move" "a best move that delivers mate keeps its words")
+assert_not_matches("${analysed}" "\\(3\\.[ \n]+Nf3[ \n]+{[ \n]*\\[%eval" "a best move that delivers mate gets no tag")
+assert_matches("${analysed}" "Qxf7#[ \n]+{[ \n]*[a-z]" "4. Qxf7# keeps its words")
+assert_not_matches("${analysed}" "Qxf7#[ \n]+{[ \n]*\\[%eval" "4. Qxf7# delivers mate: no tag")
+
+# with --move-symbols std as well, a comment left with nothing in it is not written at all
+apgn_run(result output ENV ${mates_env} ARGS --engine "${FAKE_ENGINE}" --eval-format std --move-symbols std mates_standard.pgn)
+assert_equal("${result}" "0" "apgn should succeed with both std modes")
+assert_not_contains("${output}" "Unknown" "pgn-extract must accept the output")
+
+read_file(analysed "${WORK_DIR}/analyzed-mates_standard.pgn")
+assert_matches("${analysed}" "Qxf7#[ \n]+\\$[0-9]+[ \n]+\\$[0-9]+[ \n]+\\(4\\.[ \n]+a4[ \n]+{[ \n]*\\[%eval[ \n]+0\\.20\\][ \n]*}"
+    "4. Qxf7#: its NAGs, no comment, then its variation")
+assert_matches("${analysed}" "\\(3\\.[ \n]+Nf3[ \n]*\\)" "the variation of a best move that delivers mate has no comment")
+assert_not_matches("${analysed}" "{[ \n]*}" "no empty comments")
 
 # ---- invalid mode ----
 
