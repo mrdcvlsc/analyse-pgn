@@ -289,7 +289,8 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
                 int cp_pmv_bmv_diff = mv_player_cp - mv_best_cp;
                 comment = score_comments(cp_pmv_bmv_diff, mv_player_cp, mv_best_cp, mv_player_cm, mv_best_cm);
-                chess_game.comments[i] = " {" + comment;
+
+                std::string move_comment = " {" + comment;
 
                 std::istringstream interpret_stream(comment);
                 interpret_stream >> tmp_item;
@@ -305,21 +306,29 @@ std::string analyse_game(ChessGame &chess_game, const std::string &chess_engine,
 
                 chess_game.interpret_stats.at(curr_player)[comments::rank(comment_type)]++;
 
-                chess_game.comments[i] += (!mv_player_cp && mv_player_cm)
-                                              ? (" MATE_IN:" + std::to_string(mv_player_cm))
-                                              : (" CP:" + std::to_string(mv_player_cp));
+                move_comment += (!mv_player_cp && mv_player_cm) ? (" MATE_IN:" + std::to_string(mv_player_cm))
+                                                                 : (" CP:" + std::to_string(mv_player_cp));
 
-                chess_game.comments[i] += " } ";
+                move_comment += " } ";
 
                 chess_game.player_move_centipawn[i] = mv_player_cp;
                 chess_game.best_move_centipawn[i]   = mv_best_cp;
 
                 if (move != mv_best) {
-                    chess_game.comments[i] +=
-                        " (" + mv_best + " { was the best move" +
-                        ((!mv_best_cp && mv_best_cm) ? (" MATE_IN:" + std::to_string(mv_best_cm))
-                                                     : (" CP:" + std::to_string(mv_best_cp))) +
-                        (", followed by } " + best_mv_cont + " ) ");
+                    move_comment += " (" + mv_best + " { was the best move" +
+                                    ((!mv_best_cp && mv_best_cm) ? (" MATE_IN:" + std::to_string(mv_best_cm))
+                                                                 : (" CP:" + std::to_string(mv_best_cp))) +
+                                    (", followed by } " + best_mv_cont + " ) ");
+                }
+
+                // --threshold: a move that is less than `threshold` centipawns worse than the engine's best
+                // move is left unannotated. a move involving a forced mate is always annotated, because a
+                // centipawn loss is not meaningful for it. the statistics count the move either way.
+                const bool mate_found    = (mv_player_cm != 0) || (mv_best_cm != 0);
+                const int centipawn_loss = mv_best_cp - mv_player_cp;
+
+                if (opts.threshold <= 0 || mate_found || centipawn_loss >= opts.threshold) {
+                    chess_game.comments[i] = move_comment;
                 }
             }
 

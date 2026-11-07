@@ -28,6 +28,39 @@ static bool is_pgn_file(const std::string &argument) {
 // the longest possible legal chess game is under 9,000 moves
 static const int MAX_MOVE_NUMBER = 10'000;
 
+// "0.50" for 50 centipawns, for messages about flags whose value is given in pawns
+static std::string pawns_text(int centipawns) {
+    const auto whole     = centipawns / 100;
+    const auto remainder = centipawns % 100;
+
+    return std::to_string(whole) + "." + ((remainder < 10) ? "0" : "") + std::to_string(remainder);
+}
+
+// converts a flag value in pawns that is_pawn_number() accepted ("0.5", "2.00") into centipawns,
+// and exits with an error when it is outside [min_centipawns, max_centipawns]
+static int flag_pawns(const std::string &flag, const std::string &value, int min_centipawns, int max_centipawns) {
+    const auto dot        = value.find('.');
+    const auto whole_text = value.substr(0, dot);
+
+    auto fraction_text = (dot == std::string::npos) ? std::string() : value.substr(dot + 1);
+    fraction_text.resize(2, '0'); // "5" is 50 centipawns, "05" is 5
+
+    // a whole part this long cannot be in range, and would overflow the conversion below
+    const long long whole = (whole_text.size() > 9) ? static_cast<long long>(max_centipawns) + 1
+                                                    : std::stoll(whole_text);
+
+    const long long centipawns = whole * 100 + std::stoll(fraction_text);
+
+    if (centipawns < min_centipawns || centipawns > max_centipawns) {
+        std::cerr << "Argument Error: " << flag << " " << value << "\n\n\tthe value of " << flag
+                  << " must be between " << pawns_text(min_centipawns) << " and " << pawns_text(max_centipawns)
+                  << " pawns\n";
+        exit(1);
+    }
+
+    return static_cast<int>(centipawns);
+}
+
 // converts a flag value that is_number() accepted (digits only) and exits with an error
 // when it is outside [min, max], so nonsense values never reach the engine or overflow `int`
 static int flag_number(const std::string &flag, const std::string &value, int min, int max) {
@@ -107,6 +140,13 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
             } else {
                 assert_invalid("player value", arguments[i - 1], arguments[i]);
             }
+        } else if (arguments[i] == "--threshold") {
+            assert_missing_flagvalue(i, arguments.size(), arguments[i]);
+            if (is_pawn_number(arguments[++i])) {
+                options.threshold = flag_pawns(arguments[i - 1], arguments[i], 0, 1'000);
+            } else {
+                assert_invalid("threshold value", arguments[i - 1], arguments[i]);
+            }
         } else if (arguments[i] == "--analyse-start-on-move") {
             assert_missing_flagvalue(i, arguments.size(), arguments[i]);
             if (is_number(arguments[++i])) {
@@ -138,7 +178,8 @@ std::pair<ArgPaths, UciOptions> extract_args(int argc, char *argv[]) {
               << "\nthreads                : " << options.threads << "\ndepth                  : " << options.depth
               << "\nhash size              : " << options.hash_size << "\nplayer to analyse      : " << piece
               << "\nstart analysis on move : " << options.start_on_move
-              << "\nanalyse until move     : " << options.until_move << "\n\n";
+              << "\nanalyse until move     : " << options.until_move
+              << "\nannotation threshold   : " << pawns_text(options.threshold) << " pawns\n\n";
 
     if (options.depth > 12) {
         std::cout << "NOTE: depth is set greater than 12!!!\n"
